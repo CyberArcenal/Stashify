@@ -1,0 +1,98 @@
+{
+  "name": "stashly",
+  "version": "0.0.0-beta",
+  "private": true,
+  "main": "src/main/index.js",
+  "scripts": {
+    "build:main": "tsc -p tsconfig.main.json",
+    "lint": "eslint . --ext .ts,.tsx",
+    "vite": "vite",
+    "preview": "vite preview",
+    "electron": "electron ./src/main/index.js",
+    "electron:dev": "electron ./src/main/index.js",
+    "electron:build": "electron-builder",
+    "migration:generate": "npx typeorm migration:generate src/migrations/InitSchema -d src/main/db/datasource.js --outputJs",
+    "migration:run": "npx typeorm migration:run -d src/main/db/datasource.js",
+    "migration:revert": "npx typeorm migration:revert -d src/main/db/datasource.js",
+    "dev": "cross-env NODE_ENV=development concurrently \"vite\" \"tsc -w -p tsconfig.node.json\" \"electron ./src/main/index.js\"",
+    "build": "vite build && electron-builder",
+    "seed": "node src/seeders/seedData.js",
+    "seed:reset": "ts-node src/seeders/seedData.js --reset",
+    "postinstall": "electron-rebuild",
+    "rebuild": "electron-rebuild -f -w sqlite3"
+  },
+  "build": {
+    "appId": "com.CyberArcenal",
+    "productName": "Stashly",
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "icon": "build/icon.icns"
+    },
+    "linux": {
+      "icon": "build/icon.png"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "CyberArcenal",
+        "repo": "stashly"
+      }
+    ]
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "chart.js": "^4.5.1",
+    "clsx": "^2.1.1",
+    "csv-parse": "^6.1.0",
+    "csv-stringify": "^6.6.0",
+    "date-fns": "^4.1.0",
+    "decimal.js": "^10.6.0",
+    "electron-updater": "^6.8.3",
+    "escpos": "^3.0.0-alpha.6",
+    "escpos-usb": "^3.0.0-alpha.4",
+    "exceljs": "^4.4.0",
+    "lucide-react": "^0.562.0",
+    "nodemailer": "^8.0.1",
+    "p-queue": "^9.1.0",
+    "pdfkit": "^0.17.2",
+    "react": "^19.2.0",
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "^19.2.0",
+    "react-hook-form": "^7.71.1",
+    "react-router-dom": "^7.12.0",
+    "reflect-metadata": "^0.2.2",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.0.2",
+    "tailwind-merge": "^3.4.0",
+    "twilio": "^5.12.2",
+    "typeorm": "^0.3.28"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/chart.js": "^2.9.41",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "babel-plugin-react-compiler": "^1.0.0",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.8.1",
+    "electron-rebuild": "^3.2.9",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.4",
+    "vite": "^7.2.4"
+  }
+}

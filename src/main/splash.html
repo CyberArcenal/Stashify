@@ -1,0 +1,809 @@
+<!-- electron-app/main/splash.html -->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: linear-gradient(135deg, #1a2f3c 0%, #283f4f 100%);
+        color: #daf1f8;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      .splash-container {
+        text-align: center;
+        padding: 40px;
+        max-width: 400px;
+        width: 100%;
+        animation: fadeIn 0.5s ease-out;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        height: 100vh;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .logo {
+        width: 120px;
+        height: 120px;
+        margin-bottom: 30px;
+        animation: float 3s ease-in-out infinite;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .logo svg {
+        display: block;
+        margin: 0 auto;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      h1 {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #daf1f8 0%, #9ed9ec 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        width: 100%;
+      }
+
+      .subtitle {
+        font-size: 16px;
+        font-weight: 400;
+        opacity: 0.9;
+        margin-bottom: 40px;
+        text-align: center;
+        width: 100%;
+        color: #9ed9ec;
+      }
+
+      .loading-container {
+        width: 100%;
+        text-align: center;
+        position: absolute;
+        bottom: 100px;
+        left: 0;
+        right: 0;
+        padding: 0 40px;
+      }
+
+      .loading-text {
+        font-size: 14px;
+        margin-bottom: 10px;
+        opacity: 0.9;
+        height: 20px;
+        transition: opacity 0.3s ease;
+        text-align: center;
+        color: #daf1f8;
+      }
+
+      .loading-bar {
+        width: 100%;
+        height: 6px;
+        background: rgba(14, 157, 124, 0.1);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 15px;
+      }
+
+      .loading-progress {
+        height: 100%;
+        background: linear-gradient(90deg, #0e9d7c, #1ab394, #10b981);
+        border-radius: 3px;
+        width: 0%;
+        transition: width 0.3s ease;
+      }
+
+      .version {
+        position: absolute;
+        bottom: 20px;
+        font-size: 12px;
+        opacity: 0.7;
+        text-align: center;
+        width: 100%;
+        left: 0;
+        right: 0;
+        color: #9ed9ec;
+      }
+
+      .dots {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 15px;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        background: rgba(14, 157, 124, 0.5);
+        border-radius: 50%;
+        animation: pulse 1.4s ease-in-out infinite;
+      }
+
+      .dot:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .dot:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.5;
+          background-color: rgba(14, 157, 124, 0.5);
+        }
+        50% {
+          transform: scale(1.2);
+          opacity: 1;
+          background-color: #1ab394;
+        }
+      }
+
+      .company {
+        position: absolute;
+        bottom: 50px;
+        font-size: 12px;
+        opacity: 0.8;
+        font-weight: 300;
+        text-align: center;
+        width: 100%;
+        left: 0;
+        right: 0;
+        color: #9ed9ec;
+      }
+
+      .center-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding-bottom: 15%;
+        margin-top: -100px; /* Adjust to center vertically better */
+      }
+
+      .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(26, 47, 60, 0.95) 0%,
+          rgba(40, 63, 79, 0.95) 100%
+        );
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 10;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.5s ease;
+      }
+
+      .loading-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .overlay-content {
+        text-align: center;
+        max-width: 300px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .overlay-logo {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      .overlay-logo svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .overlay-text {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #daf1f8;
+        text-align: center;
+        width: 100%;
+      }
+
+      .overlay-subtext {
+        font-size: 14px;
+        color: #9ed9ec;
+        opacity: 0.8;
+        margin-bottom: 20px;
+        text-align: center;
+        width: 100%;
+      }
+
+      .overlay-version {
+        font-size: 11px;
+        color: #9ed9ec;
+        opacity: 0.6;
+        margin-top: 15px;
+        text-align: center;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="splash-container">
+      <div class="center-content">
+        <div class="logo">
+          <svg
+            viewBox="0 0 120 120"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop
+                  offset="0%"
+                  style="stop-color: #0e9d7c; stop-opacity: 1"
+                />
+                <stop
+                  offset="100%"
+                  style="stop-color: #1ab394; stop-opacity: 1"
+                />
+              </linearGradient>
+              <radialGradient id="innerGlow">
+                <stop offset="0%" stop-color="#1ab394" stop-opacity="0.3" />
+                <stop offset="100%" stop-color="#0e9d7c" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+
+            <!-- Background glow -->
+            <circle cx="60" cy="60" r="50" fill="url(#innerGlow)" />
+
+            <!-- Outer ring -->
+            <circle
+              cx="60"
+              cy="60"
+              r="52"
+              stroke="url(#grad1)"
+              stroke-width="3"
+              fill="none"
+            />
+
+            <!-- Central hub -->
+            <circle
+              cx="60"
+              cy="60"
+              r="15"
+              stroke="#daf1f8"
+              stroke-width="3"
+              fill="rgba(26, 179, 148, 0.2)"
+            />
+
+            <!-- Connected nodes -->
+            <circle
+              cx="35"
+              cy="40"
+              r="10"
+              fill="#0e9d7c"
+              stroke="#daf1f8"
+              stroke-width="2"
+            />
+            <circle
+              cx="85"
+              cy="40"
+              r="10"
+              fill="#0e9d7c"
+              stroke="#daf1f8"
+              stroke-width="2"
+            />
+            <circle
+              cx="35"
+              cy="80"
+              r="10"
+              fill="#0e9d7c"
+              stroke="#daf1f8"
+              stroke-width="2"
+            />
+            <circle
+              cx="85"
+              cy="80"
+              r="10"
+              fill="#0e9d7c"
+              stroke="#daf1f8"
+              stroke-width="2"
+            />
+
+            <!-- Connection lines -->
+            <path
+              d="M60 45 L60 75 M45 60 L75 60"
+              stroke="rgba(218, 241, 248, 0.6)"
+              stroke-width="2"
+              stroke-dasharray="4,4"
+            />
+
+            <!-- Hub icon -->
+            <path
+              d="M55 55 L65 55 L65 65 L55 65 Z"
+              stroke="#daf1f8"
+              stroke-width="2"
+              fill="rgba(218, 241, 248, 0.1)"
+            />
+            <path
+              d="M58 58 L62 62 M62 58 L58 62"
+              stroke="#1ab394"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+        </div>
+
+        <h1>Inventory Pro</h1>
+        <div class="subtitle">Enterprise Management System</div>
+      </div>
+
+      <div class="loading-container">
+        <div class="loading-text" id="loadingText">
+          Initializing application...
+        </div>
+        <div class="loading-bar">
+          <div class="loading-progress" id="loadingProgress"></div>
+        </div>
+
+        <div class="dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+
+      <div class="company">© 2025 Inventory Solutions Inc.</div>
+      <div class="version">...</div>
+    </div>
+
+    <!-- Loading Overlay for Version Update -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="overlay-content">
+        <div class="overlay-logo">
+          <svg
+            viewBox="0 0 80 80"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="40"
+              cy="40"
+              r="35"
+              stroke="#1ab394"
+              stroke-width="3"
+              fill="none"
+            />
+            <rect
+              x="30"
+              y="30"
+              width="20"
+              height="20"
+              rx="2"
+              stroke="#daf1f8"
+              stroke-width="2"
+              fill="rgba(14, 157, 124, 0.2)"
+            />
+            <path
+              d="M35 35 L45 45 M45 35 L35 45"
+              stroke="#daf1f8"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+        </div>
+        <div class="overlay-text">Updating Application</div>
+        <div class="overlay-subtext">Installing latest version...</div>
+        <div class="dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+        <div class="overlay-version">New Version: 2.1.0</div>
+      </div>
+    </div>
+
+    <!-- Idagdag ito sa existing HTML, maaaring pagkatapos ng loading overlay -->
+    <div class="update-overlay" id="updateOverlay">
+      <div class="update-content">
+        <div class="update-icon">
+          <svg
+            viewBox="0 0 80 80"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M40 15V40M40 40L50 30M40 40L30 30"
+              stroke="#1ab394"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M60 40C60 51.0457 51.0457 60 40 60C28.9543 60 20 51.0457 20 40C20 28.9543 28.9543 20 40 20"
+              stroke="#daf1f8"
+              stroke-width="3"
+              stroke-linecap="round"
+            />
+          </svg>
+        </div>
+        <div class="update-title">Update Available</div>
+        <div class="update-subtitle" id="updateVersion">
+          Version X.X.X is ready to install
+        </div>
+        <div
+          class="update-progress-container"
+          id="updateProgressContainer"
+          style="display: none"
+        >
+          <div class="update-progress-bar">
+            <div class="update-progress-fill" id="updateProgressFill"></div>
+          </div>
+          <div class="update-progress-text" id="updateProgressText">0%</div>
+        </div>
+        <div class="update-buttons">
+          <button class="update-btn update-install" id="updateInstallBtn">
+            Install Update
+          </button>
+          <button class="update-btn update-later" id="updateLaterBtn">
+            Remind Me Later
+          </button>
+        </div>
+        <div class="update-notes" id="updateNotes">
+          <div class="update-notes-title">What's New:</div>
+          <ul class="update-notes-list" id="updateNotesList">
+            <!-- Release notes will be populated here -->
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .update-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(26, 47, 60, 0.98) 0%,
+          rgba(40, 63, 79, 0.98) 100%
+        );
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.5s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .update-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .update-content {
+        text-align: center;
+        max-width: 450px;
+        width: 90%;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 40px;
+        border-radius: 16px;
+        border: 1px solid rgba(218, 241, 248, 0.1);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      .update-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      .update-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #daf1f8;
+        margin-bottom: 10px;
+        background: linear-gradient(135deg, #1ab394 0%, #0e9d7c 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .update-subtitle {
+        font-size: 16px;
+        color: #9ed9ec;
+        margin-bottom: 30px;
+        opacity: 0.9;
+      }
+
+      .update-progress-container {
+        width: 100%;
+        margin: 25px 0;
+      }
+
+      .update-progress-bar {
+        width: 100%;
+        height: 8px;
+        background: rgba(14, 157, 124, 0.2);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 10px;
+      }
+
+      .update-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #0e9d7c, #1ab394, #10b981);
+        border-radius: 4px;
+        width: 0%;
+        transition: width 0.3s ease;
+      }
+
+      .update-progress-text {
+        font-size: 12px;
+        color: #9ed9ec;
+        text-align: right;
+        opacity: 0.8;
+      }
+
+      .update-buttons {
+        display: flex;
+        gap: 15px;
+        margin: 25px 0;
+        justify-content: center;
+      }
+
+      .update-btn {
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        min-width: 140px;
+      }
+
+      .update-install {
+        background: linear-gradient(135deg, #0e9d7c 0%, #1ab394 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(14, 157, 124, 0.3);
+      }
+
+      .update-install:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(14, 157, 124, 0.4);
+      }
+
+      .update-later {
+        background: transparent;
+        color: #9ed9ec;
+        border: 1px solid rgba(158, 217, 236, 0.3);
+      }
+
+      .update-later:hover {
+        background: rgba(158, 217, 236, 0.1);
+        border-color: rgba(158, 217, 236, 0.5);
+      }
+
+      .update-notes {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 25px;
+        text-align: left;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .update-notes-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #daf1f8;
+        margin-bottom: 10px;
+        border-bottom: 1px solid rgba(158, 217, 236, 0.2);
+        padding-bottom: 8px;
+      }
+
+      .update-notes-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .update-notes-list li {
+        font-size: 13px;
+        color: #9ed9ec;
+        margin-bottom: 8px;
+        padding-left: 20px;
+        position: relative;
+        line-height: 1.5;
+      }
+
+      .update-notes-list li:before {
+        content: "•";
+        color: #1ab394;
+        position: absolute;
+        left: 0;
+        font-size: 16px;
+      }
+    </style>
+
+    <script>
+      // Idagdag ito sa existing JavaScript
+      const updateOverlay = document.getElementById("updateOverlay");
+      const updateVersion = document.getElementById("updateVersion");
+      const updateProgressContainer = document.getElementById(
+        "updateProgressContainer"
+      );
+      const updateProgressFill = document.getElementById("updateProgressFill");
+      const updateProgressText = document.getElementById("updateProgressText");
+      const updateInstallBtn = document.getElementById("updateInstallBtn");
+      const updateLaterBtn = document.getElementById("updateLaterBtn");
+      const updateNotesList = document.getElementById("updateNotesList");
+
+      // IPC communication for updates
+      if (window.backendAPI) {
+        // Listen for update events
+        window.backendAPI.onUpdateAvailable((event, info) => {
+          showUpdateAvailable(info);
+        });
+
+        window.backendAPI.onDownloadProgress((event, progress) => {
+          showDownloadProgress(progress);
+        });
+
+        window.backendAPI.onUpdateDownloaded((event, info) => {
+          showUpdateReady(info);
+        });
+
+        window.backendAPI.onUpdateError((event, error) => {
+          showUpdateError(error);
+        });
+
+        window.backendAPI.onUpdateNotAvailable((event, info) => {
+          console.log("No updates available");
+        });
+      }
+
+      function showUpdateAvailable(info) {
+        updateVersion.textContent = `Version ${info.version} is available`;
+
+        // Populate release notes
+        if (info.releaseNotes) {
+          const notes = Array.isArray(info.releaseNotes)
+            ? info.releaseNotes
+            : [info.releaseNotes];
+          updateNotesList.innerHTML = notes
+            .map((note) => `<li>${note}</li>`)
+            .join("");
+        } else {
+          updateNotesList.innerHTML =
+            "<li>Bug fixes and performance improvements</li>";
+        }
+
+        updateOverlay.classList.add("active");
+        updateProgressContainer.style.display = "none";
+      }
+
+      function showDownloadProgress(progress) {
+        updateProgressContainer.style.display = "block";
+        updateInstallBtn.disabled = true;
+        updateInstallBtn.textContent = "Downloading...";
+
+        const percent = Math.floor(progress.percent);
+        updateProgressFill.style.width = `${percent}%`;
+        updateProgressText.textContent = `${percent}%`;
+
+        // Update download speed
+        let speed = "";
+        if (progress.bytesPerSecond) {
+          const mbps = (progress.bytesPerSecond / 1024 / 1024).toFixed(1);
+          speed = ` (${mbps} MB/s)`;
+        }
+
+        updateVersion.textContent = `Downloading update...${speed}`;
+      }
+
+      function showUpdateReady(info) {
+        updateProgressContainer.style.display = "none";
+        updateInstallBtn.disabled = false;
+        updateInstallBtn.textContent = "Install & Restart";
+        updateVersion.textContent = `Version ${info.version} is ready to install`;
+      }
+
+      function showUpdateError(error) {
+        updateVersion.textContent = `Update failed: ${error}`;
+        updateInstallBtn.textContent = "Retry Update";
+        updateInstallBtn.disabled = false;
+      }
+
+      // Button handlers
+      updateInstallBtn.addEventListener("click", () => {
+        if (window.backendAPI) {
+          window.backendAPI.startUpdate();
+        }
+      });
+
+      updateLaterBtn.addEventListener("click", () => {
+        updateOverlay.classList.remove("active");
+        // Store choice to not ask again for 7 days
+        localStorage.setItem("lastUpdatePrompt", Date.now());
+        localStorage.setItem(
+          "updateDeferredVersion",
+          updateVersion.textContent.split(" ")[1]
+        );
+      });
+    </script>
+  </body>
+</html>
