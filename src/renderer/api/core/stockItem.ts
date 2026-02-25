@@ -169,6 +169,7 @@ class StockItemAPI {
   }): Promise<StockItemsResponse> {
     try {
       const response = await this.call<StockItemsResponse>('getAllStockItems', params || {});
+      console.log(response)
       if (response.status) return response;
       throw new Error(response.message || 'Failed to fetch stock items');
     } catch (error: any) {

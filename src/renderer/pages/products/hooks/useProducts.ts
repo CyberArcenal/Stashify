@@ -76,28 +76,22 @@ const useProducts = (initialFilters?: Partial<ProductFilters>): UseProductsRetur
     ...initialFilters,
   });
 
-  const isFetchingRef = useRef(false);
-  const isMountedRef = useRef(true);
+  const mountedRef = useRef(true);
   const stockCache = useRef<Map<number, number>>(new Map());
 
-  // Timeout helper
-  const callWithTimeout = async <T>(promise: Promise<T>, timeoutMs = 10000): Promise<T> => {
-    let timeoutId: number;
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      timeoutId = setTimeout(() => reject(new Error('Request timed out')), timeoutMs);
-    });
-    return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
-  };
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
-  // Load categories once with timeout
+  // Load categories once
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const response = await callWithTimeout(
-          categoryAPI.getAll({ sortBy: "name", sortOrder: "ASC", limit: 1000 }),
-          5000
-        );
-        if (response.status) {
+        const response = await categoryAPI.getAll({ sortBy: "name", sortOrder: "ASC", limit: 1000 });
+        if (response.status && mountedRef.current) {
           setCategories(response.data);
         }
       } catch (err) {
@@ -107,23 +101,17 @@ const useProducts = (initialFilters?: Partial<ProductFilters>): UseProductsRetur
     loadCategories();
   }, []);
 
-  useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
   const getTotalQuantity = useCallback(async (productId: number): Promise<number> => {
     if (stockCache.current.has(productId)) {
       return stockCache.current.get(productId)!;
     }
     try {
-      const response = await callWithTimeout(stockItemAPI.getByProduct(productId), 5000);
+      const response = await stockItemAPI.getByProduct(productId);
       const qty = response.status ? response.data.reduce((sum, item) => sum + item.quantity, 0) : 0;
       stockCache.current.set(productId, qty);
       return qty;
     } catch (err) {
-      console.error(`Failed to fetch stock for product ${productId}`, err);
+      console.error(`Failed to fetch stock for product ${productId}:`, err);
       return 0;
     }
   }, []);
@@ -134,68 +122,79 @@ const useProducts = (initialFilters?: Partial<ProductFilters>): UseProductsRetur
     return "in-stock";
   }, []);
 
-  useEffect(() => {
-    const loadProducts = async () => {
-      if (isFetchingRef.current) return;
-      isFetchingRef.current = true;
-      setLoading(true);
-      setError(null);
-      try {
-        const params: any = {
-          sortBy: sortConfig.key,
-          sortOrder: sortConfig.direction,
-        };
-        if (filters.search) params.search = filters.search;
-        if (filters.category_id) params.categoryId = parseInt(filters.category_id);
-        if (filters.is_published) params.is_published = filters.is_published === "true";
+  // Fetch products – defined as a reusable function
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-        const response = await callWithTimeout(productAPI.getAll(params), 10000);
-        if (!response.status) throw new Error(response.message);
-
-        const productsWithQuantity: ProductWithDetails[] = await Promise.all(
-          response.data.map(async (p) => {
-            const totalQty = await getTotalQuantity(p.id);
-            return {
-              ...p,
-              total_quantity: totalQty,
-              category_name: p.category?.name,
-              status: determineStatus(totalQty),
-            };
-          })
-        );
-
-        // Client-side filters
-        let filtered = productsWithQuantity;
-        if (filters.is_deleted === "true") {
-          filtered = filtered.filter(p => p.is_deleted === true);
-        } else if (filters.is_deleted === "false") {
-          filtered = filtered.filter(p => p.is_deleted === false);
-        }
-
-        if (filters.low_stock === "true") {
-          filtered = filtered.filter(p => p.total_quantity > 0 && p.total_quantity <= 5);
-        } else if (filters.low_stock === "false") {
-          filtered = filtered.filter(p => p.total_quantity > 5);
-        }
-
-        if (isMountedRef.current) {
-          setAllProducts(filtered);
-          setSelectedProducts([]);
-        }
-      } catch (err: any) {
-        if (isMountedRef.current) {
-          setError(err.message || "Failed to load products");
-        }
-      } finally {
-        if (isMountedRef.current) {
-          setLoading(false);
-        }
-        isFetchingRef.current = false;
+    try {
+      // Check API availability
+      if (!window.backendAPI?.product) {
+        throw new Error("Product API not available");
       }
-    };
+      if (!window.backendAPI?.stockItem) {
+        throw new Error("StockItem API not available");
+      }
 
-    const timer = setTimeout(loadProducts, 300);
-    return () => clearTimeout(timer);
+      const params: any = {
+        sortBy: sortConfig.key,
+        sortOrder: sortConfig.direction,
+      };
+      if (filters.search) params.search = filters.search;
+      if (filters.category_id) params.categoryId = parseInt(filters.category_id);
+      if (filters.is_published) params.is_published = filters.is_published === "true";
+
+      const response = await productAPI.getAll(params);
+      if (!response.status) throw new Error(response.message || "Failed to fetch products");
+
+      // Fetch stock for all products in parallel
+      const stockPromises = response.data.map(async (p) => {
+        const qty = await getTotalQuantity(p.id);
+        return { productId: p.id, quantity: qty };
+      });
+
+      const stockResults = await Promise.all(stockPromises);
+      const quantityMap = new Map(stockResults.map(r => [r.productId, r.quantity]));
+
+      const productsWithQuantity: ProductWithDetails[] = response.data.map((p) => {
+        const totalQty = quantityMap.get(p.id) ?? 0;
+        return {
+          ...p,
+          total_quantity: totalQty,
+          category_name: p.category?.name,
+          status: determineStatus(totalQty),
+        };
+      });
+
+      // Apply client-side filters
+      let filtered = productsWithQuantity;
+      if (filters.is_deleted === "true") {
+        filtered = filtered.filter(p => p.is_deleted === true);
+      } else if (filters.is_deleted === "false") {
+        filtered = filtered.filter(p => p.is_deleted === false);
+      }
+
+      if (filters.low_stock === "true") {
+        filtered = filtered.filter(p => p.total_quantity > 0 && p.total_quantity <= 5);
+      } else if (filters.low_stock === "false") {
+        filtered = filtered.filter(p => p.total_quantity > 5);
+      }
+
+      if (mountedRef.current) {
+        setAllProducts(filtered);
+        setSelectedProducts([]);
+        setError(null);
+      }
+    } catch (err: any) {
+      if (mountedRef.current) {
+        setError(err.message || "Failed to load products");
+        console.error("Product loading error:", err);
+      }
+    } finally {
+      if (mountedRef.current) {
+        setLoading(false);
+      }
+    }
   }, [
     filters.search,
     filters.category_id,
@@ -208,6 +207,12 @@ const useProducts = (initialFilters?: Partial<ProductFilters>): UseProductsRetur
     determineStatus,
   ]);
 
+  // Trigger fetch when dependencies change
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  // Sorting and pagination (unchanged)
   const sortedProducts = useMemo(() => {
     const sorted = [...allProducts];
     const { key, direction } = sortConfig;
@@ -291,10 +296,8 @@ const useProducts = (initialFilters?: Partial<ProductFilters>): UseProductsRetur
   }, []);
 
   const reload = useCallback(() => {
-    setCurrentPage(1);
-    // Trigger effect by forcing a re-run (filters are unchanged but effect will run due to debounce)
-    setFilters((prev) => ({ ...prev }));
-  }, []);
+    fetchProducts();
+  }, [fetchProducts]);
 
   const setPageSizeHandler = useCallback((size: number) => {
     setPageSize(size);

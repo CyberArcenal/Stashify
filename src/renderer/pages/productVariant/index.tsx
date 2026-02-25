@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Download, Filter, Package } from "lucide-react";
+import { Plus, Download, Filter, Package, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import useVariants from "./hooks/useVariants";
@@ -9,18 +9,18 @@ import useVariantView from "./hooks/useVariantView";
 import FilterBar from "./components/FilterBar";
 import VariantTable from "./components/VariantTable";
 import VariantFormDialog from "./components/VariantFormDialog";
-import VariantViewDialog from "./components/VariantViewDialog";import { dialogs } from "../../utils/dialogs";
+import VariantViewDialog from "./components/VariantViewDialog";
+import { dialogs } from "../../utils/dialogs";
 import productVariantAPI from "../../api/core/productVariant";
 import { showError, showInfo, showSuccess } from "../../utils/notification";
 import { variantExportAPI, type VariantExportParams } from "../../api/exports/variant";
 import Button from "../../components/UI/Button";
 import Pagination from "../../components/Shared/Pagination1";
 
-
 const VariantsPage: React.FC = () => {
   const {
     paginatedVariants,
-    variants,
+    allVariants,        // full list (all variants)
     filters,
     loading,
     error,
@@ -98,11 +98,8 @@ const VariantsPage: React.FC = () => {
     }
   };
 
-  // Restore – HINDI SUPPORTED ng productVariantAPI (wala sa update method ang is_deleted)
-  // Kaya ito ay inalis sa bulk actions.
-
   const handleExport = async () => {
-    if (variants?.length || 0 === 0) return;
+    if (pagination.count === 0) return;
     const confirmed = await dialogs.confirm({
       title: "Export Variants",
       message: `Export ${pagination.count} variants as ${exportFormat.toUpperCase()}?`,
@@ -152,8 +149,8 @@ const VariantsPage: React.FC = () => {
           </p>
         </div>
         <div className="flex flex-wrap gap-xs w-full sm:w-auto">
-          <button
-            className="compact-button rounded-md flex items-center transition-colors"
+           <button
+            className="compact-button rounded-md flex items-center transition-colors ease-in-out hover:scale-105 hover:shadow-md disabled:opacity-50"
             style={{
               backgroundColor: "var(--card-secondary-bg)",
               color: "var(--sidebar-text)",
@@ -163,17 +160,16 @@ const VariantsPage: React.FC = () => {
             <Filter className="icon-sm mr-xs" />
             Filters {showFilters ? "↑" : "↓"}
           </button>
-          <button
-            onClick={reload}
-            className="compact-button rounded-md flex items-center transition-colors"
-            style={{
-              backgroundColor: "var(--card-secondary-bg)",
-              color: "var(--sidebar-text)",
-            }}
-          >
-            <Download className="icon-sm mr-xs" />
-            Refresh
-          </button>
+           <button
+              onClick={reload}
+              disabled={loading}
+              className="btn btn-secondary btn-sm rounded-md flex items-center transition-all duration-200 ease-in-out hover:scale-105 hover:shadow-md disabled:opacity-50"
+            >
+              <RefreshCw
+                className={`icon-sm mr-1 ${loading ? "animate-spin" : ""}`}
+              />
+              {loading ? "Refreshing..." : "Refresh"}
+            </button>
 
           {/* Export */}
           <div
@@ -200,7 +196,7 @@ const VariantsPage: React.FC = () => {
             </div>
             <Button
               onClick={handleExport}
-              disabled={exportLoading || variants?.length || 0 === 0}
+              disabled={exportLoading || pagination.count === 0}
               className="compact-button rounded-md flex items-center gap-1 px-2 py-1 text-xs"
             >
               <Download className="icon-xs" />
@@ -220,8 +216,8 @@ const VariantsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Summary Banner */}
-      {variants?.length || 0 > 0 && (
+      {/* Summary Banner - only show if there are variants */}
+      {allVariants && allVariants.length > 0 && (
         <div
           className="mb-4 compact-card rounded-md border p-3 flex flex-wrap items-center justify-between gap-2"
           style={{
@@ -232,19 +228,19 @@ const VariantsPage: React.FC = () => {
           <div className="flex items-center gap-2 text-xs">
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-[var(--accent-green)]"></span>
-              {variants.filter((v: { is_active: any; }) => v.is_active).length} Active
+              {allVariants.filter((v: { is_active: any; }) => v.is_active).length} Active
             </span>
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-[var(--accent-orange)]"></span>
-              {variants.filter((v: { is_active: any; }) => !v.is_active).length} Inactive
+              {allVariants.filter((v: { is_active: any; }) => !v.is_active).length} Inactive
             </span>
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-[var(--accent-red)]"></span>
-              {variants.filter((v: { total_quantity: number; }) => v.total_quantity === 0).length} Out of Stock
+              {allVariants.filter((v: { total_quantity: number; }) => v.total_quantity === 0).length} Out of Stock
             </span>
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-[var(--accent-blue)]"></span>
-              {variants.filter((v: { total_quantity: number; }) => v.total_quantity > 0 && v.total_quantity <= 5).length} Low Stock
+              {allVariants.filter((v: { total_quantity: number; }) => v.total_quantity > 0 && v.total_quantity <= 5).length} Low Stock
             </span>
           </div>
           <div className="text-xs" style={{ color: "var(--text-secondary)" }}>
@@ -291,7 +287,6 @@ const VariantsPage: React.FC = () => {
             >
               Archive
             </button>
-            {/* Restore button inalis dahil hindi supported ng API */}
             <button
               className="compact-button bg-[var(--accent-red)] hover:bg-[var(--accent-red-hover)] text-white rounded-md"
               onClick={handleBulkDelete}
@@ -370,8 +365,8 @@ const VariantsPage: React.FC = () => {
             onDelete={handleDelete}
           />
 
-          {/* Empty State */}
-          {variants?.length || 0 === 0 && (
+          {/* Empty State - only show when there are no variants after filtering */}
+          {pagination.count === 0 && (
             <div
               className="text-center py-8 border rounded-md"
               style={{ borderColor: "var(--border-color)" }}
@@ -407,7 +402,7 @@ const VariantsPage: React.FC = () => {
           )}
 
           {/* Pagination */}
-          {variants?.length || 0 > 0 && pagination.total_pages > 1 && (
+          {pagination.count > 0 && pagination.total_pages > 1 && (
             <div className="mt-2">
               <Pagination
                 currentPage={currentPage}

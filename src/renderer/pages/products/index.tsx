@@ -1,6 +1,6 @@
 // src/renderer/pages/inventory/index.tsx
 import React, { useState } from "react";
-import { Plus, Download, Filter, Package } from "lucide-react";
+import { Plus, Download, Filter, Package, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import Button from "../../components/UI/Button";
 import Pagination from "../../components/Shared/Pagination1";
@@ -176,7 +176,7 @@ const ProductsPage: React.FC = () => {
         </div>
         <div className="flex flex-wrap gap-xs w-full sm:w-auto">
           <button
-            className="compact-button rounded-md flex items-center transition-colors"
+            className="compact-button rounded-md flex items-center transition-colors ease-in-out hover:scale-105 hover:shadow-md disabled:opacity-50"
             style={{
               backgroundColor: "var(--card-secondary-bg)",
               color: "var(--sidebar-text)",
@@ -186,17 +186,16 @@ const ProductsPage: React.FC = () => {
             <Filter className="icon-sm mr-xs" />
             Filters {showFilters ? "↑" : "↓"}
           </button>
-          <button
-            onClick={reload}
-            className="compact-button rounded-md flex items-center transition-colors"
-            style={{
-              backgroundColor: "var(--card-secondary-bg)",
-              color: "var(--sidebar-text)",
-            }}
-          >
-            <Download className="icon-sm mr-xs" />
-            Refresh
-          </button>
+           <button
+              onClick={reload}
+              disabled={loading}
+              className="btn btn-secondary btn-sm rounded-md flex items-center transition-all duration-200 ease-in-out hover:scale-105 hover:shadow-md disabled:opacity-50"
+            >
+              <RefreshCw
+                className={`icon-sm mr-1 ${loading ? "animate-spin" : ""}`}
+              />
+              {loading ? "Refreshing..." : "Refresh"}
+            </button>
 
           {/* Export */}
           <div

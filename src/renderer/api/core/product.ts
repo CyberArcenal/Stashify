@@ -195,6 +195,7 @@ class ProductAPI {
   }): Promise<ProductsResponse> {
     try {
       const response = await this.call<ProductsResponse>('getAllProducts', params || {});
+      console.log(response)
       if (response.status) return response;
       throw new Error(response.message || 'Failed to fetch products');
     } catch (error: any) {
