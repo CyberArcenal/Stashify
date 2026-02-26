@@ -566,6 +566,7 @@ class ProductExportHandler {
         doc.fontSize(11).text("No products found.", { align: "center" });
         doc.end();
         await new Promise((resolve, reject) => {
+          // @ts-ignore
           writeStream.on("finish", resolve);
           writeStream.on("error", reject);
         });
@@ -735,6 +736,7 @@ class ProductExportHandler {
 
       // Wait for write to complete
       await new Promise((resolve, reject) => {
+        // @ts-ignore
         writeStream.on("finish", resolve);
         writeStream.on("error", reject);
       });

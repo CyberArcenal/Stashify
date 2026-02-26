@@ -42,6 +42,7 @@ export interface backendAPI {
   auditExport: (payload: any) => Promise<any>;
   inventoryExport: (payload: any) => Promise<any>;
   inventoryLogExport: (payload: any) => Promise<any>;
+  customerExport: (payload: any) => Promise<any>;
   orderExport: (payload: any) => Promise<any>;
   stockMovementExport: (payload: any) => Promise<any>;
   productExport: (payload: any) => Promise<any>;

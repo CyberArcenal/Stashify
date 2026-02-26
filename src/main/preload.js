@@ -53,6 +53,7 @@ contextBridge.exposeInMainWorld("backendAPI", {
 
   // Exports
   auditExport: (payload) => ipcRenderer.invoke("auditExport", payload),
+  customerExport: (payload) => ipcRenderer.invoke("customerExport", payload),
   inventoryLogExport: (payload) => ipcRenderer.invoke("inventoryLogExport", payload),
   inventoryExport: (payload) => ipcRenderer.invoke("inventoryExport", payload),
   lowStockExport: (payload) => ipcRenderer.invoke("lowStockExport", payload),
