@@ -88,7 +88,7 @@ export default function WarehouseSettingsPage() {
     priority: 1,
   });
   const [testData, setTestData] = useState<TestDeductionRequest>({
-    product_id: 0,
+    productId: 0,
     quantity: 10,
   });
   const [testResult, setTestResult] = useState<TestDeductionResult | null>(
@@ -228,7 +228,7 @@ export default function WarehouseSettingsPage() {
 
   // Test deduction strategy
   const handleTestDeduction = async () => {
-    if (!settings || !testData.product_id || testData.quantity <= 0) {
+    if (!settings || !testData.productId || testData.quantity <= 0) {
       showError("Please provide valid product ID and quantity");
       return;
     }
@@ -855,10 +855,10 @@ export default function WarehouseSettingsPage() {
                 </label>
                 <input
                   type="number"
-                  value={testData.product_id || ""}
+                  value={testData.productId || ""}
                   onChange={(e) =>
                     handleTestDataChange(
-                      "product_id",
+                      "productId",
                       parseInt(e.target.value) || 0,
                     )
                   }
@@ -889,7 +889,7 @@ export default function WarehouseSettingsPage() {
                 <button
                   onClick={handleTestDeduction}
                   disabled={
-                    testing || !testData.product_id || testData.product_id === 0
+                    testing || !testData.productId || testData.productId === 0
                   }
                   className="w-full px-3 py-2 bg-[var(--warning-color)] text-[var(--sidebar-text)] rounded-md hover:bg-[var(--accent-orange-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-1"
                 >

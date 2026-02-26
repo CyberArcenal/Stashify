@@ -14,8 +14,8 @@ class WarehouseExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "InventoryPro",
-      "warehouse_exports"
+      "stashly",
+      "warehouse_exports",
     );
 
     // Create export directory if it doesn't exist
@@ -35,7 +35,7 @@ class WarehouseExportHandler {
       console.warn(
         "ExcelJS not available for enhanced Excel export:",
         // @ts-ignore
-        error.message
+        error.message,
       );
     }
   }
@@ -183,7 +183,7 @@ class WarehouseExportHandler {
     const lowStockSubQuery = stockRepo
       .createQueryBuilder("si")
       .select("COUNT(DISTINCT si.id)")
-      .where("si.warehouse_id = w.id")
+      .where("si.warehouseId = w.id")
       .andWhere("si.quantity > 0")
       .andWhere("si.quantity <= si.reorder_level")
       .andWhere("si.is_deleted = 0");
@@ -192,7 +192,7 @@ class WarehouseExportHandler {
     const outOfStockSubQuery = stockRepo
       .createQueryBuilder("si")
       .select("COUNT(DISTINCT si.id)")
-      .where("si.warehouse_id = w.id")
+      .where("si.warehouseId = w.id")
       .andWhere("si.quantity = 0")
       .andWhere("si.is_deleted = 0");
 
@@ -233,7 +233,7 @@ class WarehouseExportHandler {
       const searchTerm = `%${params.search}%`;
       queryBuilder.andWhere(
         "(w.name LIKE :search OR w.location LIKE :search)",
-        { search: searchTerm }
+        { search: searchTerm },
       );
     }
 
@@ -343,7 +343,7 @@ class WarehouseExportHandler {
     csvContent.push(`Generated: ${new Date().toLocaleString()}`);
     csvContent.push(`Total Warehouses: ${data.analytics.totalWarehouses}`);
     csvContent.push(
-      `Active: ${data.analytics.activeWarehouses} | Inactive: ${data.analytics.inactiveWarehouses}`
+      `Active: ${data.analytics.activeWarehouses} | Inactive: ${data.analytics.inactiveWarehouses}`,
     );
     csvContent.push(`Total Stock Items: ${data.analytics.totalStockItems}`);
     csvContent.push(`Total Quantity: ${data.analytics.totalQuantity}`);
@@ -671,7 +671,7 @@ class WarehouseExportHandler {
           `Generated: ${new Date().toLocaleDateString()} | Total: ${data.analytics.totalWarehouses} warehouses`,
           {
             align: "center",
-          }
+          },
         );
 
       // Analytics summary
@@ -683,7 +683,7 @@ class WarehouseExportHandler {
         .text(
           `Active: ${data.analytics.activeWarehouses} | Inactive: ${data.analytics.inactiveWarehouses} | ` +
             `Stock Items: ${data.analytics.totalStockItems} | Low Stock: ${data.analytics.totalLowStock} | ` +
-            `Out of Stock: ${data.analytics.totalOutOfStock}`
+            `Out of Stock: ${data.analytics.totalOutOfStock}`,
         );
 
       doc.moveDown(0.5);
@@ -996,7 +996,7 @@ if (ipcMain) {
   });
 } else {
   console.warn(
-    "ipcMain is not available - running in non-Electron environment"
+    "ipcMain is not available - running in non-Electron environment",
   );
 }
 

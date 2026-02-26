@@ -52,7 +52,6 @@ const IconTemplates = {
   `,
 };
 
-// Updated IconColors to use POS Management dark theme variables
 const IconColors: Record<ConfirmIconType, string> = {
   question: "text-[var(--info-color)] bg-[var(--status-processing-bg)]",
   warning: "text-[var(--warning-color)] bg-[var(--status-pending-bg)]",
@@ -64,7 +63,14 @@ const IconColors: Record<ConfirmIconType, string> = {
 class DialogManager {
   private static instance: DialogManager;
   private container: HTMLDivElement | null = null;
-  private activeDialogs: Set<HTMLDivElement> = new Set();
+  private currentConfirm: {
+    element: HTMLDivElement;
+    resolve: (value: boolean) => void;
+  } | null = null;
+  private currentAlert: {
+    element: HTMLDivElement;
+    resolve: () => void;
+  } | null = null;
 
   private constructor() {
     this.injectGlobalStyles();
@@ -190,7 +196,33 @@ class DialogManager {
     `;
   }
 
+  // Close any existing confirm dialog and resolve it as cancelled
+  private closeCurrentConfirm(): void {
+    if (this.currentConfirm) {
+      const { element, resolve } = this.currentConfirm;
+      // Remove without animation to avoid delay
+      element.remove();
+      // Resolve as false (cancelled)
+      resolve(false);
+      this.currentConfirm = null;
+    }
+  }
+
+  // Close any existing alert dialog and resolve it
+  private closeCurrentAlert(): void {
+    if (this.currentAlert) {
+      const { element, resolve } = this.currentAlert;
+      element.remove();
+      resolve();
+      this.currentAlert = null;
+    }
+  }
+
   public showConfirm(options: ConfirmOptions = {}): Promise<boolean> {
+    // Close any existing dialogs first
+    this.closeCurrentConfirm();
+    this.closeCurrentAlert();
+
     this.createContainer();
 
     return new Promise((resolve) => {
@@ -257,7 +289,7 @@ class DialogManager {
       // Append to container
       this.container!.appendChild(backdrop);
       this.container!.appendChild(dialog);
-      this.activeDialogs.add(dialog);
+      this.currentConfirm = { element: dialog, resolve };
 
       // Animate in backdrop first
       requestAnimationFrame(() => {
@@ -272,6 +304,9 @@ class DialogManager {
 
       // Event handlers
       const cleanup = () => {
+        if (this.currentConfirm?.element === dialog) {
+          this.currentConfirm = null;
+        }
         // Animate out backdrop
         backdrop.classList.remove("backdrop-enter-active");
         backdrop.classList.add("backdrop-exit-active");
@@ -280,9 +315,8 @@ class DialogManager {
         this.animateOut(dialog, () => {
           dialog.remove();
           backdrop.remove();
-          this.activeDialogs.delete(dialog);
 
-          if (this.container && this.activeDialogs.size === 0) {
+          if (this.container && !this.currentConfirm && !this.currentAlert) {
             this.container.remove();
             this.container = null;
           }
@@ -336,6 +370,10 @@ class DialogManager {
   }
 
   public showAlert(options: AlertOptions): Promise<void> {
+    // Close any existing dialogs first
+    this.closeCurrentConfirm();
+    this.closeCurrentAlert();
+
     this.createContainer();
 
     return new Promise((resolve) => {
@@ -378,7 +416,7 @@ class DialogManager {
       // Append to container
       this.container!.appendChild(backdrop);
       this.container!.appendChild(dialog);
-      this.activeDialogs.add(dialog);
+      this.currentAlert = { element: dialog, resolve };
 
       // Animate in backdrop first
       requestAnimationFrame(() => {
@@ -393,6 +431,9 @@ class DialogManager {
 
       // Event handlers
       const cleanup = () => {
+        if (this.currentAlert?.element === dialog) {
+          this.currentAlert = null;
+        }
         // Animate out backdrop
         backdrop.classList.remove("backdrop-enter-active");
         backdrop.classList.add("backdrop-exit-active");
@@ -401,9 +442,8 @@ class DialogManager {
         this.animateOut(dialog, () => {
           dialog.remove();
           backdrop.remove();
-          this.activeDialogs.delete(dialog);
 
-          if (this.container && this.activeDialogs.size === 0) {
+          if (this.container && !this.currentConfirm && !this.currentAlert) {
             this.container.remove();
             this.container = null;
           }
@@ -436,15 +476,8 @@ class DialogManager {
   }
 
   public closeAllDialogs(): void {
-    this.activeDialogs.forEach((dialog) => {
-      dialog.remove();
-    });
-    this.activeDialogs.clear();
-
-    if (this.container) {
-      this.container.remove();
-      this.container = null;
-    }
+    this.closeCurrentConfirm();
+    this.closeCurrentAlert();
   }
 }
 
@@ -470,7 +503,6 @@ export const dialogs = {
   alert: showAlert,
   closeAll: closeAllDialogs,
 
-  // Pre-configured dialogs
   delete: (itemName?: string) =>
     showConfirm({
       title: "Delete Confirmation",

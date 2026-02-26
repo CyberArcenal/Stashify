@@ -37,7 +37,7 @@ interface ProductWithDetails extends ProductData {
 
 interface Filters {
   search: string;
-  category_id: string;
+  categoryId: string;
   is_published: string;
   has_discount: string;
   low_stock: string;
@@ -75,7 +75,7 @@ const ProductsPage: React.FC = () => {
 
   const [filters, setFilters] = useState<Filters>({
     search: "",
-    category_id: "",
+    categoryId: "",
     is_published: "",
     has_discount: "",
     low_stock: "",
@@ -116,7 +116,7 @@ const ProductsPage: React.FC = () => {
     loadProducts(1);
   }, [
     debouncedSearch,
-    filters.category_id,
+    filters.categoryId,
     filters.is_published,
     filters.has_discount,
     filters.low_stock,
@@ -154,8 +154,8 @@ const ProductsPage: React.FC = () => {
       }
 
       // Add category filter
-      if (filters.category_id) {
-        searchParams.category_id = parseInt(filters.category_id);
+      if (filters.categoryId) {
+        searchParams.categoryId = parseInt(filters.categoryId);
       }
 
       // Add published status filter
@@ -249,7 +249,7 @@ const ProductsPage: React.FC = () => {
   const resetFilters = () => {
     setFilters({
       search: "",
-      category_id: "",
+      categoryId: "",
       is_published: "",
       has_discount: "",
       low_stock: "",
@@ -448,9 +448,8 @@ const ProductsPage: React.FC = () => {
 
       const exportParams: ProductExportParams = {
         format: exportFormat,
-        category: filters.category_id
-          ? categories.find((c) => c.id.toString() === filters.category_id)
-              ?.name
+        category: filters.categoryId
+          ? categories.find((c) => c.id.toString() === filters.categoryId)?.name
           : undefined,
         status: filters.status as "published" | "unpublished" | undefined,
         low_stock: filters.low_stock as "true" | "false" | undefined,
@@ -764,10 +763,8 @@ const ProductsPage: React.FC = () => {
               Category
             </label>
             <select
-              value={filters.category_id}
-              onChange={(e) =>
-                handleFilterChange("category_id", e.target.value)
-              }
+              value={filters.categoryId}
+              onChange={(e) => handleFilterChange("categoryId", e.target.value)}
               className="compact-input w-full border rounded-md"
               style={{
                 backgroundColor: "var(--card-bg)",

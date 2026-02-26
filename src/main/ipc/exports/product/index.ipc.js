@@ -22,7 +22,7 @@ class ProductExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "InventoryPro",
+      "stashly",
       "product_exports",
     );
 
@@ -194,7 +194,7 @@ class ProductExportHandler {
       .subQuery()
       .select("COUNT(*)")
       .from(ProductVariant, "pv")
-      .where("pv.product_id = p.id")
+      .where("pv.productId = p.id")
       .andWhere("pv.is_deleted = 0")
       .getQuery();
 
@@ -204,8 +204,8 @@ class ProductExportHandler {
       .subQuery()
       .select("COALESCE(SUM(si.quantity), 0)")
       .from(StockItem, "si")
-      .where("si.product_id = p.id")
-      .andWhere("si.variant_id IS NULL")
+      .where("si.productId = p.id")
+      .andWhere("si.variantId IS NULL")
       .getQuery();
 
     // Subquery for variant stock (sum over all variants)
@@ -215,8 +215,8 @@ class ProductExportHandler {
       .select("COALESCE(SUM(si.quantity), 0)")
       .from(StockItem, "si")
       // @ts-ignore
-      .innerJoin(ProductVariant, "pv", "si.variant_id = pv.id")
-      .where("pv.product_id = p.id")
+      .innerJoin(ProductVariant, "pv", "si.variantId = pv.id")
+      .where("pv.productId = p.id")
       .getQuery();
 
     // Build main query
@@ -242,7 +242,7 @@ class ProductExportHandler {
 
     // Apply filters
     if (params.category) {
-      queryBuilder.andWhere("p.category_id = :categoryId", {
+      queryBuilder.andWhere("p.categoryId = :categoryId", {
         categoryId: params.category,
       });
     }

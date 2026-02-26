@@ -42,7 +42,7 @@ module.exports = async (params = {}) => {
     // Compute summary and metrics
     const summary = await getSummary({ category, dateRange });
     // @ts-ignore
-    const performanceMetrics = getPerformanceMetrics(stockByCategory, stockMovements, summary);
+    const performanceMetrics = getPerformanceMetrics(stockByCategory, summary.stockTurnoverRate);
     const metadata = getMetadata({ dateRange, params });
 
     const reportData = {

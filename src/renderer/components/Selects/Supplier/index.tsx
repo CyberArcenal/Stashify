@@ -244,8 +244,8 @@ const SupplierSelect: React.FC<SupplierSelectProps> = ({
                     onClick={() => handleSelect(supplier)}
                     className={`
                       w-full px-3 py-2 text-left flex items-center gap-2
-                      transition-colors text-sm cursor-pointer hover:bg-gray-800
-                      ${supplier.id === value ? "bg-gray-800" : ""}
+                      transition-colors text-sm cursor-pointer hover:bg-[var(--card-hover-bg)]
+                      ${supplier.id === value ? "bg-[var(--accent-blue-light)]" : ""}
                     `}
                     style={{ borderBottom: "1px solid var(--border-color)" }}
                   >

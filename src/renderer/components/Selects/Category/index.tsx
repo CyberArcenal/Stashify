@@ -137,7 +137,7 @@ const CategorySelect: React.FC<CategorySelectProps> = ({
         className={`
           w-full px-4 py-2 rounded-lg text-left flex items-center gap-2
           transition-colors duration-200
-          ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-gray-800"}
+          ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-[var(--card-hover-bg)]"}
         `}
         style={{
           backgroundColor: "var(--card-bg)",
@@ -167,7 +167,7 @@ const CategorySelect: React.FC<CategorySelectProps> = ({
           <button
             type="button"
             onClick={handleClear}
-            className="p-1 rounded-full hover:bg-gray-700 transition-colors flex-shrink-0"
+            className="p-1 rounded-full hover:bg-[var(--card-hover-bg)] transition-colors flex-shrink-0"
             style={{ color: "var(--text-secondary)" }}
             title="Remove selected"
           >
@@ -238,24 +238,26 @@ const CategorySelect: React.FC<CategorySelectProps> = ({
                     onClick={() => handleSelect(category)}
                     className={`
                       w-full px-3 py-2 text-left flex items-center gap-2
-                      transition-colors text-sm cursor-pointer hover:bg-gray-800
-                      ${category.id === value ? "bg-gray-800" : ""}
+                      transition-colors text-sm cursor-pointer hover:bg-[var(--card-hover-bg)]
+                      ${category.id === value ? "bg-[var(--accent-blue-light)]" : ""}
                     `}
                     style={{ borderBottom: "1px solid var(--border-color)" }}
                   >
                     <Tag className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "var(--primary-color)" }} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium truncate" style={{ color: "var(--text-secondary)" }}>
+                        <span className="font-medium truncate" style={{ color: "var(--text-primary)" }}>
                           {category.name}
                         </span>
                         <span
                           className="px-1.5 py-0.5 text-xs rounded-full flex-shrink-0"
                           style={{
                             backgroundColor: category.is_active
-                              ? "var(--status-completed-bg)"
-                              : "var(--status-cancelled-bg)",
-                            color: category.is_active ? "var(--status-completed)" : "var(--status-cancelled)",
+                              ? "var(--status-success-bg)"
+                              : "var(--status-inactive-bg)",
+                            color: category.is_active
+                              ? "var(--status-success-text)"
+                              : "var(--status-inactive-text)",
                           }}
                         >
                           {category.is_active ? "Active" : "Inactive"}

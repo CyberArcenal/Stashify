@@ -9,9 +9,9 @@ interface UseAdjustmentFormProps {
 }
 
 interface AdjustmentFormState {
-  product_id: number | null;
-  variant_id: number | null;
-  warehouse_id: number | null;
+  productId: number | null;
+  variantId: number | null;
+  warehouseId: number | null;
   quantity: number;
   reason: string;
   adjustmentType: "manual" | "correction" | "damage" | "return";
@@ -23,17 +23,22 @@ export interface UseAdjustmentFormReturn extends AdjustmentFormState {
   stockItemId: number | null;
   quickActions: { label: string; value: number }[];
   adjustmentTypes: { value: string; label: string }[];
-  setField: <K extends keyof AdjustmentFormState>(key: K, value: AdjustmentFormState[K]) => void;
+  setField: <K extends keyof AdjustmentFormState>(
+    key: K,
+    value: AdjustmentFormState[K],
+  ) => void;
   handleQuickAction: (value: number) => void;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   reset: () => void;
 }
 
-const useAdjustmentForm = ({ onSuccess }: UseAdjustmentFormProps): UseAdjustmentFormReturn => {
+const useAdjustmentForm = ({
+  onSuccess,
+}: UseAdjustmentFormProps): UseAdjustmentFormReturn => {
   const [form, setForm] = useState<AdjustmentFormState>({
-    product_id: null,
-    variant_id: null,
-    warehouse_id: null,
+    productId: null,
+    variantId: null,
+    warehouseId: null,
     quantity: 0,
     reason: "",
     adjustmentType: "manual",
@@ -60,22 +65,23 @@ const useAdjustmentForm = ({ onSuccess }: UseAdjustmentFormProps): UseAdjustment
   // Update current stock when product/variant/warehouse changes
   useEffect(() => {
     const fetchCurrentStock = async () => {
-      if (!form.product_id || !form.warehouse_id) {
+      if (!form.productId || !form.warehouseId) {
         setCurrentStock(0);
         setStockItemId(null);
         return;
       }
 
       try {
-        const response = await stockItemAPI.getByProduct(form.product_id);
-          console.log("product response", response)
+        const response = await stockItemAPI.getByProduct(form.productId);
+        console.log("product response", response);
         if (!response.status) throw new Error(response.message);
-      
 
         const match = response.data.find(
           (item) =>
-            item.warehouse_id === form.warehouse_id &&
-            (form.variant_id ? item.variant_id === form.variant_id : !item.variant_id)
+            item.warehouseId === form.warehouseId &&
+            (form.variantId
+              ? item.variantId === form.variantId
+              : !item.variantId),
         );
 
         if (match) {
@@ -93,31 +99,42 @@ const useAdjustmentForm = ({ onSuccess }: UseAdjustmentFormProps): UseAdjustment
     };
 
     fetchCurrentStock();
-  }, [form.product_id, form.variant_id, form.warehouse_id]);
+  }, [form.productId, form.variantId, form.warehouseId]);
 
-  const setField = <K extends keyof AdjustmentFormState>(key: K, value: AdjustmentFormState[K]) => {
-    setForm(prev => ({ ...prev, [key]: value }));
+  const setField = <K extends keyof AdjustmentFormState>(
+    key: K,
+    value: AdjustmentFormState[K],
+  ) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleQuickAction = (value: number) => {
-    setForm(prev => ({ ...prev, quantity: prev.quantity + value }));
-    showToast(`Quick adjustment: ${value > 0 ? "+" : ""}${value}`, "info", { duration: 2000 });
+    setForm((prev) => ({ ...prev, quantity: prev.quantity + value }));
+    showToast(`Quick adjustment: ${value > 0 ? "+" : ""}${value}`, "info", {
+      duration: 2000,
+    });
   };
 
   const validate = (): boolean => {
     const errors: string[] = [];
 
-    if (!form.product_id) errors.push("• Please select a product");
-    if (!form.warehouse_id) errors.push("• Please select a warehouse");
+    if (!form.productId) errors.push("• Please select a product");
+    if (!form.warehouseId) errors.push("• Please select a warehouse");
     if (form.quantity === 0) errors.push("• Quantity cannot be zero");
     if (!form.reason.trim()) errors.push("• Please provide a reason");
     if (form.quantity < 0 && Math.abs(form.quantity) > currentStock) {
-      errors.push(`• Cannot decrease more than current stock (${currentStock} units)`);
+      errors.push(
+        `• Cannot decrease more than current stock (${currentStock} units)`,
+      );
     }
-    if (!stockItemId) errors.push("• Stock item not found for the selected combination");
+    if (!stockItemId)
+      errors.push("• Stock item not found for the selected combination");
 
     if (errors.length > 0) {
-      dialogs.error("Validation Error", `Please fix the following issues:\n\n${errors.join("\n")}`);
+      dialogs.error(
+        "Validation Error",
+        `Please fix the following issues:\n\n${errors.join("\n")}`,
+      );
       return false;
     }
     return true;
@@ -139,7 +156,9 @@ const useAdjustmentForm = ({ onSuccess }: UseAdjustmentFormProps): UseAdjustment
 
     setSubmitting(true);
     try {
-      const typeLabel = adjustmentTypes.find(t => t.value === form.adjustmentType)?.label || "";
+      const typeLabel =
+        adjustmentTypes.find((t) => t.value === form.adjustmentType)?.label ||
+        "";
       const fullReason = `${typeLabel}: ${form.reason}`;
 
       const response = await stockItemAPI.adjust({
@@ -151,13 +170,16 @@ const useAdjustmentForm = ({ onSuccess }: UseAdjustmentFormProps): UseAdjustment
       if (!response.status) throw new Error(response.message);
 
       showSuccess(
-        `Stock adjustment successful! ${form.quantity > 0 ? "Added" : "Removed"} ${Math.abs(form.quantity)} units.`
+        `Stock adjustment successful! ${form.quantity > 0 ? "Added" : "Removed"} ${Math.abs(form.quantity)} units.`,
       );
 
       reset();
       onSuccess();
     } catch (error: any) {
-      dialogs.error("Adjustment Failed", error.message || "Failed to process adjustment.");
+      dialogs.error(
+        "Adjustment Failed",
+        error.message || "Failed to process adjustment.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -165,9 +187,9 @@ const useAdjustmentForm = ({ onSuccess }: UseAdjustmentFormProps): UseAdjustment
 
   const reset = () => {
     setForm({
-      product_id: null,
-      variant_id: null,
-      warehouse_id: null,
+      productId: null,
+      variantId: null,
+      warehouseId: null,
       quantity: 0,
       reason: "",
       adjustmentType: "manual",

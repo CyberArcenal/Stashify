@@ -7,7 +7,6 @@ const { AppDataSource } = require("../../../db/datasource");
 const { getGeneralCurrencySign } = require("../../../../utils/settings/system");
 const { lowStockHandler } = require("../../reports/lowStock/index.ipc");
 
-
 let currency = "$";
 (async () => {
   // @ts-ignore
@@ -20,8 +19,8 @@ class LowStockExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "InventoryPro",
-      "low_stock_exports"
+      "stashly",
+      "low_stock_exports",
     );
 
     // Create export directory if it doesn't exist
@@ -69,7 +68,7 @@ class LowStockExportHandler {
       console.warn(
         "ExcelJS not available for enhanced Excel export:",
         // @ts-ignore
-        error.message
+        error.message,
       );
     }
   }
@@ -246,7 +245,7 @@ class LowStockExportHandler {
       // Transform the data to match the expected format
       const transformedData = await this._transformLowStockData(
         lowStockData,
-        params
+        params,
       );
 
       return transformedData;
@@ -274,7 +273,7 @@ class LowStockExportHandler {
     // Transform stock items
     const transformedItems = stockItems.map(
       (
-        /** @type {{ id: any; product: any; sku: any; variant: any; category: string; warehouse: any; warehouseLocation: any; currentStock: any; reorderLevel: any; adjustedReorderLevel: any; costPerItem: number; netPrice: number; stockValue: any; status: string; salesVelocity: any; daysOfSupply: any; urgencyScore: any; stockRatio: any; itemType: any; lastUpdated: any; supplier: any; deductionStrategy: any; allowNegativeStock: any; otherWarehouses: any; }} */ item
+        /** @type {{ id: any; product: any; sku: any; variant: any; category: string; warehouse: any; warehouseLocation: any; currentStock: any; reorderLevel: any; adjustedReorderLevel: any; costPerItem: number; netPrice: number; stockValue: any; status: string; salesVelocity: any; daysOfSupply: any; urgencyScore: any; stockRatio: any; itemType: any; lastUpdated: any; supplier: any; deductionStrategy: any; allowNegativeStock: any; otherWarehouses: any; }} */ item,
       ) => ({
         id: item.id,
         product_name: item.product,
@@ -314,13 +313,13 @@ class LowStockExportHandler {
         deduction_strategy: item.deductionStrategy,
         allow_negative_stock: item.allowNegativeStock,
         other_warehouses: item.otherWarehouses || [],
-      })
+      }),
     );
 
     // Calculate analytics from summary
     const analytics = this._calculateAnalyticsFromSummary(
       summary,
-      transformedItems
+      transformedItems,
     );
 
     return {
@@ -420,7 +419,7 @@ class LowStockExportHandler {
         : 0;
 
     const immediateAttentionItems = items.filter((item) =>
-      ["Out of Stock", "Critical"].includes(item.stock_status)
+      ["Out of Stock", "Critical"].includes(item.stock_status),
     ).length;
 
     const riskLevel = this._getRiskLevel(items.length, summary.totalStockItems);
@@ -455,10 +454,10 @@ class LowStockExportHandler {
           percentage:
             summary.totalStockItems > 0
               ? parseFloat(
-                  ((data.count / summary.totalStockItems) * 100).toFixed(1)
+                  ((data.count / summary.totalStockItems) * 100).toFixed(1),
                 )
               : 0,
-        })
+        }),
       ),
       warehouse_breakdown: Object.entries(warehouseBreakdown).map(
         ([warehouse, data]) => ({
@@ -469,7 +468,7 @@ class LowStockExportHandler {
             data.count > 0
               ? parseFloat((data.stock_sum / data.count).toFixed(1))
               : 0,
-        })
+        }),
       ),
       status_distribution: statusDistribution,
     };
@@ -496,7 +495,7 @@ class LowStockExportHandler {
     csvContent.push(`Total Items Analyzed,${data.summary.totalStockItems}`);
     csvContent.push(`Low Stock Items Found,${data.summary.lowStockCount}`);
     csvContent.push(
-      `Threshold Multiplier,${data.filters.threshold_multiplier}x`
+      `Threshold Multiplier,${data.filters.threshold_multiplier}x`,
     );
     csvContent.push(`Risk Level,${data.analytics.risk_level}`);
     csvContent.push(`Currency,${data.metadata.currency}`);
@@ -596,19 +595,19 @@ class LowStockExportHandler {
         // @ts-ignore
         const color = this.STATUS_COLORS[status]?.argb || "CCCCCC";
         csvContent.push([status, count, `${percentage}%`, color].join(","));
-      }
+      },
     );
     csvContent.push("");
 
     // Category Breakdown
     csvContent.push("📦 CATEGORY BREAKDOWN");
     csvContent.push(
-      "Category,Low Stock Items,Percentage,Total Value,Avg Urgency,Avg Profit Margin"
+      "Category,Low Stock Items,Percentage,Total Value,Avg Urgency,Avg Profit Margin",
     );
 
     data.analytics.category_breakdown.forEach(
       (
-        /** @type {{ category: any; count: any; percentage: number; total_value: number; average_urgency: number; average_profit_margin: number; }} */ breakdown
+        /** @type {{ category: any; count: any; percentage: number; total_value: number; average_urgency: number; average_profit_margin: number; }} */ breakdown,
       ) => {
         csvContent.push(
           [
@@ -618,9 +617,9 @@ class LowStockExportHandler {
             this._formatCurrency(breakdown.total_value),
             breakdown.average_urgency.toFixed(1),
             `${breakdown.average_profit_margin.toFixed(1)}%`,
-          ].join(",")
+          ].join(","),
         );
-      }
+      },
     );
     csvContent.push("");
 
@@ -649,12 +648,12 @@ class LowStockExportHandler {
         "Supplier",
         "Item Type",
         "Last Updated",
-      ].join(",")
+      ].join(","),
     );
 
     // Sort by urgency score (highest first)
     const sortedItems = [...data.low_stock_items].sort(
-      (a, b) => b.urgency_score - a.urgency_score
+      (a, b) => b.urgency_score - a.urgency_score,
     );
 
     sortedItems.forEach((item) => {
@@ -681,7 +680,7 @@ class LowStockExportHandler {
           `"${item.supplier}"`,
           item.item_type,
           item.last_updated.substring(0, 10),
-        ].join(",")
+        ].join(","),
       );
     });
     csvContent.push("");
@@ -692,7 +691,7 @@ class LowStockExportHandler {
 
     data.recommendations.forEach(
       (
-        /** @type {{ priority: any; type: any; title: any; action: any; description: any; }} */ rec
+        /** @type {{ priority: any; type: any; title: any; action: any; description: any; }} */ rec,
       ) => {
         csvContent.push(
           [
@@ -701,18 +700,18 @@ class LowStockExportHandler {
             `"${rec.title}"`,
             `"${rec.action}"`,
             `"${rec.description}"`,
-          ].join(",")
+          ].join(","),
         );
-      }
+      },
     );
     csvContent.push("");
 
     // Footer
     csvContent.push("🏁 REPORT FOOTER");
-    csvContent.push("Generated by,InventoryPro Management System v2.0");
+    csvContent.push("Generated by,stashly Management System v2.0");
     csvContent.push("Data Source,Product Inventory Database");
     csvContent.push(
-      "Report Type,Low Stock Analysis - Per Warehouse Stock Items"
+      "Report Type,Low Stock Analysis - Per Warehouse Stock Items",
     );
     csvContent.push("Confidentiality,Internal Use Only");
     csvContent.push("Next Review,Next 7 Days");
@@ -744,7 +743,7 @@ class LowStockExportHandler {
       const filepath = path.join(this.EXPORT_DIR, filename);
 
       const workbook = new this.excelJS.Workbook();
-      workbook.creator = "InventoryPro Management System";
+      workbook.creator = "stashly Management System";
       workbook.created = new Date();
 
       // ==================== COVER PAGE ====================
@@ -975,7 +974,7 @@ class LowStockExportHandler {
 
       // Add data rows with conditional formatting
       const sortedItems = [...data.low_stock_items].sort(
-        (a, b) => b.urgency_score - a.urgency_score
+        (a, b) => b.urgency_score - a.urgency_score,
       );
 
       sortedItems.forEach((item, index) => {
@@ -1063,7 +1062,7 @@ class LowStockExportHandler {
       data.analytics.category_breakdown.forEach(
         (
           /** @type {{ category: any; count: any; percentage: number; total_value: number; average_urgency: number; average_profit_margin: number; }} */ category,
-          /** @type {any} */ index
+          /** @type {any} */ index,
         ) => {
           analyticsSheet.addRow([
             category.category,
@@ -1073,7 +1072,7 @@ class LowStockExportHandler {
             category.average_urgency.toFixed(1),
             `${category.average_profit_margin.toFixed(1)}%`,
           ]);
-        }
+        },
       );
 
       // Warehouse Breakdown
@@ -1092,7 +1091,7 @@ class LowStockExportHandler {
       data.analytics.warehouse_breakdown.forEach(
         (
           /** @type {{ warehouse: any; count: any; total_value: number; average_stock: number; }} */ warehouse,
-          /** @type {any} */ index
+          /** @type {any} */ index,
         ) => {
           analyticsSheet.addRow([
             warehouse.warehouse,
@@ -1100,7 +1099,7 @@ class LowStockExportHandler {
             this._formatCurrency(warehouse.total_value),
             warehouse.average_stock.toFixed(1),
           ]);
-        }
+        },
       );
 
       // ==================== CHARTS PAGE ====================
@@ -1127,7 +1126,7 @@ class LowStockExportHandler {
           .forEach(
             (
               /** @type {{ name: any; warehouse: any; stock: any; reorderLevel: any; urgencyScore: any; status: any; }} */ item,
-              /** @type {any} */ index
+              /** @type {any} */ index,
             ) => {
               chartsSheet.addRow([
                 item.name,
@@ -1137,7 +1136,7 @@ class LowStockExportHandler {
                 item.urgencyScore,
                 item.status,
               ]);
-            }
+            },
           );
       }
 
@@ -1150,7 +1149,7 @@ class LowStockExportHandler {
 
         data.charts.pieChart.forEach(
           (
-            /** @type {{ name: any; value: any; totalValue: number; averageUrgency: any; }} */ item
+            /** @type {{ name: any; value: any; totalValue: number; averageUrgency: any; }} */ item,
           ) => {
             chartsSheet.addRow([
               item.name,
@@ -1158,7 +1157,7 @@ class LowStockExportHandler {
               this._formatCurrency(item.totalValue),
               item.averageUrgency,
             ]);
-          }
+          },
         );
       }
 
@@ -1177,7 +1176,7 @@ class LowStockExportHandler {
       data.recommendations.forEach(
         (
           /** @type {{ priority: number; type: any; title: any; action: any; description: any; }} */ rec,
-          /** @type {any} */ index
+          /** @type {any} */ index,
         ) => {
           const row = recSheet.addRow({
             priority: rec.priority,
@@ -1204,7 +1203,7 @@ class LowStockExportHandler {
             };
             priorityCell.font = { bold: true, color: { argb: "F39C12" } };
           }
-        }
+        },
       );
 
       // Save workbook
@@ -1247,7 +1246,7 @@ class LowStockExportHandler {
         margin: 40,
         info: {
           Title: "Low Stock Inventory Report",
-          Author: "InventoryPro Management System",
+          Author: "stashly Management System",
           Subject: "Low Stock Analysis Report",
           Keywords: "inventory, low stock, reorder, report",
           CreationDate: new Date(),
@@ -1373,13 +1372,13 @@ class LowStockExportHandler {
         {
           width: pageWidth - margin * 2,
           align: "center",
-        }
+        },
       );
 
     doc
       .fontSize(10)
       .fillColor(this.CHART_COLORS.light)
-      .text("InventoryPro Management System", margin, headerPaddingTop + 92, {
+      .text("stashly Management System", margin, headerPaddingTop + 92, {
         width: pageWidth - margin * 2,
         align: "center",
       });
@@ -1565,7 +1564,7 @@ class LowStockExportHandler {
     const gap = 14;
     const colCount = Math.min(maxCols, kpis.length);
     const boxWidth = Math.floor(
-      (contentWidth - gap * (colCount - 1)) / colCount
+      (contentWidth - gap * (colCount - 1)) / colCount,
     );
     const boxHeight = 64;
     let cursorY = doc.y;
@@ -1791,7 +1790,7 @@ class LowStockExportHandler {
     // Draw bars
     const barWidth = 40;
     const maxValue = Math.max(
-      ...Object.values(data.analytics.status_distribution)
+      ...Object.values(data.analytics.status_distribution),
     );
     const scale = chartHeight / maxValue;
 
@@ -1900,7 +1899,7 @@ class LowStockExportHandler {
     data.analytics.category_breakdown.forEach(
       (
         /** @type {{ category: any; count: { toString: () => any; }; percentage: number; total_value: number; average_urgency: number; average_profit_margin: number; }} */ category,
-        /** @type {number} */ rowIndex
+        /** @type {number} */ rowIndex,
       ) => {
         const y = startY + 20 + rowIndex * 20;
 
@@ -1911,7 +1910,7 @@ class LowStockExportHandler {
               startX,
               y,
               colWidths.reduce((a, b) => a + b, 0),
-              20
+              20,
             )
             .fillColor("#F8F9F9")
             .fill();
@@ -1943,7 +1942,7 @@ class LowStockExportHandler {
               width: colWidths[i] - 10,
             });
         });
-      }
+      },
     );
 
     doc.moveDown(data.analytics.category_breakdown.length / 2 + 1);
@@ -2014,7 +2013,7 @@ class LowStockExportHandler {
           tableX,
           tableY,
           colWidths.reduce((a, b) => a + b, 0),
-          headerHeight
+          headerHeight,
         )
         .fill(this.CHART_COLORS.dark);
       doc.restore();
@@ -2076,7 +2075,7 @@ class LowStockExportHandler {
       rows.forEach(
         (
           /** @type {{ name: any; warehouse: any; stock: null; reorderLevel: null; urgencyScore: number | null; status: string | number; }} */ item,
-          /** @type {number} */ rowIndex
+          /** @type {number} */ rowIndex,
         ) => {
           ensureSpace(rowHeight + 10);
 
@@ -2087,7 +2086,7 @@ class LowStockExportHandler {
                 tableX,
                 tableY,
                 colWidths.reduce((a, b) => a + b, 0),
-                rowHeight
+                rowHeight,
               )
               .fillColor("#FAFBFB")
               .fill();
@@ -2113,10 +2112,10 @@ class LowStockExportHandler {
             // Status cell: colored badge background and centered text
             if (ci === values.length - 1) {
               const statusColorHex = // @ts-ignore
-              (this.STATUS_COLORS[item.status]?.argb || "FFCCCC").replace(
-                "#",
-                ""
-              );
+                (this.STATUS_COLORS[item.status]?.argb || "FFCCCC").replace(
+                  "#",
+                  "",
+                );
               const badgeW = Math.max(48, cellWidth);
               const badgeH = rowHeight - 10;
               const badgeX = cx + (colWidths[ci] - badgeW) / 2;
@@ -2178,7 +2177,7 @@ class LowStockExportHandler {
           });
 
           tableY += rowHeight;
-        }
+        },
       );
 
       // Move doc cursor below table
@@ -2204,8 +2203,8 @@ class LowStockExportHandler {
         data.charts.pieChart.reduce(
           (/** @type {any} */ s, /** @type {{ value: any; }} */ c) =>
             s + (c.value || 0),
-          0
-        )
+          0,
+        ),
       );
       const barMaxWidth = Math.min(360, contentWidth - 120);
       let pieY = doc.y;
@@ -2215,7 +2214,7 @@ class LowStockExportHandler {
           ensureSpace(18);
           const pct = ((item.value || 0) / total) * 100;
           const barWidth = Math.round(
-            ((item.value || 0) / total) * barMaxWidth
+            ((item.value || 0) / total) * barMaxWidth,
           );
 
           doc
@@ -2243,11 +2242,11 @@ class LowStockExportHandler {
               `${item.value} (${pct.toFixed(1)}%)`,
               barX + barMaxWidth + 8,
               pieY,
-              { width: 80 }
+              { width: 80 },
             );
 
           pieY += 18;
-        }
+        },
       );
 
       doc.y = pieY + 8;
@@ -2283,7 +2282,7 @@ class LowStockExportHandler {
       .fillColor("#666666")
       .text(
         `Showing ${Math.min(20, data.low_stock_items.length)} of ${data.low_stock_items.length} items`,
-        { align: "center" }
+        { align: "center" },
       );
 
     doc.moveDown(0.6);
@@ -2329,7 +2328,7 @@ class LowStockExportHandler {
         tableX,
         tableY,
         colWidths.reduce((a, b) => a + b, 0),
-        headerHeight
+        headerHeight,
       )
       .fill(this.CHART_COLORS.dark);
     doc.restore();
@@ -2380,7 +2379,7 @@ class LowStockExportHandler {
     displayItems.forEach(
       (
         /** @type {{ product_name: any; variant_name: any; warehouse: any; current_stock: null; stock_status: string | number; stock_value: any; urgency_score: number | null; }} */ item,
-        /** @type {number} */ rowIndex
+        /** @type {number} */ rowIndex,
       ) => {
         ensureSpace(rowHeight + 8);
 
@@ -2391,7 +2390,7 @@ class LowStockExportHandler {
               tableX,
               tableY,
               colWidths.reduce((a, b) => a + b, 0),
-              rowHeight
+              rowHeight,
             )
             .fillColor("#FAFBFB")
             .fill();
@@ -2421,10 +2420,10 @@ class LowStockExportHandler {
           // Status badge
           if (ci === 5) {
             const statusColorHex = // @ts-ignore
-            (this.STATUS_COLORS[item.stock_status]?.argb || "FFCCCC").replace(
-              "#",
-              ""
-            );
+              (this.STATUS_COLORS[item.stock_status]?.argb || "FFCCCC").replace(
+                "#",
+                "",
+              );
             const badgeW = Math.max(48, cellWidth - 8);
             const badgeH = 18;
             const badgeX = cx + (colWidths[ci] - badgeW) / 2;
@@ -2518,7 +2517,7 @@ class LowStockExportHandler {
         });
 
         tableY += rowHeight;
-      }
+      },
     );
 
     // Move doc cursor below table
@@ -2531,7 +2530,7 @@ class LowStockExportHandler {
         .fillColor("#666666")
         .text(
           `* Showing first 20 of ${data.low_stock_items.length} items. See full list in Excel/CSV export.`,
-          { align: "center" }
+          { align: "center" },
         );
       doc.moveDown(0.6);
     }
@@ -2554,7 +2553,7 @@ class LowStockExportHandler {
     data.recommendations.forEach(
       (
         /** @type {{ priority: number; title: any; description: any; action: any; }} */ rec,
-        /** @type {number} */ index
+        /** @type {number} */ index,
       ) => {
         const y = doc.y;
 
@@ -2592,7 +2591,7 @@ class LowStockExportHandler {
           .text(`Action: ${rec.action}`, { indent: 20 });
 
         doc.moveDown(1);
-      }
+      },
     );
 
     // Urgency Scale
@@ -2654,7 +2653,7 @@ class LowStockExportHandler {
             {
               align: "center",
               width: doc.page.width - 80,
-            }
+            },
           );
 
         // Footer separator
@@ -2670,10 +2669,10 @@ class LowStockExportHandler {
           .fontSize(7)
           .fillColor("#999999")
           .text(
-            `Low Stock Report | Generated: ${new Date().toLocaleDateString()} | InventoryPro v2.0 | Report Type: ${data.metadata.report_type} | Confidential`,
+            `Low Stock Report | Generated: ${new Date().toLocaleDateString()} | stashly v2.0 | Report Type: ${data.metadata.report_type} | Confidential`,
             40,
             doc.page.height - 20,
-            { align: "center", width: doc.page.width - 80 }
+            { align: "center", width: doc.page.width - 80 },
           );
       }
     } catch (error) {
@@ -2690,7 +2689,7 @@ class LowStockExportHandler {
     try {
       // Check if export_history table exists
       const tableCheck = await AppDataSource.query(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='export_history'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='export_history'",
       );
 
       if (!tableCheck || tableCheck.length === 0) {
@@ -2718,7 +2717,7 @@ class LowStockExportHandler {
 
       // Get history
       const history = await AppDataSource.query(
-        "SELECT * FROM export_history WHERE filename LIKE '%low_stock%' OR filename LIKE '%LowStock%' ORDER BY generated_at DESC LIMIT 50"
+        "SELECT * FROM export_history WHERE filename LIKE '%low_stock%' OR filename LIKE '%LowStock%' ORDER BY generated_at DESC LIMIT 50",
       );
 
       // Parse filters_json
@@ -2726,7 +2725,7 @@ class LowStockExportHandler {
         (/** @type {{ filters_json: string; }} */ item) => ({
           ...item,
           filters: item.filters_json ? JSON.parse(item.filters_json) : {},
-        })
+        }),
       );
 
       return {
@@ -2762,7 +2761,7 @@ class LowStockExportHandler {
           exportData.generated_at,
           exportData.file_size,
           exportData.filters || "{}",
-        ]
+        ],
       );
 
       return true;
@@ -2891,7 +2890,7 @@ if (ipcMain) {
   });
 } else {
   console.warn(
-    "ipcMain is not available - running in non-Electron environment"
+    "ipcMain is not available - running in non-Electron environment",
   );
 }
 

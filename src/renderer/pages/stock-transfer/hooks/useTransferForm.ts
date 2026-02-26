@@ -24,13 +24,18 @@ export interface UseTransferFormReturn extends TransferFormState {
   sourceStock: number;
   destStock: number;
   quickActions: { label: string; value: number }[];
-  setField: <K extends keyof TransferFormState>(key: K, value: TransferFormState[K]) => void;
+  setField: <K extends keyof TransferFormState>(
+    key: K,
+    value: TransferFormState[K],
+  ) => void;
   handleQuickAction: (value: number) => void;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   reset: () => void;
 }
 
-const useTransferForm = ({ onSuccess }: UseTransferFormProps): UseTransferFormReturn => {
+const useTransferForm = ({
+  onSuccess,
+}: UseTransferFormProps): UseTransferFormReturn => {
   const [form, setForm] = useState<TransferFormState>({
     productId: null,
     variantId: null,
@@ -41,7 +46,9 @@ const useTransferForm = ({ onSuccess }: UseTransferFormProps): UseTransferFormRe
   });
 
   const [submitting, setSubmitting] = useState(false);
-  const [sourceStockItemId, setSourceStockItemId] = useState<number | null>(null);
+  const [sourceStockItemId, setSourceStockItemId] = useState<number | null>(
+    null,
+  );
   const [destStockItemId, setDestStockItemId] = useState<number | null>(null);
   const [sourceStock, setSourceStock] = useState(0);
   const [destStock, setDestStock] = useState(0);
@@ -68,8 +75,10 @@ const useTransferForm = ({ onSuccess }: UseTransferFormProps): UseTransferFormRe
 
         const match = response.data.find(
           (item) =>
-            item.warehouse_id === form.fromWarehouseId &&
-            (form.variantId ? item.variant_id === form.variantId : !item.variant_id)
+            item.warehouseId === form.fromWarehouseId &&
+            (form.variantId
+              ? item.variantId === form.variantId
+              : !item.variantId),
         );
 
         if (match) {
@@ -104,8 +113,10 @@ const useTransferForm = ({ onSuccess }: UseTransferFormProps): UseTransferFormRe
 
         const match = response.data.find(
           (item) =>
-            item.warehouse_id === form.toWarehouseId &&
-            (form.variantId ? item.variant_id === form.variantId : !item.variant_id)
+            item.warehouseId === form.toWarehouseId &&
+            (form.variantId
+              ? item.variantId === form.variantId
+              : !item.variantId),
         );
 
         if (match) {
@@ -127,16 +138,19 @@ const useTransferForm = ({ onSuccess }: UseTransferFormProps): UseTransferFormRe
     fetchDest();
   }, [form.productId, form.variantId, form.toWarehouseId]);
 
-  const setField = <K extends keyof TransferFormState>(key: K, value: TransferFormState[K]) => {
-    setForm(prev => ({ ...prev, [key]: value }));
+  const setField = <K extends keyof TransferFormState>(
+    key: K,
+    value: TransferFormState[K],
+  ) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
     // If fromWarehouse changes and equals toWarehouse, reset toWarehouse
     if (key === "fromWarehouseId" && value === form.toWarehouseId) {
-      setForm(prev => ({ ...prev, toWarehouseId: null }));
+      setForm((prev) => ({ ...prev, toWarehouseId: null }));
     }
   };
 
   const handleQuickAction = (value: number) => {
-    setForm(prev => ({ ...prev, quantity: prev.quantity + value }));
+    setForm((prev) => ({ ...prev, quantity: prev.quantity + value }));
     showToast(`Quick add: +${value}`, "info", { duration: 2000 });
   };
 
@@ -145,19 +159,25 @@ const useTransferForm = ({ onSuccess }: UseTransferFormProps): UseTransferFormRe
 
     if (!form.productId) errors.push("• Please select a product");
     if (!form.fromWarehouseId) errors.push("• Please select source warehouse");
-    if (!form.toWarehouseId) errors.push("• Please select destination warehouse");
+    if (!form.toWarehouseId)
+      errors.push("• Please select destination warehouse");
     if (form.fromWarehouseId === form.toWarehouseId) {
       errors.push("• Source and destination warehouses cannot be the same");
     }
     if (form.quantity <= 0) errors.push("• Quantity must be greater than 0");
     if (form.quantity > sourceStock) {
-      errors.push(`• Cannot transfer more than source stock (${sourceStock} units)`);
+      errors.push(
+        `• Cannot transfer more than source stock (${sourceStock} units)`,
+      );
     }
     if (!sourceStockItemId) errors.push("• Source stock item not found");
     if (!destStockItemId) errors.push("• Destination stock item not found");
 
     if (errors.length > 0) {
-      dialogs.error("Validation Error", `Please fix the following issues:\n\n${errors.join("\n")}`);
+      dialogs.error(
+        "Validation Error",
+        `Please fix the following issues:\n\n${errors.join("\n")}`,
+      );
       return false;
     }
     return true;
@@ -189,14 +209,15 @@ const useTransferForm = ({ onSuccess }: UseTransferFormProps): UseTransferFormRe
 
       if (!response.status) throw new Error(response.message);
 
-      showSuccess(
-        `Transfer successful! ${form.quantity} units moved.`
-      );
+      showSuccess(`Transfer successful! ${form.quantity} units moved.`);
 
       reset();
       onSuccess();
     } catch (error: any) {
-      dialogs.error("Transfer Failed", error.message || "Failed to process transfer.");
+      dialogs.error(
+        "Transfer Failed",
+        error.message || "Failed to process transfer.",
+      );
     } finally {
       setSubmitting(false);
     }

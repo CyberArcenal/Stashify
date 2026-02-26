@@ -39,7 +39,7 @@ interface ProductVariantWithDetails extends ProductVariantData {
 
 interface Filters {
   search: string;
-  product_id: string;
+  productId: string;
   low_stock: string;
   is_deleted: string;
   // Export-specific filters
@@ -81,7 +81,7 @@ const ProductVariantsPage: React.FC = () => {
 
   const [filters, setFilters] = useState<Filters>({
     search: "",
-    product_id: "",
+    productId: "",
     low_stock: "",
     is_deleted: "false",
   });
@@ -118,7 +118,7 @@ const ProductVariantsPage: React.FC = () => {
     loadVariants(1);
   }, [
     debouncedSearch,
-    filters.product_id,
+    filters.productId,
     filters.low_stock,
     filters.is_deleted,
     pageSize,
@@ -154,8 +154,8 @@ const ProductVariantsPage: React.FC = () => {
       }
 
       // Add product filter
-      if (filters.product_id) {
-        searchParams.product = parseInt(filters.product_id);
+      if (filters.productId) {
+        searchParams.product = parseInt(filters.productId);
       }
 
       // Add low stock filter
@@ -252,7 +252,7 @@ const ProductVariantsPage: React.FC = () => {
   const resetFilters = () => {
     setFilters({
       search: "",
-      product_id: "",
+      productId: "",
       low_stock: "",
       is_deleted: "false",
     });
@@ -499,9 +499,9 @@ const ProductVariantsPage: React.FC = () => {
     let exportDescription = `${pagination.count} variant(s) in ${exportFormat.toUpperCase()} format`;
 
     const activeFilters = [];
-    if (filters.product_id) {
+    if (filters.productId) {
       const productName = products.find(
-        (p) => p.id.toString() === filters.product_id,
+        (p) => p.id.toString() === filters.productId,
       )?.name;
       if (productName) activeFilters.push(productName);
     }
@@ -530,8 +530,8 @@ const ProductVariantsPage: React.FC = () => {
 
       const exportParams: VariantExportParams = {
         format: exportFormat,
-        product: filters.product_id
-          ? products.find((p) => p.id.toString() === filters.product_id)?.name
+        product: filters.productId
+          ? products.find((p) => p.id.toString() === filters.productId)?.name
           : undefined,
         low_stock: filters.low_stock as "true" | "false" | undefined,
         search: filters.search || undefined,
@@ -822,8 +822,8 @@ const ProductVariantsPage: React.FC = () => {
               Product
             </label>
             <select
-              value={filters.product_id}
-              onChange={(e) => handleFilterChange("product_id", e.target.value)}
+              value={filters.productId}
+              onChange={(e) => handleFilterChange("productId", e.target.value)}
               className="compact-input w-full border border-[var(--border-color)] rounded-md bg-[var(--input-bg)] text-[var(--input-text)] focus:ring-2 focus:ring-[var(--focus-ring-color)] focus:border-[var(--focus-ring-color)]"
             >
               <option value="">All Products</option>

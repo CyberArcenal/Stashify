@@ -29,7 +29,11 @@ const ProductSelect: React.FC<ProductSelectProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [dropdownStyle, setDropdownStyle] = useState({ top: 0, left: 0, width: 0 });
+  const [dropdownStyle, setDropdownStyle] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+  });
 
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -45,11 +49,13 @@ const ProductSelect: React.FC<ProductSelectProps> = ({
           sortOrder: "ASC",
           limit: 1000,
           is_active: activeOnly ? true : undefined,
-          category_id: categoryId,
+          categoryId: categoryId,
         };
         const response = await productAPI.getAll(params);
         if (response.status && response.data) {
-          const list = Array.isArray(response.data) ? response.data : response.data || [];
+          const list = Array.isArray(response.data)
+            ? response.data
+            : response.data || [];
           setProducts(list);
           setFilteredProducts(list);
         }
@@ -74,8 +80,8 @@ const ProductSelect: React.FC<ProductSelectProps> = ({
         (p) =>
           p.name.toLowerCase().includes(lower) ||
           (p.sku && p.sku.toLowerCase().includes(lower)) ||
-          (p.barcode && p.barcode.toLowerCase().includes(lower))
-      )
+          (p.barcode && p.barcode.toLowerCase().includes(lower)),
+      ),
     );
   }, [searchTerm, products]);
 
@@ -158,19 +164,30 @@ const ProductSelect: React.FC<ProductSelectProps> = ({
           minHeight: "42px",
         }}
       >
-        <Package className="w-4 h-4 flex-shrink-0" style={{ color: "var(--primary-color)" }} />
+        <Package
+          className="w-4 h-4 flex-shrink-0"
+          style={{ color: "var(--primary-color)" }}
+        />
         <div className="flex-1 min-w-0 flex items-center gap-2">
           {selectedProduct ? (
             <>
-              <span className="font-medium truncate">{selectedProduct.name}</span>
+              <span className="font-medium truncate">
+                {selectedProduct.name}
+              </span>
               {selectedProduct.sku && (
-                <span className="text-xs truncate" style={{ color: "var(--text-secondary)" }}>
+                <span
+                  className="text-xs truncate"
+                  style={{ color: "var(--text-secondary)" }}
+                >
                   ({selectedProduct.sku})
                 </span>
               )}
             </>
           ) : (
-            <span className="truncate" style={{ color: "var(--text-secondary)" }}>
+            <span
+              className="truncate"
+              style={{ color: "var(--text-secondary)" }}
+            >
               {placeholder}
             </span>
           )}
@@ -208,7 +225,10 @@ const ProductSelect: React.FC<ProductSelectProps> = ({
               maxHeight: "350px",
             }}
           >
-            <div className="p-2 border-b" style={{ borderColor: "var(--border-color)" }}>
+            <div
+              className="p-2 border-b"
+              style={{ borderColor: "var(--border-color)" }}
+            >
               <div className="relative">
                 <Search
                   className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4"
@@ -232,11 +252,17 @@ const ProductSelect: React.FC<ProductSelectProps> = ({
 
             <div className="overflow-y-auto" style={{ maxHeight: "250px" }}>
               {loading && products.length === 0 ? (
-                <div className="p-3 text-center text-sm" style={{ color: "var(--text-secondary)" }}>
+                <div
+                  className="p-3 text-center text-sm"
+                  style={{ color: "var(--text-secondary)" }}
+                >
                   Loading...
                 </div>
               ) : filteredProducts.length === 0 ? (
-                <div className="p-3 text-center text-sm" style={{ color: "var(--text-secondary)" }}>
+                <div
+                  className="p-3 text-center text-sm"
+                  style={{ color: "var(--text-secondary)" }}
+                >
                   No products found
                 </div>
               ) : (
@@ -247,25 +273,37 @@ const ProductSelect: React.FC<ProductSelectProps> = ({
                     onClick={() => handleSelect(product)}
                     className={`
                       w-full px-3 py-2 text-left flex items-center gap-2
-                      transition-colors text-sm cursor-pointer hover:bg-gray-800
-                      ${product.id === value ? "bg-gray-800" : ""}
+                      transition-colors text-sm cursor-pointer hover:bg-[var(--card-hover-bg)]
+                      ${product.id === value ? "bg-[var(--accent-blue-light)]" : ""}
                     `}
                     style={{ borderBottom: "1px solid var(--border-color)" }}
                   >
-                    <Package className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "var(--primary-color)" }} />
+                    <Package
+                      className="w-3.5 h-3.5 flex-shrink-0"
+                      style={{ color: "var(--primary-color)" }}
+                    />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium truncate" style={{ color: "var(--text-primary)" }}>
+                        <span
+                          className="font-medium truncate"
+                          style={{ color: "var(--text-primary)" }}
+                        >
                           {product.name}
                         </span>
                         {product.sku && (
-                          <span className="text-xs truncate" style={{ color: "var(--text-secondary)" }}>
+                          <span
+                            className="text-xs truncate"
+                            style={{ color: "var(--text-secondary)" }}
+                          >
                             SKU: {product.sku}
                           </span>
                         )}
                       </div>
                       {product.net_price !== undefined && (
-                        <div className="text-xs mt-0.5" style={{ color: "var(--primary-color)" }}>
+                        <div
+                          className="text-xs mt-0.5"
+                          style={{ color: "var(--primary-color)" }}
+                        >
                           ₱{product.net_price}
                         </div>
                       )}
@@ -275,7 +313,7 @@ const ProductSelect: React.FC<ProductSelectProps> = ({
               )}
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

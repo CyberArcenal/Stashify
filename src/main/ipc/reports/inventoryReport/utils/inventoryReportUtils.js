@@ -1,5 +1,4 @@
 //@ts-check
-// @ts-ignore
 const { Between, IsNull } = require("typeorm");
 const Product = require("../../../../../entities/Product");
 const Category = require("../../../../../entities/Category");
@@ -29,7 +28,7 @@ const CATEGORY_COLORS = [
  * @returns {Promise<Array<{ name: string; value: number; color: string; stockValue: number }>>}
  */
 async function getStockByCategory({ category, dateRange } = {}) {
-   const { AppDataSource } = require("../../../../db/datasource");
+  const { AppDataSource } = require("../../../../db/datasource");
   if (!AppDataSource.isInitialized) {
     await AppDataSource.initialize();
   }
@@ -40,21 +39,21 @@ async function getStockByCategory({ category, dateRange } = {}) {
         // @ts-ignore
         Product,
         "p",
-        "c.id = p.category_id AND p.is_deleted = :deleted",
+        "c.id = p.categoryId AND p.is_deleted = :deleted", // FIXED: categoryId
         { deleted: false },
       )
       .leftJoin(
         // @ts-ignore
         ProductVariant,
         "v",
-        "p.id = v.product_id AND v.is_deleted = :deleted",
+        "p.id = v.productId AND v.is_deleted = :deleted",
         { deleted: false },
       )
       .leftJoin(
         // @ts-ignore
         StockItem,
         "si",
-        "(si.product_id = p.id AND si.variant_id IS NULL) OR (si.variant_id = v.id)",
+        "(si.productId = p.id AND si.variantId IS NULL) OR (si.variantId = v.id)",
       )
       .select("c.name", "category_name")
       .addSelect("COALESCE(SUM(si.quantity), 0)", "total_quantity")
@@ -110,8 +109,9 @@ async function getStockByCategory({ category, dateRange } = {}) {
  *   currentValue: number;
  * }>>}
  */
+// @ts-ignore
 async function getLowStockProducts({ category, threshold, dateRange } = {}) {
-   const { AppDataSource } = require("../../../../db/datasource");
+  const { AppDataSource } = require("../../../../db/datasource");
   if (!AppDataSource.isInitialized) {
     await AppDataSource.initialize();
   }
@@ -122,42 +122,42 @@ async function getLowStockProducts({ category, threshold, dateRange } = {}) {
         // @ts-ignore
         ProductVariant,
         "v",
-        "p.id = v.product_id AND v.is_deleted = :deleted",
+        "p.id = v.productId AND v.is_deleted = :deleted",
         { deleted: false },
       )
       .leftJoin(
         // @ts-ignore
         StockItem,
         "si",
-        "(si.product_id = p.id AND si.variant_id IS NULL) OR (si.variant_id = v.id)",
+        "(si.productId = p.id AND si.variantId IS NULL) OR (si.variantId = v.id)",
       )
       // @ts-ignore
-      .leftJoin(Category, "c", "p.category_id = c.id")
+      .leftJoin(Category, "c", "p.categoryId = c.id") // FIXED: categoryId
       .select([
-        "p.id as product_id",
+        "p.id as productId",
         "p.name as product_name",
-        "v.id as variant_id",
+        "v.id as variantId",
         "v.name as variant_name",
         "c.name as category_name",
-        "COALESCE(v.low_stock_threshold, p.low_stock_threshold, 10) as reorder_level",
+        "COALESCE(si.low_stock_threshold, 10) as reorder_level",
         "COALESCE(v.cost_per_item, p.cost_per_item, 0) as unit_cost",
         "COALESCE(SUM(si.quantity), 0) as current_stock",
+        "CASE WHEN COALESCE(SUM(si.quantity), 0) < COALESCE(si.low_stock_threshold, 10) THEN 1 ELSE 0 END as is_low_stock",
       ])
       .where("p.is_deleted = 0")
       .andWhere("p.track_quantity = 1")
-      .andWhere("(si.is_deleted = 0 OR si.is_deleted IS NULL)");
+      .andWhere("(si.is_deleted = 0 OR si.is_deleted IS NULL)")
+      .groupBy(
+        "p.id, p.name, v.id, v.name, c.name, si.low_stock_threshold, v.cost_per_item, p.cost_per_item",
+      )
+      // Only one HAVING clause using aggregate expression
+      .having("COALESCE(SUM(si.quantity), 0) > 0");
 
     if (category) {
       query.andWhere("c.name = :category", { category });
     }
 
-    if (dateRange?.start && dateRange?.end) {
-      // Ang original ay hindi nagfa-filter ng date range sa low stock query
-      // kaya hindi na natin isasama.
-    }
-
-    query.groupBy("p.id, v.id");
-    query.having("current_stock > 0"); // original ay may HAVING current_stock > 0
+    // Removed redundant groupBy and having that caused syntax error
 
     const products = await query.getRawMany();
 
@@ -178,8 +178,8 @@ async function getLowStockProducts({ category, threshold, dateRange } = {}) {
       stock: parseFloat(item.current_stock) || 0,
       reorderLevel: parseFloat(item.reorder_level) || 10,
       category: item.category_name || "Uncategorized",
-      productId: parseInt(item.product_id),
-      variantId: item.variant_id ? parseInt(item.variant_id) : null,
+      productId: parseInt(item.productId),
+      variantId: item.variantId ? parseInt(item.variantId) : null,
       currentValue:
         (parseFloat(item.current_stock) || 0) *
         (parseFloat(item.unit_cost) || 0),
@@ -198,7 +198,7 @@ async function getLowStockProducts({ category, threshold, dateRange } = {}) {
  * @returns {Promise<Array<{ month: string; stockIn: number; stockOut: number; netChange: number }>>}
  */
 async function getStockMovements({ dateRange, groupBy = "month" }) {
-   const { AppDataSource } = require("../../../../db/datasource");
+  const { AppDataSource } = require("../../../../db/datasource");
   if (!AppDataSource.isInitialized) {
     await AppDataSource.initialize();
   }
@@ -324,7 +324,7 @@ function getWeekNumber(date) {
  */
 // @ts-ignore
 async function getSummary({ category, dateRange, lowStockProducts = [] } = {}) {
-   const { AppDataSource } = require("../../../../db/datasource");
+  const { AppDataSource } = require("../../../../db/datasource");
   if (!AppDataSource.isInitialized) {
     await AppDataSource.initialize();
   }
@@ -339,11 +339,11 @@ async function getSummary({ category, dateRange, lowStockProducts = [] } = {}) {
     const stockQuery = AppDataSource.createQueryBuilder()
       .from(StockItem, "si")
       // @ts-ignore
-      .leftJoin(Product, "p", "si.product_id = p.id")
+      .leftJoin(Product, "p", "si.productId = p.id")
       // @ts-ignore
-      .leftJoin(ProductVariant, "v", "si.variant_id = v.id")
+      .leftJoin(ProductVariant, "v", "si.variantId = v.id")
       // @ts-ignore
-      .leftJoin(Category, "c", "p.category_id = c.id")
+      .leftJoin(Category, "c", "p.categoryId = c.id") // FIXED: categoryId
       .select("COALESCE(SUM(si.quantity), 0)", "totalQuantity")
       .addSelect(
         `COALESCE(SUM(
@@ -426,7 +426,7 @@ async function getSummary({ category, dateRange, lowStockProducts = [] } = {}) {
  */
 // @ts-ignore
 async function getStockQuantityAtDate(date) {
-   const { AppDataSource } = require("../../../../db/datasource");
+  const { AppDataSource } = require("../../../../db/datasource");
   if (!AppDataSource.isInitialized) {
     await AppDataSource.initialize();
   }
@@ -444,7 +444,7 @@ async function getStockQuantityAtDate(date) {
  */
 // @ts-ignore
 async function getTotalStockOutBetween(start, end) {
-   const { AppDataSource } = require("../../../../db/datasource");
+  const { AppDataSource } = require("../../../../db/datasource");
   if (!AppDataSource.isInitialized) {
     await AppDataSource.initialize();
   }
@@ -558,6 +558,7 @@ function formatDateForSQL(date) {
  */
 function getMetadata({
   // @ts-ignore
+  // @ts-ignore
   dateRange,
   params,
   // @ts-ignore
@@ -569,9 +570,9 @@ function getMetadata({
 }) {
   return {
     generatedAt: new Date().toISOString(),
-    totalCategories: stockByCategory.length,
-    lowStockCount: lowStockProducts.length,
-    totalMovements: stockMovements.length,
+    totalCategories: stockByCategory?.length || 0,
+    lowStockCount: lowStockProducts?.length || 0,
+    totalMovements: stockMovements?.length || 0,
     filtersApplied: {
       // @ts-ignore
       period: params.period || "6months",

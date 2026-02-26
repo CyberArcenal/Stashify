@@ -16,7 +16,7 @@ export interface WarehouseBasic {
 }
 
 export interface WarehouseCapacity {
-  warehouse_id: number;
+  warehouseId: number;
   max_capacity: number;
   current_utilization: number;
   available_space: number;
@@ -24,7 +24,7 @@ export interface WarehouseCapacity {
 }
 
 export interface WarehousePerformance {
-  warehouse_id: number;
+  warehouseId: number;
   month: string;
   total_shipments: number;
   on_time_delivery: number;
@@ -146,7 +146,7 @@ class WarehouseExportAPI {
             console.error("Failed to open file:", openError);
             await dialogs.error(
               "The file was exported successfully but could not be opened automatically.\n" +
-                "You can find it in your InventoryPro folder inside Downloads.",
+                "You can find it in your stashly folder inside Downloads.",
               "File Export Complete",
             );
           }

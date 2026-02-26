@@ -5,9 +5,9 @@ const StockItem = new EntitySchema({
   tableName: "stock_items",
   columns: {
     id: { type: Number, primary: true, generated: true },
-    product_id: { type: Number },
-    variant_id: { type: Number, nullable: true },
-    warehouse_id: { type: Number },
+    productId: { type: Number },
+    variantId: { type: Number, nullable: true },
+    warehouseId: { type: Number },
     quantity: { type: Number, default: 0, nullable: false },
     reorder_level: { type: Number, default: 0, nullable: false },
     low_stock_threshold: { type: Number, nullable: true },
@@ -24,7 +24,7 @@ const StockItem = new EntitySchema({
     is_deleted: { type: Boolean, default: false, nullable: false },
   },
   uniques: [
-    { columns: ["product_id", "variant_id", "warehouse_id"] }, // relies on naming strategy
+    { columns: ["productId", "variantId", "warehouseId"] }, // relies on naming strategy
   ],
   relations: {
     product: {

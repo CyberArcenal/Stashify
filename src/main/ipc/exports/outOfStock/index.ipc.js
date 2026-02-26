@@ -5,10 +5,15 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { AppDataSource } = require("../../../db/datasource");
-const { getGeneralCurrencySign, getGeneralCurrency } = require("../../../../utils/settings/system");
-const { successResponse, errorResponse } = require("../../../../utils/settings/response");
+const {
+  getGeneralCurrencySign,
+  getGeneralCurrency,
+} = require("../../../../utils/settings/system");
+const {
+  successResponse,
+  errorResponse,
+} = require("../../../../utils/settings/response");
 const { outOfStockHandler } = require("../../reports/outOfStock/index.ipc");
-
 
 let currency = "PHP";
 (async () => {
@@ -22,8 +27,8 @@ class OutOfStockExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "InventoryPro",
-      "out_of_stock_exports"
+      "stashly",
+      "out_of_stock_exports",
     );
 
     // Create export directory if it doesn't exist
@@ -77,7 +82,7 @@ class OutOfStockExportHandler {
       console.warn(
         "ExcelJS not available for enhanced Excel export:",
         // @ts-ignore
-        error.message
+        error.message,
       );
     }
   }
@@ -106,7 +111,7 @@ class OutOfStockExportHandler {
         case "getSupportedFormats":
           return successResponse(
             this.getSupportedFormats(),
-            "Supported formats fetched"
+            "Supported formats fetched",
           );
         case "getExportTemplates":
           return await this.getExportTemplates();
@@ -121,7 +126,7 @@ class OutOfStockExportHandler {
       return errorResponse(
         // @ts-ignore
         `Failed to process out of stock export request: ${error.message}`,
-        500
+        500,
       );
     }
   }
@@ -137,7 +142,7 @@ class OutOfStockExportHandler {
       if (!this.SUPPORTED_FORMATS.includes(format)) {
         return errorResponse(
           `Unsupported format. Supported: ${this.SUPPORTED_FORMATS.join(", ")}`,
-          400
+          400,
         );
       }
 
@@ -195,14 +200,14 @@ class OutOfStockExportHandler {
           mimeType: this._getMimeType(format),
           fullPath: filepath,
         },
-        `Out of stock report exported successfully: ${exportResult.filename}`
+        `Out of stock report exported successfully: ${exportResult.filename}`,
       );
     } catch (error) {
       console.error("exportOutOfStockReport error:", error);
       return errorResponse(
         // @ts-ignore
         `Failed to export out of stock report: ${error.message}`,
-        500
+        500,
       );
     }
   }
@@ -217,7 +222,7 @@ class OutOfStockExportHandler {
       return successResponse(
         // @ts-ignore
         outOfStockData,
-        "Export preview generated successfully"
+        "Export preview generated successfully",
       );
     } catch (error) {
       console.error("getExportPreview error:", error);
@@ -238,7 +243,7 @@ class OutOfStockExportHandler {
       // @ts-ignore
       if (!response.status) {
         throw new Error(
-          response.message || "Failed to get out of stock report"
+          response.message || "Failed to get out of stock report",
         );
       }
 
@@ -247,7 +252,7 @@ class OutOfStockExportHandler {
       // Transform the data to match the expected format
       const transformedData = await this._transformOutOfStockData(
         outOfStockData,
-        params
+        params,
       );
 
       return transformedData;
@@ -275,14 +280,14 @@ class OutOfStockExportHandler {
     // Transform stock items
     const transformedItems = stockItems.map(
       (
-        /** @type {{ id: any; product: any; sku: any; variant: any; category: any; categoryId: any; warehouse: any; warehouseType: any; warehouseLocation: any; currentStock: number; reorderLevel: number; effectiveReorderLevel: any; costPerItem: number; netPrice: number; status: any; salesVelocity: any; daysOutOfStock: any; estimatedLostSales: any; urgencyScore: any; itemType: any; allowBackorder: any; supplier: any; lastUpdated: any; lastSaleDate: any; potentialRevenue: any; otherWarehouses: any; warehouseDistribution: any; }} */ item
+        /** @type {{ id: any; product: any; sku: any; variant: any; category: any; categoryId: any; warehouse: any; warehouseType: any; warehouseLocation: any; currentStock: number; reorderLevel: number; effectiveReorderLevel: any; costPerItem: number; netPrice: number; status: any; salesVelocity: any; daysOutOfStock: any; estimatedLostSales: any; urgencyScore: any; itemType: any; allowBackorder: any; supplier: any; lastUpdated: any; lastSaleDate: any; potentialRevenue: any; otherWarehouses: any; warehouseDistribution: any; }} */ item,
       ) => ({
         id: item.id,
         product_name: item.product,
         product_sku: item.sku,
         variant_name: item.variant,
         category: item.category,
-        category_id: item.categoryId,
+        categoryId: item.categoryId,
         warehouse: item.warehouse,
         warehouse_type: item.warehouseType,
         warehouse_location: item.warehouseLocation,
@@ -312,14 +317,14 @@ class OutOfStockExportHandler {
         potential_revenue: item.potentialRevenue || 0,
         other_warehouses: item.otherWarehouses || [],
         warehouse_distribution: item.warehouseDistribution || [],
-      })
+      }),
     );
 
     // Calculate analytics from summary
     const analytics = this._calculateAnalyticsFromSummary(
       summary,
       transformedItems,
-      performanceSummary
+      performanceSummary,
     );
 
     return {
@@ -414,11 +419,11 @@ class OutOfStockExportHandler {
         : 0;
 
     const immediateAttentionItems = items.filter(
-      (item) => (item.urgency_score || 0) > 70
+      (item) => (item.urgency_score || 0) > 70,
     ).length;
 
     const highLostSalesItems = items.filter(
-      (item) => (item.estimated_lost_sales || 0) > 1000
+      (item) => (item.estimated_lost_sales || 0) > 1000,
     ).length;
 
     return {
@@ -456,10 +461,10 @@ class OutOfStockExportHandler {
           percentage:
             summary.outOfStockCount > 0
               ? parseFloat(
-                  ((data.count / summary.outOfStockCount) * 100).toFixed(1)
+                  ((data.count / summary.outOfStockCount) * 100).toFixed(1),
                 )
               : 0,
-        })
+        }),
       ),
       warehouse_breakdown: Object.entries(warehouseBreakdown).map(
         ([warehouse, data]) => ({
@@ -473,10 +478,10 @@ class OutOfStockExportHandler {
           percentage:
             summary.outOfStockCount > 0
               ? parseFloat(
-                  ((data.count / summary.outOfStockCount) * 100).toFixed(1)
+                  ((data.count / summary.outOfStockCount) * 100).toFixed(1),
                 )
               : 0,
-        })
+        }),
       ),
     };
   }
@@ -591,7 +596,7 @@ class OutOfStockExportHandler {
       criticalAlerts.forEach((alert) => csvContent.push(alert.join(",")));
     } else {
       csvContent.push(
-        "No Critical Alerts,All items are being monitored,NORMAL,Regular Review"
+        "No Critical Alerts,All items are being monitored,NORMAL,Regular Review",
       );
     }
     csvContent.push("");
@@ -599,12 +604,12 @@ class OutOfStockExportHandler {
     // Category Breakdown
     csvContent.push("📊 CATEGORY BREAKDOWN");
     csvContent.push(
-      "Category,Out of Stock Items,Percentage,Total Lost Sales,Average Urgency"
+      "Category,Out of Stock Items,Percentage,Total Lost Sales,Average Urgency",
     );
 
     data.analytics.category_breakdown.forEach(
       (
-        /** @type {{ category: any; count: any; percentage: any; total_lost_sales: number; average_urgency: number; }} */ breakdown
+        /** @type {{ category: any; count: any; percentage: any; total_lost_sales: number; average_urgency: number; }} */ breakdown,
       ) => {
         csvContent.push(
           [
@@ -613,21 +618,21 @@ class OutOfStockExportHandler {
             `${breakdown.percentage}%`,
             this._formatCurrency(breakdown.total_lost_sales),
             breakdown.average_urgency.toFixed(1),
-          ].join(",")
+          ].join(","),
         );
-      }
+      },
     );
     csvContent.push("");
 
     // Warehouse Breakdown
     csvContent.push("🏬 WAREHOUSE BREAKDOWN");
     csvContent.push(
-      "Warehouse,Out of Stock Items,Percentage,Total Lost Sales,Avg Days OOS"
+      "Warehouse,Out of Stock Items,Percentage,Total Lost Sales,Avg Days OOS",
     );
 
     data.analytics.warehouse_breakdown.forEach(
       (
-        /** @type {{ warehouse: any; count: any; percentage: any; total_lost_sales: number; average_days: number; }} */ breakdown
+        /** @type {{ warehouse: any; count: any; percentage: any; total_lost_sales: number; average_days: number; }} */ breakdown,
       ) => {
         csvContent.push(
           [
@@ -636,9 +641,9 @@ class OutOfStockExportHandler {
             `${breakdown.percentage}%`,
             this._formatCurrency(breakdown.total_lost_sales),
             breakdown.average_days.toFixed(1),
-          ].join(",")
+          ].join(","),
         );
-      }
+      },
     );
     csvContent.push("");
 
@@ -663,12 +668,12 @@ class OutOfStockExportHandler {
         "Backorder",
         "Last Sale",
         "Last Updated",
-      ].join(",")
+      ].join(","),
     );
 
     // Sort by urgency score (highest first)
     const sortedItems = [...data.out_of_stock_items].sort(
-      (a, b) => b.urgency_score - a.urgency_score
+      (a, b) => b.urgency_score - a.urgency_score,
     );
 
     sortedItems.forEach((item) => {
@@ -691,7 +696,7 @@ class OutOfStockExportHandler {
           item.allow_backorder ? "Yes" : "No",
           item.last_sale_date || "N/A",
           item.last_updated?.substring(0, 10) || "N/A",
-        ].join(",")
+        ].join(","),
       );
     });
     csvContent.push("");
@@ -702,7 +707,7 @@ class OutOfStockExportHandler {
 
     data.recommendations.forEach(
       (
-        /** @type {{ priority: number; type: any; title: any; action: any; }} */ rec
+        /** @type {{ priority: number; type: any; title: any; action: any; }} */ rec,
       ) => {
         csvContent.push(
           [
@@ -711,22 +716,22 @@ class OutOfStockExportHandler {
             `"${rec.title}"`,
             `"${rec.action}"`,
             this._getTimelineForPriority(rec.priority),
-          ].join(",")
+          ].join(","),
         );
-      }
+      },
     );
     csvContent.push("");
 
     // Footer
     csvContent.push("📄 REPORT INFORMATION");
-    csvContent.push("Generated by,InventoryPro Emergency Response System");
+    csvContent.push("Generated by,stashly Emergency Response System");
     csvContent.push("Data Source,Real-time Inventory Database");
     csvContent.push("Report Type,Out of Stock Emergency Analysis");
     csvContent.push("Confidentiality Level,STRICTLY CONFIDENTIAL");
     csvContent.push("Action Required,REVIEW WITHIN 24 HOURS");
     csvContent.push("Next Audit,Scheduled for next week");
     csvContent.push(
-      `Report Expiry,${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]}`
+      `Report Expiry,${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]}`,
     );
 
     const csvString = csvContent.join("\n");
@@ -755,7 +760,7 @@ class OutOfStockExportHandler {
       const filepath = path.join(this.EXPORT_DIR, filename);
 
       const workbook = new this.excelJS.Workbook();
-      workbook.creator = "InventoryPro Emergency Response System";
+      workbook.creator = "stashly Emergency Response System";
       workbook.created = new Date();
 
       // ==================== EMERGENCY DASHBOARD ====================
@@ -875,7 +880,7 @@ class OutOfStockExportHandler {
 
       // Add data rows with conditional formatting
       const sortedItems = [...data.out_of_stock_items].sort(
-        (a, b) => b.urgency_score - a.urgency_score
+        (a, b) => b.urgency_score - a.urgency_score,
       );
 
       // @ts-ignore
@@ -973,7 +978,7 @@ class OutOfStockExportHandler {
 
       data.analytics.category_breakdown.forEach(
         (
-          /** @type {{ average_urgency: number; category: any; count: any; percentage: any; total_lost_sales: number; }} */ category
+          /** @type {{ average_urgency: number; category: any; count: any; percentage: any; total_lost_sales: number; }} */ category,
         ) => {
           const riskLevel =
             category.average_urgency > 70
@@ -989,7 +994,7 @@ class OutOfStockExportHandler {
             category.average_urgency.toFixed(1),
             riskLevel,
           ]);
-        }
+        },
       );
 
       // Warehouse Analysis
@@ -1012,7 +1017,7 @@ class OutOfStockExportHandler {
 
       data.analytics.warehouse_breakdown.forEach(
         (
-          /** @type {{ average_days: number; warehouse: any; count: any; percentage: any; total_lost_sales: number; }} */ warehouse
+          /** @type {{ average_days: number; warehouse: any; count: any; percentage: any; total_lost_sales: number; }} */ warehouse,
         ) => {
           const status =
             warehouse.average_days > 7
@@ -1028,7 +1033,7 @@ class OutOfStockExportHandler {
             warehouse.average_days.toFixed(1),
             status,
           ]);
-        }
+        },
       );
 
       // ==================== ACTION PLAN ====================
@@ -1048,7 +1053,7 @@ class OutOfStockExportHandler {
       data.recommendations.forEach(
         (
           /** @type {{ priority: number; type: string; title: any; action: any; }} */ rec,
-          /** @type {any} */ index
+          /** @type {any} */ index,
         ) => {
           const deadline = new Date();
           if (rec.priority === 1) deadline.setDate(deadline.getDate() + 1);
@@ -1099,7 +1104,7 @@ class OutOfStockExportHandler {
             fgColor: { argb: "FFF3CD" },
           };
           statusCell.font = { bold: true, color: { argb: "856404" } };
-        }
+        },
       );
 
       // Save workbook
@@ -1142,7 +1147,7 @@ class OutOfStockExportHandler {
         margin: 40,
         info: {
           Title: "Out of Stock Emergency Report",
-          Author: "InventoryPro Emergency Response System",
+          Author: "stashly Emergency Response System",
           Subject: "Out of Stock Inventory Analysis",
           Keywords: "out of stock, emergency, inventory, report",
           CreationDate: new Date(),
@@ -1299,7 +1304,7 @@ class OutOfStockExportHandler {
         boxY + 28,
         {
           width: boxW - 24,
-        }
+        },
       );
 
     doc
@@ -1515,13 +1520,13 @@ class OutOfStockExportHandler {
     )
       .filter(
         (/** @type {{ urgency_score: number; }} */ it) =>
-          typeof it.urgency_score === "number" && it.urgency_score > 70
+          typeof it.urgency_score === "number" && it.urgency_score > 70,
       )
       .sort(
         (
           /** @type {{ urgency_score: number; }} */ a,
-          /** @type {{ urgency_score: number; }} */ b
-        ) => b.urgency_score - a.urgency_score
+          /** @type {{ urgency_score: number; }} */ b,
+        ) => b.urgency_score - a.urgency_score,
       )
       .slice(0, 10);
 
@@ -1589,7 +1594,7 @@ class OutOfStockExportHandler {
           y + 8,
           {
             width: leftColW,
-          }
+          },
         );
 
       doc
@@ -1602,7 +1607,7 @@ class OutOfStockExportHandler {
           y + 28,
           {
             width: leftColW,
-          }
+          },
         );
 
       // Right: numeric metrics
@@ -1631,7 +1636,7 @@ class OutOfStockExportHandler {
           {
             width: metricW,
             align: "right",
-          }
+          },
         );
 
       doc
@@ -1737,7 +1742,7 @@ class OutOfStockExportHandler {
     ];
     const totalWeight = cols.reduce((s, c) => s + c.weight, 0);
     const colWidths = cols.map((c) =>
-      Math.max(c.min, Math.floor((c.weight / totalWeight) * contentW))
+      Math.max(c.min, Math.floor((c.weight / totalWeight) * contentW)),
     );
 
     // Header row
@@ -1751,7 +1756,7 @@ class OutOfStockExportHandler {
         y - 4,
         colWidths.reduce((a, b) => a + b, 0) + 12,
         headerH + 8,
-        4
+        4,
       )
       .fill("#F5F7FA");
     doc.restore();
@@ -1782,7 +1787,7 @@ class OutOfStockExportHandler {
     breakdown.forEach(
       (
         /** @type {{ category: any; count: null; percentage: null; total_lost_sales: any; average_urgency: number; }} */ cat,
-        /** @type {number} */ idx
+        /** @type {number} */ idx,
       ) => {
         ensureSpace(rowH + 6);
 
@@ -1793,7 +1798,7 @@ class OutOfStockExportHandler {
               startX - 6,
               rowY - 2,
               colWidths.reduce((a, b) => a + b, 0) + 12,
-              rowH
+              rowH,
             )
             .fill("#FBFCFD");
         }
@@ -1911,7 +1916,7 @@ class OutOfStockExportHandler {
 
         // Advance rowY
         rowY += rowH;
-      }
+      },
     );
 
     // Move doc cursor below table
@@ -1932,7 +1937,7 @@ class OutOfStockExportHandler {
         " HIGH = avg urgency > 70; MEDIUM = 50–70; LOW = < 50",
         startX + 48,
         doc.y,
-        { continued: false }
+        { continued: false },
       );
 
     doc.moveDown(1);
@@ -2079,7 +2084,7 @@ class OutOfStockExportHandler {
             : String(lost),
           rightX,
           y + 22,
-          { width: metricW, align: "right" }
+          { width: metricW, align: "right" },
         );
 
       // Avg days OOS
@@ -2112,7 +2117,7 @@ class OutOfStockExportHandler {
             ? "#FFCDD2"
             : status === "URGENT"
               ? "#FFF3E0"
-              : "#E3F2FD"
+              : "#E3F2FD",
         )
         .stroke(borderColor);
 
@@ -2131,7 +2136,7 @@ class OutOfStockExportHandler {
           `Lost Sales: ${typeof this._formatCurrency === "function" ? this._formatCurrency(lost) : String(lost)}  •  Avg Days: ${avgDays.toFixed(1)}  •  Items: ${count}`,
           leftX,
           y + cardH - 18,
-          { width: cardW - 24 }
+          { width: cardW - 24 },
         );
 
       // Advance cursor
@@ -2144,7 +2149,7 @@ class OutOfStockExportHandler {
     const totalLost = breakdown.reduce(
       (/** @type {number} */ s, /** @type {{ total_lost_sales: any; }} */ w) =>
         s + (Number(w.total_lost_sales) || 0),
-      0
+      0,
     );
 
     doc
@@ -2163,7 +2168,7 @@ class OutOfStockExportHandler {
         `${totalWarehouses} warehouses analyzed • Total estimated loss: ${typeof this._formatCurrency === "function" ? this._formatCurrency(totalLost) : String(totalLost)}`,
         startX,
         doc.y,
-        { width: contentW }
+        { width: contentW },
       );
 
     // Footer timestamp
@@ -2276,8 +2281,7 @@ class OutOfStockExportHandler {
     }
 
     // Footer block (fixed at bottom)
-    const footerText1 =
-      "Report generated by InventoryPro Emergency Response System";
+    const footerText1 = "Report generated by stashly Emergency Response System";
     const footerText2 = `Report ID: OOS-${Date.now().toString().slice(-8)} | Generated: ${new Date().toLocaleString()}`;
     const footerText3 = "CONFIDENTIAL - FOR INTERNAL USE ONLY";
 
@@ -2315,7 +2319,7 @@ class OutOfStockExportHandler {
     try {
       // Check if export_history table exists
       const tableCheck = await AppDataSource.query(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='export_history'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='export_history'",
       );
 
       if (!tableCheck || tableCheck.length === 0) {
@@ -2339,7 +2343,7 @@ class OutOfStockExportHandler {
 
       // Get history
       const history = await AppDataSource.query(
-        "SELECT * FROM export_history WHERE filename LIKE '%out_of_stock%' OR filename LIKE '%OutOfStock%' ORDER BY generated_at DESC LIMIT 50"
+        "SELECT * FROM export_history WHERE filename LIKE '%out_of_stock%' OR filename LIKE '%OutOfStock%' ORDER BY generated_at DESC LIMIT 50",
       );
 
       // Parse filters_json
@@ -2347,19 +2351,19 @@ class OutOfStockExportHandler {
         (/** @type {{ filters_json: string; }} */ item) => ({
           ...item,
           filters: item.filters_json ? JSON.parse(item.filters_json) : {},
-        })
+        }),
       );
 
       return successResponse(
         parsedHistory,
-        "Export history fetched successfully"
+        "Export history fetched successfully",
       );
     } catch (error) {
       console.error("getExportHistory error:", error);
       return errorResponse(
         // @ts-ignore
         `Failed to fetch export history: ${error.message}`,
-        500
+        500,
       );
     }
   }
@@ -2371,7 +2375,7 @@ class OutOfStockExportHandler {
     try {
       // Check if export_templates table exists
       const tableCheck = await AppDataSource.query(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='export_templates'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='export_templates'",
       );
 
       if (!tableCheck || tableCheck.length === 0) {
@@ -2424,12 +2428,12 @@ class OutOfStockExportHandler {
         for (const template of defaultTemplates) {
           await AppDataSource.query(
             "INSERT INTO export_templates (name, description, filters_json) VALUES (?, ?, ?)",
-            [template.name, template.description, template.filters_json]
+            [template.name, template.description, template.filters_json],
           );
         }
 
         const templates = await AppDataSource.query(
-          "SELECT * FROM export_templates WHERE name LIKE '%out of stock%' OR name LIKE '%OutOfStock%' ORDER BY name"
+          "SELECT * FROM export_templates WHERE name LIKE '%out of stock%' OR name LIKE '%OutOfStock%' ORDER BY name",
         );
 
         const parsedTemplates = templates.map(
@@ -2438,14 +2442,14 @@ class OutOfStockExportHandler {
             filters: template.filters_json
               ? JSON.parse(template.filters_json)
               : {},
-          })
+          }),
         );
 
         return successResponse(parsedTemplates, "Default templates created");
       }
 
       const templates = await AppDataSource.query(
-        "SELECT * FROM export_templates WHERE name LIKE '%out of stock%' OR name LIKE '%OutOfStock%' ORDER BY name"
+        "SELECT * FROM export_templates WHERE name LIKE '%out of stock%' OR name LIKE '%OutOfStock%' ORDER BY name",
       );
 
       const parsedTemplates = templates.map(
@@ -2454,19 +2458,19 @@ class OutOfStockExportHandler {
           filters: template.filters_json
             ? JSON.parse(template.filters_json)
             : {},
-        })
+        }),
       );
 
       return successResponse(
         parsedTemplates,
-        "Export templates fetched successfully"
+        "Export templates fetched successfully",
       );
     } catch (error) {
       console.error("getExportTemplates error:", error);
       return errorResponse(
         // @ts-ignore
         `Failed to fetch export templates: ${error.message}`,
-        500
+        500,
       );
     }
   }
@@ -2485,13 +2489,13 @@ class OutOfStockExportHandler {
 
       const result = await AppDataSource.query(
         "INSERT INTO export_templates (name, description, filters_json) VALUES (?, ?, ?)",
-        [name, description || "", JSON.stringify(filters || {})]
+        [name, description || "", JSON.stringify(filters || {})],
       );
 
       return successResponse(
         // @ts-ignore
         { id: result.lastInsertRowid, name },
-        "Template saved successfully"
+        "Template saved successfully",
       );
     } catch (error) {
       console.error("saveExportTemplate error:", error);
@@ -2517,7 +2521,7 @@ class OutOfStockExportHandler {
           exportData.generated_at,
           exportData.file_size,
           exportData.filters || "{}",
-        ]
+        ],
       );
 
       return true;
@@ -2637,10 +2641,9 @@ if (ipcMain) {
   });
 } else {
   console.warn(
-    "ipcMain is not available - running in non-Electron environment"
+    "ipcMain is not available - running in non-Electron environment",
   );
 }
 
 // Export for use in other modules
 module.exports = { OutOfStockExportHandler, outOfStockExportHandler };
-

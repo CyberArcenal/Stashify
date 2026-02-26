@@ -77,9 +77,9 @@ const StockAdjustmentPage: React.FC = () => {
   const allActions = actionTypes.map((a) => a.value);
 
   const [form, setForm] = useState<StockAdjustmentForm>({
-    product_id: undefined,
-    variant_id: undefined,
-    warehouse_id: 0,
+    productId: undefined,
+    variantId: undefined,
+    warehouseId: 0,
     quantity: 0,
     action: "manual_adjustment",
     notes: "",
@@ -190,18 +190,18 @@ const StockAdjustmentPage: React.FC = () => {
   };
 
   // Get selected product details
-  const selectedProduct = products.find((p) => p.id === form.product_id);
+  const selectedProduct = products.find((p) => p.id === form.productId);
 
   // Get available variants for selected product
   const availableVariants = selectedProduct?.variants_data || [];
 
   // Get stock quantity for selected product/variant in selected warehouse
   // const getCurrentStock = () => {
-  //   if (!selectedProduct || !form.warehouse_id) return 0;
+  //   if (!selectedProduct || !form.warehouseId) return 0;
 
   //   // If variant is selected, find variant stock
-  //   if (form.variant_id) {
-  //     const variant = availableVariants.find(v => v.id === form.variant_id);
+  //   if (form.variantId) {
+  //     const variant = availableVariants.find(v => v.id === form.variantId);
   //     return variant ? variant.quantity : 0;
   //   }
 
@@ -211,15 +211,15 @@ const StockAdjustmentPage: React.FC = () => {
 
   // Get stock quantity for selected product/variant in selected warehouse
   const _getCurrentStock = async () => {
-    if (!selectedProduct || !form.warehouse_id) {
+    if (!selectedProduct || !form.warehouseId) {
       setCurrentStockQuantity(0);
     }
 
     // If variant is selected, find variant stock
     const stockItem = await stockItemAPI.getUniqueStock(
-      form.product_id,
-      form.variant_id,
-      form.warehouse_id,
+      form.productId,
+      form.variantId,
+      form.warehouseId,
     );
     setCurrentStockQuantity(stockItem.quantity);
   };
@@ -232,19 +232,19 @@ const StockAdjustmentPage: React.FC = () => {
   const validateForm = async (): Promise<boolean> => {
     const errors: string[] = [];
 
-    if (!form.product_id) {
+    if (!form.productId) {
       errors.push("• Please select a product");
     }
 
     if (
       selectedProduct?.variants_data &&
       selectedProduct.variants_data.length > 0 &&
-      !form.variant_id
+      !form.variantId
     ) {
       errors.push("• Please select a variant for this product");
     }
 
-    if (!form.warehouse_id) {
+    if (!form.warehouseId) {
       errors.push("• Please select a warehouse");
     }
 
@@ -327,9 +327,9 @@ const StockAdjustmentPage: React.FC = () => {
 
       // Reset form
       setForm({
-        product_id: undefined,
-        variant_id: undefined,
-        warehouse_id: 0,
+        productId: undefined,
+        variantId: undefined,
+        warehouseId: 0,
         quantity: 0,
         action: "manual_adjustment",
         notes: "",
@@ -364,9 +364,9 @@ const StockAdjustmentPage: React.FC = () => {
   const handleProductChange = (productId: string) => {
     const productIdNum = productId ? parseInt(productId) : undefined;
     setForm({
-      product_id: productIdNum,
-      variant_id: undefined,
-      warehouse_id: form.warehouse_id || 0,
+      productId: productIdNum,
+      variantId: undefined,
+      warehouseId: form.warehouseId || 0,
       quantity: 0,
       action: form.action,
       notes: form.notes,
@@ -377,7 +377,7 @@ const StockAdjustmentPage: React.FC = () => {
     const variantIdNum = variantId ? parseInt(variantId) : undefined;
     setForm({
       ...form,
-      variant_id: variantIdNum,
+      variantId: variantIdNum,
       quantity: 0,
     });
   };
@@ -386,7 +386,7 @@ const StockAdjustmentPage: React.FC = () => {
     const warehouseIdNum = parseInt(warehouseId);
     setForm({
       ...form,
-      warehouse_id: warehouseIdNum,
+      warehouseId: warehouseIdNum,
       quantity: 0,
     });
   };
@@ -994,7 +994,7 @@ const StockAdjustmentPage: React.FC = () => {
                 key={index}
                 type="button"
                 onClick={() => handleQuickAction(action.value)}
-                disabled={!form.product_id || !form.warehouse_id}
+                disabled={!form.productId || !form.warehouseId}
                 className="compact-button text-xs px-2 py-1 rounded transition-colors disabled:opacity-50"
                 style={{
                   backgroundColor:
@@ -1022,7 +1022,7 @@ const StockAdjustmentPage: React.FC = () => {
               Product *
             </label>
             <ProductSelect
-              value={form.product_id ? form.product_id : 0}
+              value={form.productId ? form.productId : 0}
               onChange={(productId, productName, price) =>
                 handleProductChange(productId.toString())
               }
@@ -1038,7 +1038,7 @@ const StockAdjustmentPage: React.FC = () => {
               Variant {availableVariants.length > 0 ? "*" : ""}
             </label>
             <select
-              value={form.variant_id || ""}
+              value={form.variantId || ""}
               onChange={(e) => handleVariantChange(e.target.value)}
               className="compact-input w-full rounded-md"
               style={{
@@ -1047,7 +1047,7 @@ const StockAdjustmentPage: React.FC = () => {
                 color: "var(--sidebar-text)",
               }}
               required={availableVariants.length > 0}
-              disabled={!form.product_id}
+              disabled={!form.productId}
             >
               <option value="">
                 {availableVariants.length > 0
@@ -1070,7 +1070,7 @@ const StockAdjustmentPage: React.FC = () => {
               Warehouse *
             </label>
             <select
-              value={form.warehouse_id || ""}
+              value={form.warehouseId || ""}
               onChange={(e) => handleWarehouseChange(e.target.value)}
               className="compact-input w-full rounded-md"
               style={{
@@ -1239,11 +1239,11 @@ const StockAdjustmentPage: React.FC = () => {
               }}
               disabled={
                 submitting ||
-                !form.product_id ||
-                !form.warehouse_id ||
+                !form.productId ||
+                !form.warehouseId ||
                 form.quantity === 0 ||
                 !form.notes?.trim() ||
-                (availableVariants.length > 0 && !form.variant_id) ||
+                (availableVariants.length > 0 && !form.variantId) ||
                 (form.quantity < 0 &&
                   Math.abs(form.quantity) > currentStockQuantity)
               }

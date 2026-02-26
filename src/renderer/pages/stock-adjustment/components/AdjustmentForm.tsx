@@ -22,9 +22,9 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
   onSubmit,
 }) => {
   const {
-    product_id,
-    variant_id,
-    warehouse_id,
+    productId,
+    variantId,
+    warehouseId,
     quantity,
     reason,
     adjustmentType,
@@ -40,10 +40,16 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
   return (
     <div
       className="compact-card rounded-md mb-4 p-3"
-      style={{ backgroundColor: "var(--card-secondary-bg)", border: "1px solid var(--border-color)" }}
+      style={{
+        backgroundColor: "var(--card-secondary-bg)",
+        border: "1px solid var(--border-color)",
+      }}
     >
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-sm flex items-center gap-2" style={{ color: "var(--sidebar-text)" }}>
+        <h3
+          className="font-semibold text-sm flex items-center gap-2"
+          style={{ color: "var(--sidebar-text)" }}
+        >
           <Plus className="icon-sm" />
           Add Stock Adjustment
         </h3>
@@ -53,10 +59,13 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
               key={index}
               type="button"
               onClick={() => handleQuickAction(action.value)}
-              disabled={!product_id || !warehouse_id}
+              disabled={!productId || !warehouseId}
               className="compact-button text-xs px-2 py-1 rounded transition-colors disabled:opacity-50"
               style={{
-                backgroundColor: action.value > 0 ? "var(--accent-green)" : "var(--accent-red)",
+                backgroundColor:
+                  action.value > 0
+                    ? "var(--accent-green)"
+                    : "var(--accent-red)",
                 color: "var(--sidebar-text)",
               }}
             >
@@ -66,15 +75,21 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
         </div>
       </div>
 
-      <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-sm">
+      <form
+        onSubmit={onSubmit}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-sm"
+      >
         {/* Product */}
         <div className="lg:col-span-2">
-          <label className="block text-sm font-medium mb-1" style={{ color: "var(--sidebar-text)" }}>
+          <label
+            className="block text-sm font-medium mb-1"
+            style={{ color: "var(--sidebar-text)" }}
+          >
             Product *
           </label>
           <ProductSelect
-            value={product_id}
-            onChange={(id) => setField("product_id", id)}
+            value={productId}
+            onChange={(id) => setField("productId", id)}
             disabled={submitting}
             placeholder="Select product..."
           />
@@ -82,26 +97,32 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
 
         {/* Variant */}
         <div>
-          <label className="block text-sm font-medium mb-1" style={{ color: "var(--sidebar-text)" }}>
+          <label
+            className="block text-sm font-medium mb-1"
+            style={{ color: "var(--sidebar-text)" }}
+          >
             Variant
           </label>
           <ProductVariantSelect
-            value={variant_id}
-            onChange={(id) => setField("variant_id", id)}
-            productId={product_id || undefined}
-            disabled={submitting || !product_id}
+            value={variantId}
+            onChange={(id) => setField("variantId", id)}
+            productId={productId || undefined}
+            disabled={submitting || !productId}
             placeholder="Select variant (optional)"
           />
         </div>
 
         {/* Warehouse */}
         <div>
-          <label className="block text-sm font-medium mb-1" style={{ color: "var(--sidebar-text)" }}>
+          <label
+            className="block text-sm font-medium mb-1"
+            style={{ color: "var(--sidebar-text)" }}
+          >
             Warehouse *
           </label>
           <WarehouseSelect
-            value={warehouse_id}
-            onChange={(id) => setField("warehouse_id", id)}
+            value={warehouseId}
+            onChange={(id) => setField("warehouseId", id)}
             disabled={submitting}
             placeholder="Select warehouse..."
           />
@@ -109,7 +130,10 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
 
         {/* Current Stock */}
         <div>
-          <label className="block text-sm font-medium mb-1" style={{ color: "var(--sidebar-text)" }}>
+          <label
+            className="block text-sm font-medium mb-1"
+            style={{ color: "var(--sidebar-text)" }}
+          >
             Current Stock
           </label>
           <div className="relative">
@@ -126,12 +150,18 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
             />
             {currentStock <= 10 && currentStock > 0 && (
               <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                <AlertTriangle className="icon-xs" style={{ color: "var(--accent-red)" }} />
+                <AlertTriangle
+                  className="icon-xs"
+                  style={{ color: "var(--accent-red)" }}
+                />
               </div>
             )}
           </div>
           {currentStock <= 10 && currentStock > 0 && (
-            <div className="text-xs mt-1 flex items-center gap-1" style={{ color: "var(--accent-red)" }}>
+            <div
+              className="text-xs mt-1 flex items-center gap-1"
+              style={{ color: "var(--accent-red)" }}
+            >
               <AlertTriangle className="icon-xs" />
               Low stock warning
             </div>
@@ -140,13 +170,18 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
 
         {/* Quantity */}
         <div>
-          <label className="block text-sm font-medium mb-1" style={{ color: "var(--sidebar-text)" }}>
+          <label
+            className="block text-sm font-medium mb-1"
+            style={{ color: "var(--sidebar-text)" }}
+          >
             Quantity *
           </label>
           <input
             type="number"
             value={quantity}
-            onChange={(e) => setField("quantity", parseInt(e.target.value) || 0)}
+            onChange={(e) =>
+              setField("quantity", parseInt(e.target.value) || 0)
+            }
             className="compact-input w-full rounded-md"
             style={{
               backgroundColor: "var(--card-bg)",
@@ -154,15 +189,18 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
                 quantity > 0
                   ? "var(--accent-green)"
                   : quantity < 0
-                  ? "var(--accent-red)"
-                  : "var(--border-color)",
+                    ? "var(--accent-red)"
+                    : "var(--border-color)",
               color: "var(--sidebar-text)",
             }}
             placeholder="Enter quantity"
             required
           />
           {quantity < 0 && (
-            <div className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
+            <div
+              className="text-xs mt-1"
+              style={{ color: "var(--text-secondary)" }}
+            >
               Max decrease: {currentStock} units
             </div>
           )}
@@ -170,7 +208,10 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
 
         {/* Adjustment Type */}
         <div>
-          <label className="block text-sm font-medium mb-1" style={{ color: "var(--sidebar-text)" }}>
+          <label
+            className="block text-sm font-medium mb-1"
+            style={{ color: "var(--sidebar-text)" }}
+          >
             Type
           </label>
           <select
@@ -183,15 +224,20 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
               color: "var(--sidebar-text)",
             }}
           >
-            {adjustmentTypes.map(t => (
-              <option key={t.value} value={t.value}>{t.label}</option>
+            {adjustmentTypes.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
             ))}
           </select>
         </div>
 
         {/* Reason */}
         <div className="lg:col-span-2">
-          <label className="block text-sm font-medium mb-1" style={{ color: "var(--sidebar-text)" }}>
+          <label
+            className="block text-sm font-medium mb-1"
+            style={{ color: "var(--sidebar-text)" }}
+          >
             Reason *
           </label>
           <input
@@ -215,8 +261,8 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
             type="submit"
             disabled={
               submitting ||
-              !product_id ||
-              !warehouse_id ||
+              !productId ||
+              !warehouseId ||
               quantity === 0 ||
               !reason.trim() ||
               (quantity < 0 && Math.abs(quantity) > currentStock) ||
@@ -228,8 +274,8 @@ const AdjustmentForm: React.FC<AdjustmentFormProps> = ({
                 quantity > 0
                   ? "var(--accent-green)"
                   : quantity < 0
-                  ? "var(--accent-red)"
-                  : "var(--accent-blue)",
+                    ? "var(--accent-red)"
+                    : "var(--accent-blue)",
             }}
           >
             {submitting ? (

@@ -5,7 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { getDb } = require(
-  path.join(__dirname, "..", "..", "models", "BaseQuerySet")
+  path.join(__dirname, "..", "..", "models", "BaseQuerySet"),
 );
 
 class AuditLogExportHandler {
@@ -14,8 +14,8 @@ class AuditLogExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "InventoryPro",
-      "audit_log_exports"
+      "stashly",
+      "audit_log_exports",
     );
 
     // Create export directory if it doesn't exist
@@ -35,7 +35,7 @@ class AuditLogExportHandler {
       console.warn(
         "ExcelJS not available for enhanced Excel export:",
         // @ts-ignore
-        error.message
+        error.message,
       );
     }
   }
@@ -502,7 +502,7 @@ class AuditLogExportHandler {
           `Generated: ${new Date().toLocaleDateString()} | Total: ${logs.length} logs`,
           {
             align: "center",
-          }
+          },
         );
 
       doc.moveDown(0.5);
@@ -847,7 +847,7 @@ if (ipcMain) {
   });
 } else {
   console.warn(
-    "ipcMain is not available - running in non-Electron environment"
+    "ipcMain is not available - running in non-Electron environment",
   );
 }
 

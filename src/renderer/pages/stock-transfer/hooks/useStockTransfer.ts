@@ -131,7 +131,7 @@ const useStockTransfer = (): UseStockTransferReturn => {
         movement_type: filters.type !== "all" ? filters.type : undefined,
       };
       if (filters.warehouse !== "all")
-        params.warehouse_id = parseInt(filters.warehouse);
+        params.warehouseId = parseInt(filters.warehouse);
       if (filters.date_from) params.startDate = filters.date_from;
       if (filters.date_to) params.endDate = filters.date_to;
 

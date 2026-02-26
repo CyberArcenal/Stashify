@@ -6,11 +6,11 @@ import type { ExportResult } from "./product";
 
 export interface InventoryItem {
   id: number;
-  product_id: number;
+  productId: number;
   product_name: string;
   product_sku: string;
   category: string;
-  variant_id?: number;
+  variantId?: number;
   variant_name?: string;
   variant_sku?: string;
   quantity: number;
@@ -27,10 +27,10 @@ export interface InventoryItem {
 
 export interface StockMovement {
   id: number;
-  product_id: number;
+  productId: number;
   product_name: string;
   product_sku: string;
-  variant_id?: number;
+  variantId?: number;
   variant_name?: string;
   movement_type: "IN" | "OUT" | "ADJUSTMENT" | "TRANSFER";
   quantity_change: number;
@@ -46,7 +46,7 @@ export interface StockMovement {
 }
 
 export interface CategoryStock {
-  category_id: number;
+  categoryId: number;
   category_name: string;
   total_quantity: number;
   total_value: number;
@@ -178,7 +178,7 @@ class InventoryExportAPI {
             console.error("Failed to open file:", openError);
             await dialogs.error(
               "The file was exported successfully but could not be opened automatically.\n" +
-                "You can find it in your InventoryPro folder inside Downloads.",
+                "You can find it in your stashly folder inside Downloads.",
               "File Export Complete",
             );
           }

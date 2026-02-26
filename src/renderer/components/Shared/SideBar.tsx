@@ -24,6 +24,8 @@ import {
   CarIcon,
   FilePlus,
   Key,
+  icons,
+  Lock,
 } from "lucide-react";
 import { version } from "../../../../package.json";
 
@@ -102,8 +104,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       icon: Settings,
       category: "system",
       children: [
+        {path: "/audit", name: "Audit Trail", icon: Lock},
         { path: "/settings", name: "Settings", icon: Settings },
-        { path: "/settings/inventory", name: "Inventory Settings", icon: Warehouse },
         { name: "Activation", icon: Key, path: "/activation" },
       ],
     },

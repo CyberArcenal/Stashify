@@ -1,7 +1,7 @@
 // src/utils/errorHandler.js
 //@ts-check
 
-const { safeStringify } = require("../utils/logger");
+const { safeStringify, logger } = require("../utils/logger");
 
 
 // Kung wala ang TransactionError, gumawa tayo ng fallback
@@ -88,6 +88,7 @@ function handleError(error, context) {
   };
 
   // Log with context and meta
+
   // @ts-ignore
   logger.error(normalized.message, {
     context: ctx,

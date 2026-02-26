@@ -1,8 +1,9 @@
-
+//@ts-check
 const { ipcMain } = require("electron");
 const { AppDataSource } = require("../../../db/datasource");
 const { AuditLog } = require("../../../../entities/AuditLog");
 const { withErrorHandling } = require("../../../../middlewares/errorHandler");
+const { logger } = require("../../../../utils/logger");
 
 class SalesReportHandler {
   constructor() {
@@ -31,6 +32,7 @@ class SalesReportHandler {
       // @ts-ignore
       console.warn(
         `[SalesReportHandler] Failed to load handler: ${path}`,
+        // @ts-ignore
         error.message,
       );
       return async () => ({

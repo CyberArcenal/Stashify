@@ -38,12 +38,12 @@ async function getSupplierFromPurchases(manager, productId, variantId) {
     // Subukan kunin ang supplier na may eksaktong variant
     const purchaseWithVariant = await manager
       .createQueryBuilder(Purchase, "p")
-      .innerJoin(PurchaseItem, "pi", "p.id = pi.purchase_id")
-      .innerJoin(Supplier, "s", "p.supplier_id = s.id")
+      .innerJoin(PurchaseItem, "pi", "p.id = pi.purchaseId")
+      .innerJoin(Supplier, "s", "p.supplierId = s.id")
       .select("s.name", "supplier_name")
-      .where("pi.product_id = :productId", { productId })
+      .where("pi.productId = :productId", { productId })
       .andWhere(
-        variantId ? "pi.variant_id = :variantId" : "pi.variant_id IS NULL",
+        variantId ? "pi.variantId = :variantId" : "pi.variantId IS NULL",
         variantId ? { variantId } : {},
       )
       .andWhere("p.is_deleted = 0")
@@ -59,10 +59,10 @@ async function getSupplierFromPurchases(manager, productId, variantId) {
     // Fallback: supplier kahit walang variant
     const purchaseAny = await manager
       .createQueryBuilder(Purchase, "p")
-      .innerJoin(PurchaseItem, "pi", "p.id = pi.purchase_id")
-      .innerJoin(Supplier, "s", "p.supplier_id = s.id")
+      .innerJoin(PurchaseItem, "pi", "p.id = pi.purchaseId")
+      .innerJoin(Supplier, "s", "p.supplierId = s.id")
       .select("s.name", "supplier_name")
-      .where("pi.product_id = :productId", { productId })
+      .where("pi.productId = :productId", { productId })
       .andWhere("p.is_deleted = 0")
       .orderBy("p.created_at", "DESC")
       .limit(1)
@@ -75,10 +75,10 @@ async function getSupplierFromPurchases(manager, productId, variantId) {
     // Fallback: isama ang deleted suppliers
     const includeDeleted = await manager
       .createQueryBuilder(Purchase, "p")
-      .innerJoin(PurchaseItem, "pi", "p.id = pi.purchase_id")
-      .innerJoin(Supplier, "s", "p.supplier_id = s.id")
+      .innerJoin(PurchaseItem, "pi", "p.id = pi.purchaseId")
+      .innerJoin(Supplier, "s", "p.supplierId = s.id")
       .select("s.name", "supplier_name")
-      .where("pi.product_id = :productId", { productId })
+      .where("pi.productId = :productId", { productId })
       .orderBy("p.created_at", "DESC")
       .limit(1)
       .getRawOne();
@@ -99,9 +99,9 @@ async function getLastSaleDate(manager, productId, variantId) {
       .createQueryBuilder(OrderItem, "oi")
       .innerJoin("oi.order", "o")
       .select("MAX(o.created_at)", "last_sale_date")
-      .where("oi.product_id = :productId", { productId })
+      .where("oi.productId = :productId", { productId })
       .andWhere(
-        variantId ? "oi.variant_id = :variantId" : "oi.variant_id IS NULL",
+        variantId ? "oi.variantId = :variantId" : "oi.variantId IS NULL",
         variantId ? { variantId } : {},
       )
       .andWhere("o.status = 'completed'")
@@ -135,16 +135,16 @@ async function getOtherWarehouses(
       .select("warehouse.name", "warehouse")
       .addSelect("warehouse.location", "location")
       .addSelect("stock.quantity", "quantity")
-      .where("stock.product_id = :productId", { productId })
-      .andWhere("stock.warehouse_id != :excludeId", {
+      .where("stock.productId = :productId", { productId })
+      .andWhere("stock.warehouseId != :excludeId", {
         excludeId: excludeWarehouseId,
       })
       .andWhere("stock.is_deleted = 0");
 
     if (variantId) {
-      query.andWhere("stock.variant_id = :variantId", { variantId });
+      query.andWhere("stock.variantId = :variantId", { variantId });
     } else {
-      query.andWhere("stock.variant_id IS NULL");
+      query.andWhere("stock.variantId IS NULL");
     }
 
     const results = await query.getRawMany();
@@ -167,7 +167,7 @@ async function getOtherWarehouses(
 async function getTotalTrackedCounts(manager) {
   const stockItemCount = await manager
     .createQueryBuilder(StockItem, "si")
-    .innerJoin(Product, "p", "si.product_id = p.id")
+    .innerJoin(Product, "p", "si.productId = p.id")
     .where("p.track_quantity = 1")
     .andWhere("p.is_deleted = 0")
     .andWhere("si.is_deleted = 0")
@@ -181,7 +181,7 @@ async function getTotalTrackedCounts(manager) {
 
   const variantCount = await manager
     .createQueryBuilder(ProductVariant, "v")
-    .innerJoin(Product, "p", "v.product_id = p.id")
+    .innerJoin(Product, "p", "v.productId = p.id")
     .where("p.track_quantity = 1")
     .andWhere("v.is_deleted = 0")
     .getCount();
@@ -201,9 +201,9 @@ async function computeSalesVelocity(manager, productId, variantId) {
       .createQueryBuilder(OrderItem, "oi")
       .innerJoin("oi.order", "o")
       .select("SUM(oi.quantity)", "totalSold")
-      .where("oi.product_id = :productId", { productId })
+      .where("oi.productId = :productId", { productId })
       .andWhere(
-        variantId ? "oi.variant_id = :variantId" : "oi.variant_id IS NULL",
+        variantId ? "oi.variantId = :variantId" : "oi.variantId IS NULL",
         variantId ? { variantId } : {},
       )
       .andWhere("o.status = 'completed'")
@@ -253,7 +253,7 @@ function computeLostSales(salesVelocity, daysOutOfStock, netPrice) {
 // Pagbuo ng buong out-of-stock report
 // @ts-ignore
 async function generateOutOfStockReport(params = {}, queryRunner) {
-   const { AppDataSource } = require("../../../../db/datasource");
+  const { AppDataSource } = require("../../../../db/datasource");
   if (!AppDataSource.isInitialized) {
     await AppDataSource.initialize();
   }

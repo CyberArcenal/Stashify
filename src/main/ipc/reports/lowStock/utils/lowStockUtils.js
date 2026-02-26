@@ -126,15 +126,15 @@ async function getOtherWarehouses(
     .select("warehouse.name", "warehouse")
     .addSelect("warehouse.location", "location")
     .addSelect("stock.quantity", "quantity")
-    .where("stock.product_id = :productId", { productId })
-    .andWhere("stock.warehouse_id != :excludeId", {
+    .where("stock.productId = :productId", { productId })
+    .andWhere("stock.warehouseId != :excludeId", {
       excludeId: excludeWarehouseId,
     });
 
   if (variantId) {
-    query.andWhere("stock.variant_id = :variantId", { variantId });
+    query.andWhere("stock.variantId = :variantId", { variantId });
   } else {
-    query.andWhere("stock.variant_id IS NULL");
+    query.andWhere("stock.variantId IS NULL");
   }
 
   const results = await query.getRawMany();
@@ -156,11 +156,11 @@ async function computeSalesVelocity(manager) {
 
   const orderItems = await manager
     .createQueryBuilder(OrderItem, "oi")
-    .select("oi.product_id", "productId")
-    .addSelect("oi.variant_id", "variantId")
+    .select("oi.productId", "productId")
+    .addSelect("oi.variantId", "variantId")
     .addSelect("SUM(oi.quantity)", "totalSold")
     .where("oi.created_at >= :date", { date: thirtyDaysAgo })
-    .groupBy("oi.product_id, oi.variant_id")
+    .groupBy("oi.productId, oi.variantId")
     .getRawMany();
 
   const map = new Map();
@@ -180,7 +180,7 @@ async function computeSalesVelocity(manager) {
 async function getTotalTrackedCounts(manager) {
   const stockItemCount = await manager
     .createQueryBuilder(StockItem, "si")
-    .innerJoin(Product, "p", "si.product_id = p.id")
+    .innerJoin(Product, "p", "si.productId = p.id")
     .where("p.track_quantity = 1")
     .andWhere("p.is_deleted = 0")
     .getCount();
@@ -193,7 +193,7 @@ async function getTotalTrackedCounts(manager) {
 
   const variantCount = await manager
     .createQueryBuilder(ProductVariant, "v")
-    .innerJoin(Product, "p", "v.product_id = p.id")
+    .innerJoin(Product, "p", "v.productId = p.id")
     .where("p.track_quantity = 1")
     .andWhere("v.is_deleted = 0")
     .getCount();
@@ -205,7 +205,7 @@ async function getTotalTrackedCounts(manager) {
 // Pagbuo ng buong low stock report
 // @ts-ignore
 async function buildLowStockReport(params = {}, queryRunner) {
-   const { AppDataSource } = require("../../../../db/datasource");
+  const { AppDataSource } = require("../../../../db/datasource");
   if (!AppDataSource.isInitialized) {
     await AppDataSource.initialize();
   }

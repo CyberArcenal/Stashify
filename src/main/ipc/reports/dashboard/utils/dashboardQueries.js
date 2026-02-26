@@ -668,7 +668,7 @@ async function getInventoryHealth() {
       .leftJoin("si.product", "p")
       .leftJoin("si.variant", "v")
       .select(
-        "COALESCE(SUM(CASE WHEN si.variant_id IS NULL THEN si.quantity * COALESCE(p.cost_per_item, 0) ELSE si.quantity * COALESCE(v.cost_per_item, 0) END), 0)",
+        "COALESCE(SUM(CASE WHEN si.variantId IS NULL THEN si.quantity * COALESCE(p.cost_per_item, 0) ELSE si.quantity * COALESCE(v.cost_per_item, 0) END), 0)",
         "total_value",
       )
       .getRawOne();
@@ -783,7 +783,7 @@ async function getInventoryHealth() {
       // FIXED: Changed supplier_id to supplierId (correct foreign key property)
       const purchases = await purchaseRepo.find({
         // @ts-ignore
-        where: { supplier: {id: sup.id} },
+        where: { supplier: { id: sup.id } },
       });
       if (purchases.length > 0) {
         // @ts-ignore

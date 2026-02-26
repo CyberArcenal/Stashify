@@ -41,17 +41,18 @@ import {
   AlertCircle,
   Zap,
 } from "lucide-react";
-import salesReportAPI, {
+import type {
   SalesReportData,
   SalesReportParams,
-} from "@/renderer/api/salesReport";
+} from "../../../api/analytics/salesReport";
+import salesReportAPI from "../../../api/analytics/salesReport";
+import { dialogs } from "../../../utils/dialogs";
 import {
   salesExportAPI,
-  SalesExportParams,
-} from "@/renderer/api/exports/sales";
-import { formatCurrency } from "@/renderer/utils/formatters";
-import { showApiError, showSuccess } from "@/renderer/utils/notification";
-import { dialogs } from "@/renderer/utils/dialogs";
+  type SalesExportParams,
+} from "../../../api/exports/sales";
+import { showApiError, showSuccess } from "../../../utils/notification";
+import { formatCurrency } from "../../../utils/formatters";
 
 // Color palettes using CSS variables
 const COLORS = [
@@ -1134,7 +1135,9 @@ const SalesReport: React.FC = () => {
                     <YAxis
                       stroke="var(--sidebar-text)"
                       fontSize={11}
-                      tickFormatter={(value) => `₱${value / 1000}k`}
+                      tickFormatter={(value: number) =>
+                        `${formatCurrency(value / 1000)}k`
+                      }
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
@@ -1191,9 +1194,11 @@ const SalesReport: React.FC = () => {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ category, percentage }) =>
-                        `${category} (${percentage?.toFixed(1) || 0}%)`
-                      }
+                      label={({ value, payload }) => {
+                        const percentage = payload?.percentage || 0;
+                        const category = payload?.category || "N/A";
+                        return `${category} (${typeof percentage === "number" ? percentage.toFixed(1) : 0}%)`;
+                      }}
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="sales"
@@ -1206,11 +1211,11 @@ const SalesReport: React.FC = () => {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value: number) => [
-                        formatCurrency(value),
+                      formatter={(value: number | undefined) => [
+                        formatCurrency(value || 0),
                         "Sales",
                       ]}
-                      labelFormatter={(label) => `Category: ${label}`}
+                      labelFormatter={(label: any) => `Category: ${label}`}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -1260,7 +1265,7 @@ const SalesReport: React.FC = () => {
                     <YAxis
                       stroke="var(--sidebar-text)"
                       fontSize={11}
-                      tickFormatter={(value) => `₱${value / 1000}k`}
+                      tickFormatter={(value: number) => `₱${value / 1000}k`}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
@@ -1924,14 +1929,14 @@ const SalesReport: React.FC = () => {
                     <YAxis
                       stroke="var(--sidebar-text)"
                       fontSize={11}
-                      tickFormatter={(value) => `${value}%`}
+                      tickFormatter={(value: any) => `${value}%`}
                     />
                     <Tooltip
-                      formatter={(value) => [
+                      formatter={(value: any) => [
                         `${Number(value).toFixed(1)}%`,
                         "Growth",
                       ]}
-                      labelFormatter={(label) => `Month: ${label}`}
+                      labelFormatter={(label: any) => `Month: ${label}`}
                     />
                     <Area
                       type="monotone"

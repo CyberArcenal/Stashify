@@ -313,7 +313,7 @@ const NotificationsPage: React.FC = () => {
     ) {
       if (productSku) {
         // Navigate to product detail if we have SKU
-        return `/products/view/${notification.product_id || ""}`;
+        return `/products/view/${notification.productId || ""}`;
       } else if (type?.includes("low_stock")) {
         return "/products/low-stock";
       } else if (type?.includes("out_of_stock")) {

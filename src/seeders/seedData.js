@@ -34,8 +34,8 @@ const DEFAULT_CONFIG = {
   supplierCount: 10,
   customerCount: 30,
   productCount: 50,
-  variantPerProduct: 2,      // average variants per product (some may have 0)
-  imagePerProduct: 2,         // average images per product
+  variantPerProduct: 2, // average variants per product (some may have 0)
+  imagePerProduct: 2, // average images per product
   purchaseCount: 20,
   orderCount: 100,
   stockMovementCount: 200,
@@ -64,17 +64,24 @@ const DEFAULT_CONFIG = {
 // ========== RANDOM HELPERS ==========
 const random = {
   int: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min,
-  float: (min, max, decimals = 2) => +(Math.random() * (max - min) + min).toFixed(decimals),
-  date: (start, end) => new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime())),
+  float: (min, max, decimals = 2) =>
+    +(Math.random() * (max - min) + min).toFixed(decimals),
+  date: (start, end) =>
+    new Date(
+      start.getTime() + Math.random() * (end.getTime() - start.getTime()),
+    ),
   pastDate: () => random.date(new Date(2024, 0, 1), new Date()),
   futureDate: () => random.date(new Date(), new Date(2026, 11, 31)),
   element: (arr) => arr[Math.floor(Math.random() * arr.length)],
   boolean: (probability = 0.5) => Math.random() < probability,
   sku: (usedSet) => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let sku;
     do {
-      sku = Array.from({ length: 8 }, () => chars[random.int(0, chars.length - 1)]).join('');
+      sku = Array.from(
+        { length: 8 },
+        () => chars[random.int(0, chars.length - 1)],
+      ).join("");
     } while (usedSet.has(sku));
     usedSet.add(sku);
     return sku;
@@ -82,7 +89,7 @@ const random = {
   barcode: (usedSet) => {
     let barcode;
     do {
-      barcode = Array.from({ length: 13 }, () => random.int(0, 9)).join('');
+      barcode = Array.from({ length: 13 }, () => random.int(0, 9)).join("");
     } while (usedSet.has(barcode));
     usedSet.add(barcode);
     return barcode;
@@ -90,21 +97,86 @@ const random = {
   phone: () => `+63${random.int(900000000, 999999999)}`,
   email: (prefix) => `${prefix}${random.int(1, 999)}@example.com`,
   name: () => {
-    const first = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Maria', 'James', 'Patricia', 'Robert', 'Jennifer'];
-    const last = ['Smith', 'Doe', 'Johnson', 'Brown', 'Davis', 'Garcia', 'Rodriguez', 'Wilson', 'Martinez', 'Taylor'];
+    const first = [
+      "John",
+      "Jane",
+      "Michael",
+      "Sarah",
+      "David",
+      "Maria",
+      "James",
+      "Patricia",
+      "Robert",
+      "Jennifer",
+    ];
+    const last = [
+      "Smith",
+      "Doe",
+      "Johnson",
+      "Brown",
+      "Davis",
+      "Garcia",
+      "Rodriguez",
+      "Wilson",
+      "Martinez",
+      "Taylor",
+    ];
     return `${random.element(first)} ${random.element(last)}`;
   },
   company: () => {
-    const prefixes = ['Global', 'International', 'Premier', 'Elite', 'Advanced', 'Prime', 'Metro', 'United'];
-    const suffixes = ['Supplies', 'Trading', 'Distributors', 'Corporation', 'Inc', 'LLC', 'Group', 'Solutions'];
+    const prefixes = [
+      "Global",
+      "International",
+      "Premier",
+      "Elite",
+      "Advanced",
+      "Prime",
+      "Metro",
+      "United",
+    ];
+    const suffixes = [
+      "Supplies",
+      "Trading",
+      "Distributors",
+      "Corporation",
+      "Inc",
+      "LLC",
+      "Group",
+      "Solutions",
+    ];
     return `${random.element(prefixes)} ${random.element(suffixes)}`;
   },
   productName: () => {
-    const adjectives = ['Premium', 'Deluxe', 'Basic', 'Pro', 'Lite', 'Eco', 'Smart', 'Classic', 'Industrial', 'Compact'];
-    const nouns = ['Widget', 'Gadget', 'Tool', 'Device', 'Appliance', 'Component', 'Accessory', 'Supply', 'Instrument', 'Machine'];
+    const adjectives = [
+      "Premium",
+      "Deluxe",
+      "Basic",
+      "Pro",
+      "Lite",
+      "Eco",
+      "Smart",
+      "Classic",
+      "Industrial",
+      "Compact",
+    ];
+    const nouns = [
+      "Widget",
+      "Gadget",
+      "Tool",
+      "Device",
+      "Appliance",
+      "Component",
+      "Accessory",
+      "Supply",
+      "Instrument",
+      "Machine",
+    ];
     return `${random.element(adjectives)} ${random.element(nouns)}`;
   },
-  description: () => random.boolean(0.3) ? `High quality ${random.productName().toLowerCase()} for professional use.` : null,
+  description: () =>
+    random.boolean(0.3)
+      ? `High quality ${random.productName().toLowerCase()} for professional use.`
+      : null,
   orderNumber: (usedSet) => {
     let num;
     do {
@@ -121,9 +193,24 @@ const random = {
     usedSet.add(num);
     return num;
   },
-  movementReference: (prefix) => `${prefix}-${random.int(1000, 9999)}-${Date.now().toString().slice(-4)}`,
+  movementReference: (prefix) =>
+    `${prefix}-${random.int(1000, 9999)}-${Date.now().toString().slice(-4)}`,
   word: () => {
-    const words = ['Lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur', 'adipiscing', 'elit', 'sed', 'do', 'eiusmod', 'tempor', 'incididunt'];
+    const words = [
+      "Lorem",
+      "ipsum",
+      "dolor",
+      "sit",
+      "amet",
+      "consectetur",
+      "adipiscing",
+      "elit",
+      "sed",
+      "do",
+      "eiusmod",
+      "tempor",
+      "incididunt",
+    ];
     return random.element(words);
   },
 };
@@ -138,51 +225,51 @@ class InventorySeeder {
     this.usedBarcodes = new Set();
     this.usedOrderNumbers = new Set();
     this.usedPurchaseNumbers = new Set();
-    this.usedCompanyNames = new Set();  // to ensure supplier.name uniqueness
+    this.usedCompanyNames = new Set(); // to ensure supplier.name uniqueness
     // Caches for quick access
     this.productPriceCache = new Map(); // product id -> net_price
     this.variantPriceCache = new Map(); // variant id -> net_price
   }
 
   async init() {
-    console.log('⏳ Initializing database connection...');
+    console.log("⏳ Initializing database connection...");
     this.dataSource = await AppDataSource.initialize();
     this.queryRunner = this.dataSource.createQueryRunner();
-    console.log('✅ Database connected');
+    console.log("✅ Database connected");
   }
 
   async destroy() {
     if (this.queryRunner) await this.queryRunner.release();
     if (this.dataSource) await this.dataSource.destroy();
-    console.log('🔒 Connection closed');
+    console.log("🔒 Connection closed");
   }
 
   async clearData() {
-    console.log('🧹 Clearing old data...');
-    await this.queryRunner.query('PRAGMA foreign_keys = OFF;'); // for SQLite, adjust for other DBs if needed
+    console.log("🧹 Clearing old data...");
+    await this.queryRunner.query("PRAGMA foreign_keys = OFF;"); // for SQLite, adjust for other DBs if needed
     try {
       // Order matters: delete child tables first
-      await this.queryRunner.clearTable('audit_logs');
-      await this.queryRunner.clearTable('notification_logs');
-      await this.queryRunner.clearTable('notifications');
-      await this.queryRunner.clearTable('loyalty_transactions');
-      await this.queryRunner.clearTable('stock_movements');
-      await this.queryRunner.clearTable('order_items');
-      await this.queryRunner.clearTable('orders');
-      await this.queryRunner.clearTable('purchase_items');
-      await this.queryRunner.clearTable('purchases');
-      await this.queryRunner.clearTable('stock_items');
-      await this.queryRunner.clearTable('product_images');
-      await this.queryRunner.clearTable('product_variants');
-      await this.queryRunner.clearTable('products');
-      await this.queryRunner.clearTable('customers');
-      await this.queryRunner.clearTable('suppliers');
-      await this.queryRunner.clearTable('categories');
-      await this.queryRunner.clearTable('warehouses');
+      await this.queryRunner.clearTable("audit_logs");
+      await this.queryRunner.clearTable("notification_logs");
+      await this.queryRunner.clearTable("notifications");
+      await this.queryRunner.clearTable("loyalty_transactions");
+      await this.queryRunner.clearTable("stock_movements");
+      await this.queryRunner.clearTable("order_items");
+      await this.queryRunner.clearTable("orders");
+      await this.queryRunner.clearTable("purchase_items");
+      await this.queryRunner.clearTable("purchases");
+      await this.queryRunner.clearTable("stock_items");
+      await this.queryRunner.clearTable("product_images");
+      await this.queryRunner.clearTable("product_variants");
+      await this.queryRunner.clearTable("products");
+      await this.queryRunner.clearTable("customers");
+      await this.queryRunner.clearTable("suppliers");
+      await this.queryRunner.clearTable("categories");
+      await this.queryRunner.clearTable("warehouses");
     } finally {
-      await this.queryRunner.query('PRAGMA foreign_keys = ON;');
+      await this.queryRunner.query("PRAGMA foreign_keys = ON;");
     }
-    console.log('✅ All tables cleared');
+    console.log("✅ All tables cleared");
   }
 
   // ========== SEED METHODS ==========
@@ -190,13 +277,15 @@ class InventorySeeder {
   async seedWarehouses() {
     console.log(`🏭 Seeding ${this.config.warehouseCount} warehouses...`);
     const warehouses = [];
-    const types = ['warehouse', 'store', 'online'];
+    const types = ["warehouse", "store", "online"];
     for (let i = 0; i < this.config.warehouseCount; i++) {
       const createdAt = random.pastDate();
       warehouses.push({
         type: random.element(types),
-        name: `Warehouse ${i+1} - ${random.company()}`,
-        location: random.boolean(0.7) ? `City ${random.int(1,10)}, Street ${random.int(100,999)}` : null,
+        name: `Warehouse ${i + 1} - ${random.company()}`,
+        location: random.boolean(0.7)
+          ? `City ${random.int(1, 10)}, Street ${random.int(100, 999)}`
+          : null,
         limit_capacity: random.int(1000, 10000),
         is_active: random.boolean(0.9),
         created_at: createdAt,
@@ -211,21 +300,34 @@ class InventorySeeder {
   }
 
   async seedCategories() {
-    console.log(`📂 Seeding ${this.config.categoryCount} categories with hierarchy...`);
+    console.log(
+      `📂 Seeding ${this.config.categoryCount} categories with hierarchy...`,
+    );
     const repo = this.dataSource.getRepository(Category);
     const categories = [];
 
     // Create top-level categories first
-    const topNames = ['Electronics', 'Clothing', 'Home & Garden', 'Sports', 'Books', 'Toys', 'Beauty', 'Automotive'];
+    const topNames = [
+      "Electronics",
+      "Clothing",
+      "Home & Garden",
+      "Sports",
+      "Books",
+      "Toys",
+      "Beauty",
+      "Automotive",
+    ];
     const topCount = Math.min(this.config.categoryCount, topNames.length);
     for (let i = 0; i < topCount; i++) {
       const createdAt = random.pastDate();
       categories.push({
         name: topNames[i],
-        slug: topNames[i].toLowerCase().replace(/ & /g, '-').replace(/ /g, '-'),
+        slug: topNames[i].toLowerCase().replace(/ & /g, "-").replace(/ /g, "-"),
         description: `${topNames[i]} products`,
         image_path: random.boolean(0.3) ? `/images/categories/${i}.jpg` : null,
-        color: random.boolean(0.5) ? `#${Math.floor(Math.random()*16777215).toString(16)}` : null,
+        color: random.boolean(0.5)
+          ? `#${Math.floor(Math.random() * 16777215).toString(16)}`
+          : null,
         created_at: createdAt,
         updated_at: createdAt,
         is_active: true,
@@ -273,7 +375,7 @@ class InventorySeeder {
   async seedSuppliers() {
     console.log(`🏭 Seeding ${this.config.supplierCount} suppliers...`);
     const suppliers = [];
-    const statuses = ['pending', 'approved', 'rejected'];
+    const statuses = ["pending", "approved", "rejected"];
     for (let i = 0; i < this.config.supplierCount; i++) {
       const createdAt = random.pastDate();
       // Ensure unique company name
@@ -286,11 +388,13 @@ class InventorySeeder {
       suppliers.push({
         name: name,
         contact_person: random.boolean(0.8) ? random.name() : null,
-        email: random.email('supplier'),
+        email: random.email("supplier"),
         phone: random.boolean(0.8) ? random.phone() : null,
-        address: random.boolean(0.6) ? `${random.int(1, 999)} Industrial Ave, City ${random.int(1,10)}` : null,
-        tax_id: random.boolean(0.7) ? `TAX-${random.int(10000,99999)}` : null,
-        notes: random.boolean(0.3) ? 'Preferred supplier' : null,
+        address: random.boolean(0.6)
+          ? `${random.int(1, 999)} Industrial Ave, City ${random.int(1, 10)}`
+          : null,
+        tax_id: random.boolean(0.7) ? `TAX-${random.int(10000, 99999)}` : null,
+        notes: random.boolean(0.3) ? "Preferred supplier" : null,
         status: random.element(statuses),
         is_active: random.boolean(0.9),
         is_deleted: false,
@@ -307,14 +411,14 @@ class InventorySeeder {
   async seedCustomers() {
     console.log(`👥 Seeding ${this.config.customerCount} customers...`);
     const customers = [];
-    const statuses = ['regular', 'vip', 'elite'];
+    const statuses = ["regular", "vip", "elite"];
     for (let i = 0; i < this.config.customerCount; i++) {
       const pointsBalance = random.int(0, 500);
       const createdAt = random.pastDate();
       customers.push({
         name: random.name(),
         contactInfo: random.boolean(0.7) ? random.phone() : null,
-        email: random.email('customer'),
+        email: random.email("customer"),
         phone: random.boolean(0.7) ? random.phone() : null,
         loyaltyPointsBalance: pointsBalance,
         lifetimePointsEarned: pointsBalance + random.int(0, 200),
@@ -346,11 +450,15 @@ class InventorySeeder {
         cost_per_item: cost,
         track_quantity: true,
         allow_backorder: random.boolean(0.1),
-        compare_price: random.boolean(0.3) ? price * random.float(1.1, 1.3) : null,
+        compare_price: random.boolean(0.3)
+          ? price * random.float(1.1, 1.3)
+          : null,
         sku: sku,
         barcode: barcode,
         weight: random.boolean(0.4) ? random.float(0.1, 10) : null,
-        dimensions: random.boolean(0.3) ? `${random.int(10,50)}x${random.int(10,50)}x${random.int(10,50)}` : null,
+        dimensions: random.boolean(0.3)
+          ? `${random.int(10, 50)}x${random.int(10, 50)}x${random.int(10, 50)}`
+          : null,
         is_published: random.boolean(0.8),
         published_at: random.boolean(0.7) ? random.pastDate() : null,
         created_at: createdAt,
@@ -362,7 +470,9 @@ class InventorySeeder {
     }
     const repo = this.dataSource.getRepository(Product);
     const saved = await repo.save(products);
-    saved.forEach(p => this.productPriceCache.set(p.id, parseFloat(p.net_price)));
+    saved.forEach((p) =>
+      this.productPriceCache.set(p.id, parseFloat(p.net_price)),
+    );
     console.log(`✅ ${saved.length} products saved`);
     return saved;
   }
@@ -376,12 +486,13 @@ class InventorySeeder {
       if (random.boolean(0.6)) {
         const numVariants = random.int(1, this.config.variantPerProduct);
         for (let j = 0; j < numVariants; j++) {
-          const price = this.productPriceCache.get(product.id) * random.float(0.9, 1.2);
+          const price =
+            this.productPriceCache.get(product.id) * random.float(0.9, 1.2);
           const cost = price * random.float(0.5, 0.8);
           const sku = random.sku(this.usedSkus);
           const barcode = random.barcode(this.usedBarcodes);
           variants.push({
-            name: `Variant ${j+1} - ${random.word()}`,
+            name: `Variant ${j + 1} - ${random.word()}`,
             sku: sku,
             net_price: price,
             cost_per_item: cost,
@@ -400,7 +511,9 @@ class InventorySeeder {
       return [];
     }
     const saved = await variantRepo.save(variants);
-    saved.forEach(v => this.variantPriceCache.set(v.id, parseFloat(v.net_price)));
+    saved.forEach((v) =>
+      this.variantPriceCache.set(v.id, parseFloat(v.net_price)),
+    );
     console.log(`✅ ${saved.length} variants saved`);
     return saved;
   }
@@ -416,9 +529,13 @@ class InventorySeeder {
       for (let j = 0; j < numImages; j++) {
         const createdAt = product.created_at;
         images.push({
-          image_url: random.boolean(0.7) ? `https://example.com/images/product_${product.id}_${j}.jpg` : null,
-          image_path: random.boolean(0.5) ? `/storage/products/${product.id}/${j}.jpg` : null,
-          alt_text: `Image ${j+1} of ${product.name}`,
+          image_url: random.boolean(0.7)
+            ? `https://example.com/images/product_${product.id}_${j}.jpg`
+            : null,
+          image_path: random.boolean(0.5)
+            ? `/storage/products/${product.id}/${j}.jpg`
+            : null,
+          alt_text: `Image ${j + 1} of ${product.name}`,
           is_primary: j === 0,
           sort_order: j,
           created_at: createdAt,
@@ -434,8 +551,12 @@ class InventorySeeder {
       if (random.boolean(0.3)) {
         const createdAt = variant.created_at;
         images.push({
-          image_url: random.boolean(0.7) ? `https://example.com/images/variant_${variant.id}.jpg` : null,
-          image_path: random.boolean(0.5) ? `/storage/variants/${variant.id}.jpg` : null,
+          image_url: random.boolean(0.7)
+            ? `https://example.com/images/variant_${variant.id}.jpg`
+            : null,
+          image_path: random.boolean(0.5)
+            ? `/storage/variants/${variant.id}.jpg`
+            : null,
           alt_text: `Variant ${variant.name}`,
           is_primary: true,
           sort_order: 0,
@@ -458,13 +579,17 @@ class InventorySeeder {
   }
 
   async seedStockItems(products, variants, warehouses) {
-    console.log(`📊 Seeding stock items for product/variant/warehouse combinations...`);
+    console.log(
+      `📊 Seeding stock items for product/variant/warehouse combinations...`,
+    );
     const stockRepo = this.dataSource.getRepository(StockItem);
     const stockItems = [];
 
     for (const warehouse of warehouses) {
       for (const product of products) {
-        const productVariants = variants.filter(v => v.product.id === product.id);
+        const productVariants = variants.filter(
+          (v) => v.product.id === product.id,
+        );
         if (productVariants.length > 0) {
           for (const variant of productVariants) {
             const createdAt = random.pastDate();
@@ -477,9 +602,9 @@ class InventorySeeder {
               updated_at: createdAt,
               is_deleted: false,
               // Set explicit columns
-              product_id: product.id,
-              variant_id: variant.id,
-              warehouse_id: warehouse.id,
+              productId: product.id,
+              variantId: variant.id,
+              warehouseId: warehouse.id,
               // Set relations to populate the automatically generated foreign key columns (productId, variantId, warehouseId)
               product: { id: product.id },
               variant: { id: variant.id },
@@ -496,9 +621,9 @@ class InventorySeeder {
             created_at: createdAt,
             updated_at: createdAt,
             is_deleted: false,
-            product_id: product.id,
-            variant_id: null,
-            warehouse_id: warehouse.id,
+            productId: product.id,
+            variantId: null,
+            warehouseId: warehouse.id,
             product: { id: product.id },
             variant: null,
             warehouse: { id: warehouse.id },
@@ -519,19 +644,29 @@ class InventorySeeder {
   }
 
   async seedPurchases(suppliers, warehouses) {
-    console.log(`📥 Seeding ${this.config.purchaseCount} purchases with items...`);
+    console.log(
+      `📥 Seeding ${this.config.purchaseCount} purchases with items...`,
+    );
     const purchaseRepo = this.dataSource.getRepository(Purchase);
     const purchaseItemRepo = this.dataSource.getRepository(PurchaseItem);
     const purchases = [];
     const purchaseItems = [];
 
     const allProducts = await this.dataSource.getRepository(Product).find();
-    const allVariants = await this.dataSource.getRepository(ProductVariant).find({ relations: ['product'] });
+    const allVariants = await this.dataSource
+      .getRepository(ProductVariant)
+      .find({ relations: ["product"] });
 
     for (let i = 0; i < this.config.purchaseCount; i++) {
       const supplier = random.element(suppliers);
       const warehouse = random.element(warehouses);
-      const status = random.element(['initiated', 'pending', 'confirmed', 'received', 'cancelled']);
+      const status = random.element([
+        "initiated",
+        "pending",
+        "confirmed",
+        "received",
+        "cancelled",
+      ]);
       const createdAt = random.pastDate();
       const purchaseNumber = random.purchaseNumber(this.usedPurchaseNumbers);
       let subtotal = 0;
@@ -542,10 +677,10 @@ class InventorySeeder {
         subtotal: 0,
         tax_amount: 0,
         total: 0,
-        notes: random.boolean(0.2) ? 'Urgent order' : null,
-        inventory_processed: status === 'received' ? true : false,
-        is_received: status === 'received' ? true : false,
-        received_at: status === 'received' ? random.pastDate() : null,
+        notes: random.boolean(0.2) ? "Urgent order" : null,
+        inventory_processed: status === "received" ? true : false,
+        is_received: status === "received" ? true : false,
+        received_at: status === "received" ? random.pastDate() : null,
         proceed_by: random.boolean(0.5) ? random.int(1, 5) : null,
         created_at: createdAt,
         updated_at: createdAt,
@@ -559,7 +694,8 @@ class InventorySeeder {
 
       const itemCount = random.int(1, 6);
       for (let j = 0; j < itemCount; j++) {
-        let product, variant = null;
+        let product,
+          variant = null;
         if (random.boolean(0.7) && allVariants.length > 0) {
           variant = random.element(allVariants);
           product = variant.product;
@@ -567,7 +703,9 @@ class InventorySeeder {
           product = random.element(allProducts);
         }
         const quantity = random.int(5, 100);
-        const unitCost = product.net_price ? product.net_price * random.float(0.5, 0.9) : random.float(5, 50);
+        const unitCost = product.net_price
+          ? product.net_price * random.float(0.5, 0.9)
+          : random.float(5, 50);
         const itemTotal = quantity * unitCost;
         subtotal += itemTotal;
 
@@ -594,7 +732,9 @@ class InventorySeeder {
     }
 
     const savedItems = await purchaseItemRepo.save(purchaseItems);
-    console.log(`✅ ${purchases.length} purchases with ${savedItems.length} items saved`);
+    console.log(
+      `✅ ${purchases.length} purchases with ${savedItems.length} items saved`,
+    );
     return { purchases, purchaseItems: savedItems };
   }
 
@@ -606,10 +746,19 @@ class InventorySeeder {
     const orderItems = [];
 
     const allProducts = await this.dataSource.getRepository(Product).find();
-    const allVariants = await this.dataSource.getRepository(ProductVariant).find({ relations: ['product'] });
+    const allVariants = await this.dataSource
+      .getRepository(ProductVariant)
+      .find({ relations: ["product"] });
     const warehouses = await this.dataSource.getRepository(Warehouse).find();
 
-    const statuses = ['initiated', 'pending', 'confirmed', 'completed', 'cancelled', 'refunded'];
+    const statuses = [
+      "initiated",
+      "pending",
+      "confirmed",
+      "completed",
+      "cancelled",
+      "refunded",
+    ];
 
     for (let i = 0; i < this.config.orderCount; i++) {
       const customer = random.boolean(0.7) ? random.element(customers) : null;
@@ -624,8 +773,8 @@ class InventorySeeder {
         subtotal: 0,
         tax_amount: 0,
         total: 0,
-        notes: random.boolean(0.2) ? 'Customer requested gift wrap' : null,
-        inventory_processed: status === 'completed' ? true : false,
+        notes: random.boolean(0.2) ? "Customer requested gift wrap" : null,
+        inventory_processed: status === "completed" ? true : false,
         created_at: createdAt,
         updated_at: createdAt,
         is_deleted: false,
@@ -637,7 +786,8 @@ class InventorySeeder {
 
       const itemCount = random.int(1, 5);
       for (let j = 0; j < itemCount; j++) {
-        let product, variant = null;
+        let product,
+          variant = null;
         if (random.boolean(0.7) && allVariants.length > 0) {
           variant = random.element(allVariants);
           product = variant.product;
@@ -646,11 +796,13 @@ class InventorySeeder {
         }
         const warehouse = random.element(warehouses);
         const quantity = random.int(1, 10);
-        const unitPrice = variant ? (variant.net_price || product.net_price) : product.net_price;
+        const unitPrice = variant
+          ? variant.net_price || product.net_price
+          : product.net_price;
         const price = unitPrice || random.float(10, 200);
         const discount = random.boolean(0.3) ? random.float(0, price * 0.2) : 0;
         const taxRate = 0.12;
-        const lineNet = (price * quantity) - discount;
+        const lineNet = price * quantity - discount;
         const lineTax = lineNet * taxRate;
         const lineGross = lineNet + lineTax;
         subtotal += lineNet;
@@ -682,29 +834,35 @@ class InventorySeeder {
     }
 
     const savedItems = await orderItemRepo.save(orderItems);
-    console.log(`✅ ${orders.length} orders with ${savedItems.length} items saved`);
+    console.log(
+      `✅ ${orders.length} orders with ${savedItems.length} items saved`,
+    );
     return { orders, orderItems: savedItems };
   }
 
   async seedStockMovements(warehouses, purchases, orders) {
-    console.log(`📦 Seeding ${this.config.stockMovementCount} stock movements...`);
+    console.log(
+      `📦 Seeding ${this.config.stockMovementCount} stock movements...`,
+    );
     const movementRepo = this.dataSource.getRepository(StockMovement);
     const movements = [];
 
     // Generate movements from purchase receipts (incoming)
     for (const purchase of purchases) {
-      if (purchase.status === 'received') {
-        const purchaseItems = await this.dataSource.getRepository(PurchaseItem).find({
-          where: { purchase: { id: purchase.id } },
-          relations: ['product', 'variant'],
-        });
+      if (purchase.status === "received") {
+        const purchaseItems = await this.dataSource
+          .getRepository(PurchaseItem)
+          .find({
+            where: { purchase: { id: purchase.id } },
+            relations: ["product", "variant"],
+          });
         for (const item of purchaseItems) {
           movements.push({
             change: item.quantity,
-            movement_type: 'in',
+            movement_type: "in",
             reference_code: `PO-${purchase.purchase_number}`,
-            reason: 'Purchase receipt',
-            metadata: JSON.stringify({ purchase_id: purchase.id }),
+            reason: "Purchase receipt",
+            metadata: JSON.stringify({ purchaseId: purchase.id }),
             current_quantity: null,
             created_at: purchase.received_at || purchase.created_at,
             updated_at: purchase.received_at || purchase.created_at,
@@ -717,17 +875,17 @@ class InventorySeeder {
 
     // Generate movements from order fulfillments (outgoing)
     for (const order of orders) {
-      if (order.status === 'completed') {
+      if (order.status === "completed") {
         const orderItems = await this.dataSource.getRepository(OrderItem).find({
           where: { order: { id: order.id } },
-          relations: ['product', 'variant', 'warehouse'],
+          relations: ["product", "variant", "warehouse"],
         });
         for (const item of orderItems) {
           movements.push({
             change: -item.quantity,
-            movement_type: 'out',
+            movement_type: "out",
             reference_code: `ORD-${order.order_number}`,
-            reason: 'Order shipment',
+            reason: "Order shipment",
             metadata: JSON.stringify({ order_id: order.id }),
             current_quantity: null,
             created_at: order.created_at,
@@ -747,10 +905,10 @@ class InventorySeeder {
       const createdAt = random.pastDate();
       movements.push({
         change: change,
-        movement_type: 'adjustment',
-        reference_code: random.movementReference('ADJ'),
-        reason: change > 0 ? 'Stock count surplus' : 'Stock count deficit',
-        metadata: JSON.stringify({ reason: 'manual adjustment' }),
+        movement_type: "adjustment",
+        reference_code: random.movementReference("ADJ"),
+        reason: change > 0 ? "Stock count surplus" : "Stock count deficit",
+        metadata: JSON.stringify({ reason: "manual adjustment" }),
         current_quantity: null,
         created_at: createdAt,
         updated_at: createdAt,
@@ -762,7 +920,7 @@ class InventorySeeder {
     // Link each movement to a random stockItem
     const stockItems = await this.dataSource.getRepository(StockItem).find();
     if (stockItems.length === 0) {
-      console.log('⚠️ No stock items found, skipping stock movements');
+      console.log("⚠️ No stock items found, skipping stock movements");
       return [];
     }
 
@@ -781,22 +939,28 @@ class InventorySeeder {
   }
 
   async seedLoyaltyTransactions(customers, orders) {
-    console.log(`💳 Seeding ${this.config.loyaltyTransactionCount} loyalty transactions...`);
+    console.log(
+      `💳 Seeding ${this.config.loyaltyTransactionCount} loyalty transactions...`,
+    );
     const transactionRepo = this.dataSource.getRepository(LoyaltyTransaction);
     const transactions = [];
 
     for (let i = 0; i < this.config.loyaltyTransactionCount; i++) {
       const customer = random.element(customers);
       const order = random.boolean(0.6) ? random.element(orders) : null;
-      const pointsChange = random.boolean(0.7) ? random.int(10, 200) : -random.int(5, 50);
+      const pointsChange = random.boolean(0.7)
+        ? random.int(10, 200)
+        : -random.int(5, 50);
       const timestamp = order ? order.created_at : random.pastDate();
-      const transactionType = pointsChange > 0 ? 'earn' : (pointsChange < 0 ? 'redeem' : 'earn');
+      const transactionType =
+        pointsChange > 0 ? "earn" : pointsChange < 0 ? "redeem" : "earn";
 
       transactions.push({
         transactionType: transactionType,
         pointsChange: pointsChange,
         timestamp: timestamp,
-        notes: pointsChange > 0 ? 'Earned from purchase' : 'Redeemed for discount',
+        notes:
+          pointsChange > 0 ? "Earned from purchase" : "Redeemed for discount",
         updatedAt: timestamp,
         customer: { id: customer.id },
         order: order ? { id: order.id } : null,
@@ -811,18 +975,20 @@ class InventorySeeder {
   async seedNotifications() {
     console.log(`🔔 Seeding ${this.config.notificationCount} notifications...`);
     const repo = this.dataSource.getRepository(Notification);
-    const types = ['info', 'success', 'warning', 'error', 'purchase', 'sale'];
+    const types = ["info", "success", "warning", "error", "purchase", "sale"];
     const notifications = [];
 
     for (let i = 0; i < this.config.notificationCount; i++) {
       const createdAt = random.pastDate();
       notifications.push({
         userId: random.int(1, 5), // assume users 1-5 exist
-        title: `Notification ${i+1}`,
+        title: `Notification ${i + 1}`,
         message: `This is a ${random.element(types)} notification.`,
         type: random.element(types),
         isRead: random.boolean(0.3),
-        metadata: random.boolean(0.4) ? JSON.stringify({ refId: random.int(100,999) }) : null,
+        metadata: random.boolean(0.4)
+          ? JSON.stringify({ refId: random.int(100, 999) })
+          : null,
         createdAt: createdAt,
         updatedAt: createdAt,
       });
@@ -834,24 +1000,28 @@ class InventorySeeder {
   }
 
   async seedNotificationLogs() {
-    console.log(`📧 Seeding ${this.config.notificationLogCount} notification logs...`);
+    console.log(
+      `📧 Seeding ${this.config.notificationLogCount} notification logs...`,
+    );
     const repo = this.dataSource.getRepository(NotificationLog);
     const logs = [];
-    const statuses = ['queued', 'sent', 'failed', 'resend'];
+    const statuses = ["queued", "sent", "failed", "resend"];
 
     for (let i = 0; i < this.config.notificationLogCount; i++) {
       const status = random.element(statuses);
-      const sentAt = status === 'sent' ? random.pastDate() : null;
-      const lastErrorAt = status === 'failed' ? random.pastDate() : null;
+      const sentAt = status === "sent" ? random.pastDate() : null;
+      const lastErrorAt = status === "failed" ? random.pastDate() : null;
       const createdAt = random.pastDate();
       logs.push({
-        recipient_email: random.email('user'),
-        subject: random.boolean(0.7) ? 'Order Confirmation' : null,
-        payload: random.boolean(0.5) ? JSON.stringify({ orderId: random.int(1000, 9999) }) : null,
+        recipient_email: random.email("user"),
+        subject: random.boolean(0.7) ? "Order Confirmation" : null,
+        payload: random.boolean(0.5)
+          ? JSON.stringify({ orderId: random.int(1000, 9999) })
+          : null,
         status: status,
-        error_message: status === 'failed' ? 'SMTP error' : null,
-        retry_count: status === 'failed' ? random.int(1, 3) : 0,
-        resend_count: status === 'resend' ? random.int(1, 2) : 0,
+        error_message: status === "failed" ? "SMTP error" : null,
+        retry_count: status === "failed" ? random.int(1, 3) : 0,
+        resend_count: status === "resend" ? random.int(1, 2) : 0,
         sent_at: sentAt,
         last_error_at: lastErrorAt,
         created_at: createdAt,
@@ -860,13 +1030,26 @@ class InventorySeeder {
     }
 
     await repo.save(logs);
-    console.log(`✅ ${this.config.notificationLogCount} notification logs saved`);
+    console.log(
+      `✅ ${this.config.notificationLogCount} notification logs saved`,
+    );
   }
 
   async seedAuditLogs() {
     console.log(`📝 Seeding ${this.config.auditLogCount} audit logs...`);
-    const actions = ['CREATE', 'UPDATE', 'DELETE', 'VIEW', 'LOGIN', 'LOGOUT'];
-    const entities = ['Product', 'Customer', 'Order', 'Purchase', 'StockItem', 'Supplier', 'Category', 'Warehouse', 'Variant', 'LoyaltyTransaction'];
+    const actions = ["CREATE", "UPDATE", "DELETE", "VIEW", "LOGIN", "LOGOUT"];
+    const entities = [
+      "Product",
+      "Customer",
+      "Order",
+      "Purchase",
+      "StockItem",
+      "Supplier",
+      "Category",
+      "Warehouse",
+      "Variant",
+      "LoyaltyTransaction",
+    ];
 
     const logs = [];
     for (let i = 0; i < this.config.auditLogCount; i++) {
@@ -875,9 +1058,13 @@ class InventorySeeder {
         entity: random.element(entities),
         entityId: random.int(1, 100),
         timestamp: random.pastDate(),
-        description: random.boolean(0.3) ? 'Audit log entry' : null,
-        newData: random.boolean(0.2) ? JSON.stringify({ field: 'value' }) : null,
-        previousData: random.boolean(0.2) ? JSON.stringify({ field: 'old' }) : null,
+        description: random.boolean(0.3) ? "Audit log entry" : null,
+        newData: random.boolean(0.2)
+          ? JSON.stringify({ field: "value" })
+          : null,
+        previousData: random.boolean(0.2)
+          ? JSON.stringify({ field: "old" })
+          : null,
       });
     }
 
@@ -897,7 +1084,7 @@ class InventorySeeder {
       }
 
       if (this.config.clearOnly) {
-        console.log('🧹 Clear only mode – no seeding performed.');
+        console.log("🧹 Clear only mode – no seeding performed.");
         await this.queryRunner.commitTransaction();
         return;
       }
@@ -910,8 +1097,10 @@ class InventorySeeder {
       let variants = [];
       let images = [];
       let stockItems = [];
-      let purchases = [], purchaseItems = [];
-      let orders = [], orderItems = [];
+      let purchases = [],
+        purchaseItems = [];
+      let orders = [],
+        orderItems = [];
       let movements = [];
       let loyaltyTransactions = [];
       let notifications = [];
@@ -950,12 +1139,29 @@ class InventorySeeder {
         orderItems = result.orderItems;
       }
 
-      if (!this.config.skipStockMovements && warehouses.length && purchases.length && orders.length && stockItems.length) {
-        movements = await this.seedStockMovements(warehouses, purchases, orders);
+      if (
+        !this.config.skipStockMovements &&
+        warehouses.length &&
+        purchases.length &&
+        orders.length &&
+        stockItems.length
+      ) {
+        movements = await this.seedStockMovements(
+          warehouses,
+          purchases,
+          orders,
+        );
       }
 
-      if (!this.config.skipLoyaltyTransactions && customers.length && orders.length) {
-        loyaltyTransactions = await this.seedLoyaltyTransactions(customers, orders);
+      if (
+        !this.config.skipLoyaltyTransactions &&
+        customers.length &&
+        orders.length
+      ) {
+        loyaltyTransactions = await this.seedLoyaltyTransactions(
+          customers,
+          orders,
+        );
       }
 
       if (!this.config.skipNotifications) {
@@ -972,7 +1178,7 @@ class InventorySeeder {
 
       await this.queryRunner.commitTransaction();
 
-      console.log('\n🎉 SEED COMPLETED SUCCESSFULLY!');
+      console.log("\n🎉 SEED COMPLETED SUCCESSFULLY!");
       console.log(`   Warehouses: ${warehouses.length}`);
       console.log(`   Categories: ${categories.length}`);
       console.log(`   Suppliers: ${suppliers.length}`);
@@ -990,9 +1196,8 @@ class InventorySeeder {
       console.log(`   Notifications: ${notifications.length}`);
       console.log(`   Notification Logs: ${this.config.notificationLogCount}`);
       console.log(`   Audit Logs: ${this.config.auditLogCount}`);
-
     } catch (error) {
-      console.error('\n❌ Seeding failed – rolling back...', error);
+      console.error("\n❌ Seeding failed – rolling back...", error);
       if (this.queryRunner) await this.queryRunner.rollbackTransaction();
       throw error;
     } finally {
@@ -1008,86 +1213,129 @@ function parseArgs() {
 
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
-      case '--clear-only':
+      case "--clear-only":
         config.clearOnly = true;
         break;
-      case '--warehouses':
+      case "--warehouses":
         config.skipWarehouses = false;
-        config.warehouseCount = parseInt(args[++i]) || DEFAULT_CONFIG.warehouseCount;
+        config.warehouseCount =
+          parseInt(args[++i]) || DEFAULT_CONFIG.warehouseCount;
         break;
-      case '--categories':
+      case "--categories":
         config.skipCategories = false;
-        config.categoryCount = parseInt(args[++i]) || DEFAULT_CONFIG.categoryCount;
+        config.categoryCount =
+          parseInt(args[++i]) || DEFAULT_CONFIG.categoryCount;
         break;
-      case '--suppliers':
+      case "--suppliers":
         config.skipSuppliers = false;
-        config.supplierCount = parseInt(args[++i]) || DEFAULT_CONFIG.supplierCount;
+        config.supplierCount =
+          parseInt(args[++i]) || DEFAULT_CONFIG.supplierCount;
         break;
-      case '--customers':
+      case "--customers":
         config.skipCustomers = false;
-        config.customerCount = parseInt(args[++i]) || DEFAULT_CONFIG.customerCount;
+        config.customerCount =
+          parseInt(args[++i]) || DEFAULT_CONFIG.customerCount;
         break;
-      case '--products':
+      case "--products":
         config.skipProducts = false;
-        config.productCount = parseInt(args[++i]) || DEFAULT_CONFIG.productCount;
+        config.productCount =
+          parseInt(args[++i]) || DEFAULT_CONFIG.productCount;
         break;
-      case '--variants':
+      case "--variants":
         config.skipVariants = false;
-        config.variantPerProduct = parseInt(args[++i]) || DEFAULT_CONFIG.variantPerProduct;
+        config.variantPerProduct =
+          parseInt(args[++i]) || DEFAULT_CONFIG.variantPerProduct;
         break;
-      case '--images':
+      case "--images":
         config.skipImages = false;
-        config.imagePerProduct = parseInt(args[++i]) || DEFAULT_CONFIG.imagePerProduct;
+        config.imagePerProduct =
+          parseInt(args[++i]) || DEFAULT_CONFIG.imagePerProduct;
         break;
-      case '--stock-items':
+      case "--stock-items":
         config.skipStockItems = false;
         // no count, depends on others
         break;
-      case '--purchases':
+      case "--purchases":
         config.skipPurchases = false;
-        config.purchaseCount = parseInt(args[++i]) || DEFAULT_CONFIG.purchaseCount;
+        config.purchaseCount =
+          parseInt(args[++i]) || DEFAULT_CONFIG.purchaseCount;
         break;
-      case '--orders':
+      case "--orders":
         config.skipOrders = false;
         config.orderCount = parseInt(args[++i]) || DEFAULT_CONFIG.orderCount;
         break;
-      case '--stock-movements':
+      case "--stock-movements":
         config.skipStockMovements = false;
-        config.stockMovementCount = parseInt(args[++i]) || DEFAULT_CONFIG.stockMovementCount;
+        config.stockMovementCount =
+          parseInt(args[++i]) || DEFAULT_CONFIG.stockMovementCount;
         break;
-      case '--loyalty-transactions':
+      case "--loyalty-transactions":
         config.skipLoyaltyTransactions = false;
-        config.loyaltyTransactionCount = parseInt(args[++i]) || DEFAULT_CONFIG.loyaltyTransactionCount;
+        config.loyaltyTransactionCount =
+          parseInt(args[++i]) || DEFAULT_CONFIG.loyaltyTransactionCount;
         break;
-      case '--notifications':
+      case "--notifications":
         config.skipNotifications = false;
-        config.notificationCount = parseInt(args[++i]) || DEFAULT_CONFIG.notificationCount;
+        config.notificationCount =
+          parseInt(args[++i]) || DEFAULT_CONFIG.notificationCount;
         break;
-      case '--notification-logs':
+      case "--notification-logs":
         config.skipNotificationLogs = false;
-        config.notificationLogCount = parseInt(args[++i]) || DEFAULT_CONFIG.notificationLogCount;
+        config.notificationLogCount =
+          parseInt(args[++i]) || DEFAULT_CONFIG.notificationLogCount;
         break;
-      case '--audit-logs':
+      case "--audit-logs":
         config.skipAuditLogs = false;
-        config.auditLogCount = parseInt(args[++i]) || DEFAULT_CONFIG.auditLogCount;
+        config.auditLogCount =
+          parseInt(args[++i]) || DEFAULT_CONFIG.auditLogCount;
         break;
       // Skip flags
-      case '--skip-warehouses': config.skipWarehouses = true; break;
-      case '--skip-categories': config.skipCategories = true; break;
-      case '--skip-suppliers': config.skipSuppliers = true; break;
-      case '--skip-customers': config.skipCustomers = true; break;
-      case '--skip-products': config.skipProducts = true; break;
-      case '--skip-variants': config.skipVariants = true; break;
-      case '--skip-images': config.skipImages = true; break;
-      case '--skip-stock-items': config.skipStockItems = true; break;
-      case '--skip-purchases': config.skipPurchases = true; break;
-      case '--skip-orders': config.skipOrders = true; break;
-      case '--skip-stock-movements': config.skipStockMovements = true; break;
-      case '--skip-loyalty-transactions': config.skipLoyaltyTransactions = true; break;
-      case '--skip-notifications': config.skipNotifications = true; break;
-      case '--skip-notification-logs': config.skipNotificationLogs = true; break;
-      case '--skip-audit-logs': config.skipAuditLogs = true; break;
-      case '--help':
+      case "--skip-warehouses":
+        config.skipWarehouses = true;
+        break;
+      case "--skip-categories":
+        config.skipCategories = true;
+        break;
+      case "--skip-suppliers":
+        config.skipSuppliers = true;
+        break;
+      case "--skip-customers":
+        config.skipCustomers = true;
+        break;
+      case "--skip-products":
+        config.skipProducts = true;
+        break;
+      case "--skip-variants":
+        config.skipVariants = true;
+        break;
+      case "--skip-images":
+        config.skipImages = true;
+        break;
+      case "--skip-stock-items":
+        config.skipStockItems = true;
+        break;
+      case "--skip-purchases":
+        config.skipPurchases = true;
+        break;
+      case "--skip-orders":
+        config.skipOrders = true;
+        break;
+      case "--skip-stock-movements":
+        config.skipStockMovements = true;
+        break;
+      case "--skip-loyalty-transactions":
+        config.skipLoyaltyTransactions = true;
+        break;
+      case "--skip-notifications":
+        config.skipNotifications = true;
+        break;
+      case "--skip-notification-logs":
+        config.skipNotificationLogs = true;
+        break;
+      case "--skip-audit-logs":
+        config.skipAuditLogs = true;
+        break;
+      case "--help":
         console.log(`
 Usage: node seedData.js [options]
 
@@ -1134,7 +1382,7 @@ if (require.main === module) {
   const config = parseArgs();
   const seeder = new InventorySeeder(config);
   seeder.run().catch((err) => {
-    console.error('Fatal error:', err);
+    console.error("Fatal error:", err);
     process.exit(1);
   });
 }

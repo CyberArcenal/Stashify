@@ -154,7 +154,7 @@ class StockExportAPI {
             console.error("Failed to open file:", openError);
             await dialogs.error(
               "The file was exported successfully but could not be opened automatically.\n" +
-                "You can find it in your InventoryPro folder inside Downloads.",
+                "You can find it in your stashly folder inside Downloads.",
               "File Export Complete",
             );
           }

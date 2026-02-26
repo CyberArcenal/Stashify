@@ -116,23 +116,12 @@ const TransferForm: React.FC<TransferFormProps> = ({
           <label className="block text-sm font-medium mb-1" style={{ color: "var(--sidebar-text)" }}>
             To Warehouse *
           </label>
-          <select
-            value={toWarehouseId || ""}
-            onChange={(e) => setField("toWarehouseId", e.target.value ? parseInt(e.target.value) : null)}
-            className="compact-input w-full rounded-md"
-            style={{
-              backgroundColor: "var(--card-bg)",
-              borderColor: "var(--border-color)",
-              color: "var(--sidebar-text)",
-            }}
-            required
-            disabled={!fromWarehouseId}
-          >
-            <option value="">Select destination</option>
-            {destinationWarehouses.map(w => (
-              <option key={w.id} value={w.id}>{w.name}</option>
-            ))}
-          </select>
+           <WarehouseSelect
+            value={toWarehouseId}
+            onChange={(id) => setField("toWarehouseId", id)}
+            disabled={submitting}
+            placeholder="Select destination"
+          />
         </div>
 
         {/* Source Stock */}

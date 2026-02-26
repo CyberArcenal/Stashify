@@ -13,8 +13,8 @@ class CustomerExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "InventoryPro",
-      "customer_exports"
+      "stashly",
+      "customer_exports",
     );
 
     // Create export directory if it doesn't exist
@@ -34,7 +34,7 @@ class CustomerExportHandler {
       console.warn(
         "ExcelJS not available for enhanced Excel export:",
         // @ts-ignore
-        error.message
+        error.message,
       );
     }
   }
@@ -200,18 +200,22 @@ class CustomerExportHandler {
       const searchTerm = `%${params.search}%`;
       queryBuilder.andWhere(
         "(c.name LIKE :search OR c.email LIKE :search OR c.phone LIKE :search)",
-        { search: searchTerm }
+        { search: searchTerm },
       );
     }
 
     if (params.start_date) {
-      queryBuilder.andWhere("c.createdAt >= :startDate", { startDate: params.start_date });
+      queryBuilder.andWhere("c.createdAt >= :startDate", {
+        startDate: params.start_date,
+      });
     }
 
     if (params.end_date) {
       const endDate = new Date(params.end_date);
       endDate.setHours(23, 59, 59, 999);
-      queryBuilder.andWhere("c.createdAt <= :endDate", { endDate: endDate.toISOString() });
+      queryBuilder.andWhere("c.createdAt <= :endDate", {
+        endDate: endDate.toISOString(),
+      });
     }
 
     queryBuilder.orderBy("c.createdAt", "DESC");
@@ -487,7 +491,7 @@ class CustomerExportHandler {
           `Generated: ${new Date().toLocaleDateString()} | Total: ${customers.length} customers`,
           {
             align: "center",
-          }
+          },
         );
 
       doc.moveDown(0.5);
@@ -777,7 +781,7 @@ if (ipcMain) {
   });
 } else {
   console.warn(
-    "ipcMain is not available - running in non-Electron environment"
+    "ipcMain is not available - running in non-Electron environment",
   );
 }
 

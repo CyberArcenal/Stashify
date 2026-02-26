@@ -53,8 +53,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
           Category
         </label>
         <select
-          value={filters.category_id}
-          onChange={(e) => onFilterChange("category_id", e.target.value)}
+          value={filters.categoryId}
+          onChange={(e) => onFilterChange("categoryId", e.target.value)}
           className="compact-input w-full border rounded-md"
           style={{
             backgroundColor: "var(--card-bg)",

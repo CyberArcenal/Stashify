@@ -14,6 +14,12 @@ import StockItemsPage from "../pages/stock-items";
 import StockMovementsPage from "../pages/stock-movements";
 import StockAdjustmentPage from "../pages/stock-adjustment";
 import StockTransferPage from "../pages/stock-transfer";
+import SalesReport from "../pages/reports/SalesReport";
+import InventoryReportPage from "../pages/reports/InventoryReport";
+import ProfitLossReportPage from "../pages/reports/ProfitLoss";
+import LowStockReportPage from "../pages/analytics/LowStock";
+import OutOfStockReportPage from "../pages/analytics/OutOfStock";
+import SettingsPage from "../pages/settings";
 
 const PlaceholderPage = ({ name }: { name: string }) => <div>{name} Page</div>;
 
@@ -29,28 +35,42 @@ function App() {
 
         {/* Core */}
         <Route path="/products" element={<ProductsPage />} />
-        <Route path="/products/variants" element={<VariantsPage/>} />
-        <Route path="/products/categories" element={<CategoriesPage/>} />
-        <Route path="/orders" element={<SalesPage/>} />
-        <Route path="/purchases" element={<PurchasesPage/>} />
+        <Route path="/products/variants" element={<VariantsPage />} />
+        <Route path="/products/categories" element={<CategoriesPage />} />
+        <Route path="/orders" element={<SalesPage />} />
+        <Route path="/purchases" element={<PurchasesPage />} />
 
         {/* Inventory */}
         <Route path="/locations" element={<WarehousesPage />} />
-        <Route path="/stock-items" element={<StockItemsPage/>} />
+        <Route path="/stock-items" element={<StockItemsPage />} />
         <Route path="/stock-movements" element={<StockMovementsPage />} />
-        <Route path="/inventory/adjustments" element={<StockAdjustmentPage/>} />
-        <Route path="/inventory/transfers" element={<StockTransferPage/>} />
+        <Route
+          path="/inventory/adjustments"
+          element={<StockAdjustmentPage />}
+        />
+        <Route path="/inventory/transfers" element={<StockTransferPage />} />
 
         {/* Analytics */}
-        <Route path="/reports/sales" element={<PlaceholderPage name="Sales Reports" />} />
-        <Route path="/reports/inventory" element={<PlaceholderPage name="Inventory Reports" />} />
-        <Route path="/reports/profit-loss" element={<PlaceholderPage name="Profit & Loss" />} />
-        <Route path="/products/low-stock" element={<PlaceholderPage name="Low Stock" />} />
-        <Route path="/products/out-of-stock" element={<PlaceholderPage name="Out of Stock" />} />
+        <Route path="/reports/sales" element={<SalesReport />} />
+        <Route
+          path="/reports/inventory"
+          element={<InventoryReportPage/>}
+        />
+        <Route
+          path="/reports/profit-loss"
+          element={<ProfitLossReportPage/>}
+        />
+        <Route
+          path="/products/low-stock"
+          element={<LowStockReportPage/>}
+        />
+        <Route
+          path="/products/out-of-stock"
+          element={<OutOfStockReportPage/>}
+        />
 
         {/* System */}
-        <Route path="/settings" element={<PlaceholderPage name="Settings" />} />
-        <Route path="/settings/inventory" element={<PlaceholderPage name="Inventory Settings" />} />
+        <Route path="/settings" element={<SettingsPage/>} />
         {/* <Route path="activation" element={<ActivationPage />} /> */}
 
         {/* 404 - Dapat last */}

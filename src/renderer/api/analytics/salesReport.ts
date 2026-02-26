@@ -108,7 +108,7 @@ export interface SalesReportParams {
     | "2years"
     | "custom";
   category?: string;
-  product_id?: number;
+  productId?: number;
   group_by?: "day" | "week" | "month" | "year";
   refresh?: boolean;
 }

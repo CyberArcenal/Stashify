@@ -52,7 +52,9 @@ module.exports = async (params, queryRunner, user = "system") => {
     const stockRepo = queryRunner.manager.getRepository(StockItem);
 
     // Find the variant
-    const variant = await variantRepo.findOne({ where: { id: variantId, is_deleted: false } });
+    const variant = await variantRepo.findOne({
+      where: { id: variantId, is_deleted: false },
+    });
     if (!variant) {
       return {
         status: false,
@@ -64,17 +66,20 @@ module.exports = async (params, queryRunner, user = "system") => {
     // Build stock query
     const stockQuery = stockRepo
       .createQueryBuilder("stock")
-      .where("stock.variant_id = :variantId", { variantId })
+      .where("stock.variantId = :variantId", { variantId })
       .andWhere("stock.is_deleted = false");
 
     if (warehouseId) {
-      stockQuery.andWhere("stock.warehouse_id = :warehouseId", { warehouseId });
+      stockQuery.andWhere("stock.warehouseId = :warehouseId", { warehouseId });
     }
 
     const stockItems = await stockQuery.getMany();
 
     // Calculate total quantity
-    const totalQuantity = stockItems.reduce((sum, item) => sum + item.quantity, 0);
+    const totalQuantity = stockItems.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    );
 
     // Here you could update a hypothetical 'total_stock' field on variant if it exists
     // For now, we just return the synced data

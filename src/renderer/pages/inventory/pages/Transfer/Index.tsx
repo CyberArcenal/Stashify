@@ -147,7 +147,7 @@ const StockTransferPage: React.FC = () => {
         ...(filters.search && { search: filters.search }),
         ...(filters.status !== "all" && { action: filters.status }),
         ...(filters.location !== "all" && {
-          warehouse_id: parseInt(filters.location),
+          warehouseId: parseInt(filters.location),
         }),
         ...(filters.startDate && { date_from: filters.startDate }),
         ...(filters.endDate && { date_to: filters.endDate }),
@@ -254,14 +254,14 @@ const StockTransferPage: React.FC = () => {
   const [form, setForm] = useState<StockTransferForm>({
     from_warehouse: 0,
     to_warehouse: 0,
-    product_id: undefined,
-    variant_id: undefined,
+    productId: undefined,
+    variantId: undefined,
     quantity: 0,
     notes: "",
   });
 
   // Get selected product details
-  const selectedProduct = products.find((p) => p.id === form.product_id);
+  const selectedProduct = products.find((p) => p.id === form.productId);
 
   // Get available variants for selected product
   const availableVariants = selectedProduct?.variants_data || [];
@@ -274,8 +274,8 @@ const StockTransferPage: React.FC = () => {
 
     // If variant is selected, find variant stock
     const stockItem = await stockItemAPI.getUniqueStock(
-      form.product_id,
-      form.variant_id,
+      form.productId,
+      form.variantId,
       form.from_warehouse,
     );
     setCurrentStockQuantity(stockItem.quantity);
@@ -289,14 +289,14 @@ const StockTransferPage: React.FC = () => {
   const validateForm = async (): Promise<boolean> => {
     const errors: string[] = [];
 
-    if (!form.product_id) {
+    if (!form.productId) {
       errors.push("• Please select a product");
     }
 
     if (
       selectedProduct?.variants_data &&
       selectedProduct.variants_data.length > 0 &&
-      !form.variant_id
+      !form.variantId
     ) {
       errors.push("• Please select a variant for this product");
     }
@@ -390,8 +390,8 @@ const StockTransferPage: React.FC = () => {
       setForm({
         from_warehouse: 0,
         to_warehouse: 0,
-        product_id: undefined,
-        variant_id: undefined,
+        productId: undefined,
+        variantId: undefined,
         quantity: 0,
         notes: "",
       });
@@ -419,8 +419,8 @@ const StockTransferPage: React.FC = () => {
     const productIdNum = productId ? parseInt(productId) : undefined;
     setForm({
       ...form,
-      product_id: productIdNum,
-      variant_id: undefined,
+      productId: productIdNum,
+      variantId: undefined,
       quantity: 0,
     });
   };
@@ -429,7 +429,7 @@ const StockTransferPage: React.FC = () => {
     const variantIdNum = variantId ? parseInt(variantId) : undefined;
     setForm({
       ...form,
-      variant_id: variantIdNum,
+      variantId: variantIdNum,
       quantity: 0,
     });
   };
@@ -930,7 +930,7 @@ const StockTransferPage: React.FC = () => {
                 key={index}
                 type="button"
                 onClick={() => handleQuickAction(action.value)}
-                disabled={!form.product_id || !form.from_warehouse}
+                disabled={!form.productId || !form.from_warehouse}
                 className="compact-button text-xs px-2 py-1 rounded transition-colors disabled:opacity-50"
                 style={{
                   backgroundColor: "var(--accent-green)",
@@ -955,7 +955,7 @@ const StockTransferPage: React.FC = () => {
               Product *
             </label>
             <ProductSelect
-              value={form.product_id || 0}
+              value={form.productId || 0}
               onChange={(productId, productName, price) =>
                 handleProductChange(productId.toString())
               }
@@ -971,7 +971,7 @@ const StockTransferPage: React.FC = () => {
               Variant {availableVariants.length > 0 ? "*" : ""}
             </label>
             <select
-              value={form.variant_id || ""}
+              value={form.variantId || ""}
               onChange={(e) => handleVariantChange(e.target.value)}
               className="compact-input w-full rounded-md"
               style={{
@@ -980,7 +980,7 @@ const StockTransferPage: React.FC = () => {
                 color: "var(--sidebar-text)",
               }}
               required={availableVariants.length > 0}
-              disabled={!form.product_id}
+              disabled={!form.productId}
             >
               <option value="">
                 {availableVariants.length > 0
@@ -1161,11 +1161,11 @@ const StockTransferPage: React.FC = () => {
               }}
               disabled={
                 submitting ||
-                !form.product_id ||
+                !form.productId ||
                 !form.from_warehouse ||
                 !form.to_warehouse ||
                 form.quantity <= 0 ||
-                (availableVariants.length > 0 && !form.variant_id) ||
+                (availableVariants.length > 0 && !form.variantId) ||
                 form.quantity > currentStockQuantity
               }
             >

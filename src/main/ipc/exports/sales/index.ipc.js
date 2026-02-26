@@ -12,8 +12,8 @@ class SalesReportExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "InventoryPro",
-      "sales_report_exports"
+      "stashly",
+      "sales_report_exports",
     );
 
     // Create export directory if it doesn't exist
@@ -52,7 +52,7 @@ class SalesReportExportHandler {
       console.warn(
         "ExcelJS not available for enhanced Excel export:",
         // @ts-ignore
-        error.message
+        error.message,
       );
     }
   }
@@ -237,8 +237,8 @@ class SalesReportExportHandler {
 
   /**
    * Transform SalesReportHandler data to export format
-   * @param {{ salesByMonth: never[]; topProducts: never[]; salesTrend: never[]; salesByCategory: never[]; quickStats: { totalSales: number; totalProfit: number; totalOrders: number; totalCOGS: number; averageOrderValue: number; growthRate: number; ordersGrowthRate: number; profitMargin: number; reconciliationStatus: string; growthRateMethod: string; growthRateFallbackApplied: boolean; }; performanceMetrics: { averageOrderValue: number; conversionRate: number; customerSatisfaction: number; customerLifetimeValue: number; repeatCustomerRate: number; totalProfit: number; totalCOGS: number; cogsToSalesRatio: number; }; dateRange: { startDate: any; endDate: any; period: any; }; metadata: { generatedAt: string; formulaVersion: string; profitFormulaVersion: string; cogsIntegrationStatus: string; totalMonths: number; totalProducts: number; totalCategories: number; filtersApplied: { period: any; category: null; product_id: null; group_by: string; }; fallbackUsed: boolean; }; } | { salesByMonth: any; topProducts: any; salesTrend: { month: any; sales: any; profit: any; cogs: any; target: number; }[]; salesByCategory: any; quickStats: { totalSales: number; totalProfit: number; totalOrders: any; totalCOGS: number; averageOrderValue: number; growthRate: number; ordersGrowthRate: number; profitMargin: number; reconciliationStatus: string; growthRateMethod: string; growthRateFallbackApplied: boolean; }; performanceMetrics: { averageOrderValue: any; conversionRate: number; customerSatisfaction: number; customerLifetimeValue: Promise<number>; repeatCustomerRate: Promise<number>; totalProfit: any; totalCOGS: any; cogsToSalesRatio: number; } | { averageOrderValue: number; conversionRate: number; customerSatisfaction: number; customerLifetimeValue: number; repeatCustomerRate: number; totalProfit: number; totalCOGS: number; cogsToSalesRatio: number; }; dateRange: { startDate: string; endDate: string; period: any; }; metadata: { generatedAt: string; formulaVersion: string; profitFormulaVersion: string; cogsIntegrationStatus: string; totalMonths: any; totalProducts: any; totalCategories: any; filtersApplied: { period: any; category: any; product_id: any; group_by: any; }; }; } | null} salesData
-   * @param {{ period: any; category: any; product_id: any; group_by: any; }} params
+   * @param {{ salesByMonth: never[]; topProducts: never[]; salesTrend: never[]; salesByCategory: never[]; quickStats: { totalSales: number; totalProfit: number; totalOrders: number; totalCOGS: number; averageOrderValue: number; growthRate: number; ordersGrowthRate: number; profitMargin: number; reconciliationStatus: string; growthRateMethod: string; growthRateFallbackApplied: boolean; }; performanceMetrics: { averageOrderValue: number; conversionRate: number; customerSatisfaction: number; customerLifetimeValue: number; repeatCustomerRate: number; totalProfit: number; totalCOGS: number; cogsToSalesRatio: number; }; dateRange: { startDate: any; endDate: any; period: any; }; metadata: { generatedAt: string; formulaVersion: string; profitFormulaVersion: string; cogsIntegrationStatus: string; totalMonths: number; totalProducts: number; totalCategories: number; filtersApplied: { period: any; category: null; productId: null; group_by: string; }; fallbackUsed: boolean; }; } | { salesByMonth: any; topProducts: any; salesTrend: { month: any; sales: any; profit: any; cogs: any; target: number; }[]; salesByCategory: any; quickStats: { totalSales: number; totalProfit: number; totalOrders: any; totalCOGS: number; averageOrderValue: number; growthRate: number; ordersGrowthRate: number; profitMargin: number; reconciliationStatus: string; growthRateMethod: string; growthRateFallbackApplied: boolean; }; performanceMetrics: { averageOrderValue: any; conversionRate: number; customerSatisfaction: number; customerLifetimeValue: Promise<number>; repeatCustomerRate: Promise<number>; totalProfit: any; totalCOGS: any; cogsToSalesRatio: number; } | { averageOrderValue: number; conversionRate: number; customerSatisfaction: number; customerLifetimeValue: number; repeatCustomerRate: number; totalProfit: number; totalCOGS: number; cogsToSalesRatio: number; }; dateRange: { startDate: string; endDate: string; period: any; }; metadata: { generatedAt: string; formulaVersion: string; profitFormulaVersion: string; cogsIntegrationStatus: string; totalMonths: any; totalProducts: any; totalCategories: any; filtersApplied: { period: any; category: any; productId: any; group_by: any; }; }; } | null} salesData
+   * @param {{ period: any; category: any; productId: any; group_by: any; }} params
    */
   async _transformSalesData(salesData, params) {
     const {
@@ -263,13 +263,13 @@ class SalesReportExportHandler {
     // Calculate business insights
     const businessInsights = this._generateBusinessInsights(
       quickStats,
-      performanceMetrics
+      performanceMetrics,
     );
 
     return {
       sales_by_month: salesByMonth.map(
         (
-          /** @type {{ month: any; sales: any; profit: any; cogs: any; profitMargin: any; orders: any; }} */ item
+          /** @type {{ month: any; sales: any; profit: any; cogs: any; profitMargin: any; orders: any; }} */ item,
         ) => ({
           period: item.month,
           sales: item.sales || 0,
@@ -277,11 +277,11 @@ class SalesReportExportHandler {
           cogs: item.cogs || 0,
           profit_margin: item.profitMargin || 0,
           orders: item.orders || 0,
-        })
+        }),
       ),
       top_products: topProducts.map(
         (
-          /** @type {{ name: any; revenue: any; profit: any; profitMargin: any; units: any; value: any; category: any; }} */ item
+          /** @type {{ name: any; revenue: any; profit: any; profitMargin: any; units: any; value: any; category: any; }} */ item,
         ) => ({
           name: item.name,
           revenue: item.revenue || 0,
@@ -290,7 +290,7 @@ class SalesReportExportHandler {
           units_sold: item.units || 0,
           order_count: item.value || 0,
           category: item.category,
-        })
+        }),
       ),
       sales_trend: salesTrend.map(
         (/** @type {{ month: any; sales: any; target: any; }} */ item) => ({
@@ -304,17 +304,17 @@ class SalesReportExportHandler {
                   (item.target || 0)) *
                 100
               : 0,
-        })
+        }),
       ),
       sales_by_category: salesByCategory.map(
         (
-          /** @type {{ category: any; sales: any; percentage: any; }} */ item
+          /** @type {{ category: any; sales: any; percentage: any; }} */ item,
         ) => ({
           category: item.category,
           sales: item.sales || 0,
           percentage: item.percentage || 0,
           rank: 0, // Will be calculated
-        })
+        }),
       ),
       quick_stats: {
         total_sales: quickStats.totalSales || 0,
@@ -338,7 +338,7 @@ class SalesReportExportHandler {
       filters: {
         period: params.period || "1year",
         category: params.category || null,
-        product_id: params.product_id || null,
+        productId: params.productId || null,
         group_by: params.group_by || "month",
       },
       metadata: {
@@ -447,7 +447,7 @@ class SalesReportExportHandler {
 
   /**
    * Export data as CSV
-   * @param {{ sales_by_month: any; top_products: any; sales_trend: any; sales_by_category: any; quick_stats: any; performance_metrics: any; business_insights: any; filters?: { period: any; category: any; product_id: any; group_by: any; }; metadata: any; }} data
+   * @param {{ sales_by_month: any; top_products: any; sales_trend: any; sales_by_category: any; quick_stats: any; performance_metrics: any; business_insights: any; filters?: { period: any; category: any; productId: any; group_by: any; }; metadata: any; }} data
    * @param {{ format: string; }} params
    */
   // @ts-ignore
@@ -464,7 +464,7 @@ class SalesReportExportHandler {
     csvContent.push(`Generated,${new Date().toISOString()}`);
     csvContent.push(`Report Type,${data.metadata.report_type}`);
     csvContent.push(
-      `Period,${data.metadata.date_range.start_date} to ${data.metadata.date_range.end_date}`
+      `Period,${data.metadata.date_range.start_date} to ${data.metadata.date_range.end_date}`,
     );
     csvContent.push(`Total Periods Analyzed,${data.metadata.total_records}`);
     csvContent.push("");
@@ -531,7 +531,7 @@ class SalesReportExportHandler {
         `${data.performance_metrics.conversion_rate.toFixed(1)}%`,
         "5-10%",
         this._getConversionPerformance(
-          data.performance_metrics.conversion_rate
+          data.performance_metrics.conversion_rate,
         ),
       ],
       [
@@ -539,7 +539,7 @@ class SalesReportExportHandler {
         `${data.performance_metrics.customer_satisfaction.toFixed(1)}/5.0`,
         "4.2+",
         this._getSatisfactionPerformance(
-          data.performance_metrics.customer_satisfaction
+          data.performance_metrics.customer_satisfaction,
         ),
       ],
       [
@@ -547,7 +547,7 @@ class SalesReportExportHandler {
         this._formatCurrency(data.performance_metrics.customer_lifetime_value),
         "$200+",
         this._getCLVPerformance(
-          data.performance_metrics.customer_lifetime_value
+          data.performance_metrics.customer_lifetime_value,
         ),
       ],
       [
@@ -555,7 +555,7 @@ class SalesReportExportHandler {
         `${data.performance_metrics.repeat_customer_rate}%`,
         "30%+",
         this._getRepeatCustomerPerformance(
-          data.performance_metrics.repeat_customer_rate
+          data.performance_metrics.repeat_customer_rate,
         ),
       ],
       [
@@ -572,12 +572,12 @@ class SalesReportExportHandler {
     // Sales Trend Analysis
     csvContent.push("📈 SALES TREND ANALYSIS");
     csvContent.push(
-      "Period,Actual Sales,Target Sales,Variance,Variance %,Status"
+      "Period,Actual Sales,Target Sales,Variance,Variance %,Status",
     );
 
     data.sales_trend.forEach(
       (
-        /** @type {{ variance: number; period: any; sales: any; target: any; variance_percentage: number; }} */ item
+        /** @type {{ variance: number; period: any; sales: any; target: any; variance_percentage: number; }} */ item,
       ) => {
         const status = item.variance >= 0 ? "Above Target" : "Below Target";
         csvContent.push(
@@ -588,9 +588,9 @@ class SalesReportExportHandler {
             this._formatCurrency(item.variance),
             `${item.variance_percentage.toFixed(1)}%`,
             status,
-          ].join(",")
+          ].join(","),
         );
-      }
+      },
     );
     csvContent.push("");
 
@@ -600,7 +600,7 @@ class SalesReportExportHandler {
 
     data.sales_by_month.forEach(
       (
-        /** @type {{ period: any; sales: any; profit: any; profit_margin: number; cogs: any; orders: any; }} */ item
+        /** @type {{ period: any; sales: any; profit: any; profit_margin: number; cogs: any; orders: any; }} */ item,
       ) => {
         csvContent.push(
           [
@@ -610,22 +610,22 @@ class SalesReportExportHandler {
             `${item.profit_margin.toFixed(2)}%`,
             this._formatCurrency(item.cogs),
             item.orders,
-          ].join(",")
+          ].join(","),
         );
-      }
+      },
     );
     csvContent.push("");
 
     // Top Products
     csvContent.push("🏆 TOP PERFORMING PRODUCTS");
     csvContent.push(
-      "Rank,Product,Category,Revenue,Profit,Profit Margin,Units Sold,Orders"
+      "Rank,Product,Category,Revenue,Profit,Profit Margin,Units Sold,Orders",
     );
 
     data.top_products.forEach(
       (
         /** @type {{ name: any; category: any; revenue: any; profit: any; profit_margin: number; units_sold: any; order_count: any; }} */ item,
-        /** @type {number} */ index
+        /** @type {number} */ index,
       ) => {
         csvContent.push(
           [
@@ -637,9 +637,9 @@ class SalesReportExportHandler {
             `${item.profit_margin.toFixed(2)}%`,
             item.units_sold,
             item.order_count,
-          ].join(",")
+          ].join(","),
         );
-      }
+      },
     );
     csvContent.push("");
 
@@ -671,7 +671,7 @@ class SalesReportExportHandler {
           this._formatCurrency(item.sales),
           `${item.percentage.toFixed(2)}%`,
           item.performance,
-        ].join(",")
+        ].join(","),
       );
     });
     csvContent.push("");
@@ -682,7 +682,7 @@ class SalesReportExportHandler {
 
     data.business_insights.forEach(
       (
-        /** @type {{ priority: any; type: any; title: any; action: any; impact: any; }} */ insight
+        /** @type {{ priority: any; type: any; title: any; action: any; impact: any; }} */ insight,
       ) => {
         csvContent.push(
           [
@@ -691,15 +691,15 @@ class SalesReportExportHandler {
             `"${insight.title}"`,
             `"${insight.action}"`,
             `"${insight.impact}"`,
-          ].join(",")
+          ].join(","),
         );
-      }
+      },
     );
     csvContent.push("");
 
     // Footer
     csvContent.push("🏁 REPORT FOOTER");
-    csvContent.push("Generated by,InventoryPro Sales Analytics v2.0");
+    csvContent.push("Generated by,stashly Sales Analytics v2.0");
     csvContent.push("Data Source,Sales Transaction Database");
     csvContent.push("Report Type,Sales Performance Analysis");
     csvContent.push("Confidentiality,Internal Use Only");
@@ -718,7 +718,7 @@ class SalesReportExportHandler {
 
   /**
    * Export data as Excel with enhanced design and charts
-   * @param {{ sales_by_month: any; top_products: any; sales_trend: any; sales_by_category: any; quick_stats: any; performance_metrics?: { average_order_value: any; conversion_rate: any; customer_satisfaction: any; customer_lifetime_value: any; repeat_customer_rate: any; cogs_to_sales_ratio: any; }; business_insights: any; filters?: { period: any; category: any; product_id: any; group_by: any; }; metadata: any; }} data
+   * @param {{ sales_by_month: any; top_products: any; sales_trend: any; sales_by_category: any; quick_stats: any; performance_metrics?: { average_order_value: any; conversion_rate: any; customer_satisfaction: any; customer_lifetime_value: any; repeat_customer_rate: any; cogs_to_sales_ratio: any; }; business_insights: any; filters?: { period: any; category: any; productId: any; group_by: any; }; metadata: any; }} data
    * @param {{ format: string; }} params
    */
   async _exportExcel(data, params) {
@@ -732,7 +732,7 @@ class SalesReportExportHandler {
       const filepath = path.join(this.EXPORT_DIR, filename);
 
       const workbook = new this.excelJS.Workbook();
-      workbook.creator = "InventoryPro Sales Analytics";
+      workbook.creator = "stashly Sales Analytics";
       workbook.created = new Date();
 
       // ==================== COVER PAGE ====================
@@ -943,11 +943,11 @@ class SalesReportExportHandler {
       data.sales_trend.forEach(
         (
           /** @type {{ period: any; sales: any; target: any; variance: number; variance_percentage: number; }} */ item,
-          /** @type {number} */ index
+          /** @type {number} */ index,
         ) => {
           const periodData =
             data.sales_by_month.find(
-              (/** @type {{ period: any; }} */ p) => p.period === item.period
+              (/** @type {{ period: any; }} */ p) => p.period === item.period,
             ) || {};
           const row = trendsSheet.addRow({
             period: item.period,
@@ -995,7 +995,7 @@ class SalesReportExportHandler {
             };
             statusCell.font = { bold: true, color: { argb: "E74C3C" } };
           }
-        }
+        },
       );
 
       // ==================== PRODUCT PERFORMANCE PAGE ====================
@@ -1031,7 +1031,7 @@ class SalesReportExportHandler {
       data.top_products.forEach(
         (
           /** @type {{ profit_margin: number; name: any; category: any; revenue: any; profit: any; units_sold: any; order_count: any; }} */ item,
-          /** @type {number} */ index
+          /** @type {number} */ index,
         ) => {
           const performance =
             item.profit_margin >= 30
@@ -1088,7 +1088,7 @@ class SalesReportExportHandler {
             };
             perfCell.font = { bold: true, color: { argb: "F39C12" } };
           }
-        }
+        },
       );
 
       // ==================== CATEGORY ANALYSIS PAGE ====================
@@ -1201,7 +1201,7 @@ class SalesReportExportHandler {
       data.business_insights.forEach(
         (
           /** @type {{ priority: string; type: any; title: any; action: any; impact: any; }} */ insight,
-          /** @type {any} */ index
+          /** @type {any} */ index,
         ) => {
           const row = insightsSheet.addRow({
             priority: insight.priority,
@@ -1235,7 +1235,7 @@ class SalesReportExportHandler {
             };
             priorityCell.font = { bold: true, color: { argb: "27AE60" } };
           }
-        }
+        },
       );
 
       // Save workbook
@@ -1256,7 +1256,7 @@ class SalesReportExportHandler {
 
   /**
    * Export data as PDF with enhanced design and charts
-   * @param {{ sales_by_month: any; top_products: any; sales_trend: any; sales_by_category: any; quick_stats: { total_sales: any; total_profit: any; total_orders: any; total_cogs: any; average_order_value: any; sales_growth_rate: any; orders_growth_rate: any; profit_margin: any; }; performance_metrics: { average_order_value: any; conversion_rate: any; customer_satisfaction: any; customer_lifetime_value: any; repeat_customer_rate: any; cogs_to_sales_ratio: any; }; business_insights: { ranking: number; priority: string; type: string; title: string; description: string; action: string; impact: string; }[]; filters: { period: any; category: any; product_id: any; group_by: any; }; metadata: any; }} data
+   * @param {{ sales_by_month: any; top_products: any; sales_trend: any; sales_by_category: any; quick_stats: { total_sales: any; total_profit: any; total_orders: any; total_cogs: any; average_order_value: any; sales_growth_rate: any; orders_growth_rate: any; profit_margin: any; }; performance_metrics: { average_order_value: any; conversion_rate: any; customer_satisfaction: any; customer_lifetime_value: any; repeat_customer_rate: any; cogs_to_sales_ratio: any; }; business_insights: { ranking: number; priority: string; type: string; title: string; description: string; action: string; impact: string; }[]; filters: { period: any; category: any; productId: any; group_by: any; }; metadata: any; }} data
    * @param {{ format: string; }} params
    */
   async _exportPDF(data, params) {
@@ -1279,7 +1279,7 @@ class SalesReportExportHandler {
         margin: 40,
         info: {
           Title: "Sales Performance Report",
-          Author: "InventoryPro Sales Analytics",
+          Author: "stashly Sales Analytics",
           Subject: "Sales Performance Analysis Report",
           Keywords: "sales, performance, analysis, report, revenue, profit",
           CreationDate: new Date(),
@@ -1398,13 +1398,13 @@ class SalesReportExportHandler {
         {
           width: pageWidth - margin * 2,
           align: "center",
-        }
+        },
       );
 
     doc
       .fontSize(10)
       .fillColor(this.CHART_COLORS.light)
-      .text("InventoryPro Sales Analytics", margin, headerPaddingTop + 92, {
+      .text("stashly Sales Analytics", margin, headerPaddingTop + 92, {
         width: pageWidth - margin * 2,
         align: "center",
       });
@@ -1493,7 +1493,7 @@ class SalesReportExportHandler {
         summaryBoxY,
         summaryBoxWidth,
         summaryBoxHeight,
-        4
+        4,
       )
       .fill(this.CHART_COLORS.secondary);
 
@@ -1508,7 +1508,7 @@ class SalesReportExportHandler {
         {
           width: summaryBoxWidth,
           align: "center",
-        }
+        },
       );
     doc.restore();
 
@@ -1580,7 +1580,7 @@ class SalesReportExportHandler {
     const gap = 14;
     const colCount = Math.min(maxCols, kpis.length);
     const boxWidth = Math.floor(
-      (contentWidth - gap * (colCount - 1)) / colCount
+      (contentWidth - gap * (colCount - 1)) / colCount,
     );
     const boxHeight = 64;
     let cursorY = doc.y;
@@ -1767,7 +1767,7 @@ class SalesReportExportHandler {
           .moveTo(startX, y + 20)
           .lineTo(
             startX + colWidths[0] + colWidths[1] + colWidths[2] + 30,
-            y + 20
+            y + 20,
           )
           .strokeColor("#EEEEEE")
           .lineWidth(0.5)
@@ -1986,7 +1986,7 @@ class SalesReportExportHandler {
     displayProducts.forEach(
       (
         /** @type {{ name: any; category: any; revenue: any; profit: any; profit_margin: number; units_sold: any; order_count: any; }} */ product,
-        /** @type {number} */ index
+        /** @type {number} */ index,
       ) => {
         const y = doc.y;
 
@@ -2025,7 +2025,7 @@ class SalesReportExportHandler {
             `Revenue: ${this._formatCurrency(product.revenue)} | Profit: ${this._formatCurrency(product.profit)} | Margin: ${product.profit_margin.toFixed(2)}%`,
             {
               indent: 20,
-            }
+            },
           );
 
         doc
@@ -2035,7 +2035,7 @@ class SalesReportExportHandler {
             `Units Sold: ${product.units_sold} | Orders: ${product.order_count}`,
             {
               indent: 20,
-            }
+            },
           );
 
         // Performance indicator
@@ -2057,7 +2057,7 @@ class SalesReportExportHandler {
                 ? this.CHART_COLORS.warning
                 : performance === "Average"
                   ? "#3498DB"
-                  : this.CHART_COLORS.danger
+                  : this.CHART_COLORS.danger,
           )
           .font("Helvetica-Bold")
           .text(`Performance: ${performance}`, {
@@ -2065,7 +2065,7 @@ class SalesReportExportHandler {
           });
 
         doc.moveDown(1);
-      }
+      },
     );
   }
 
@@ -2127,7 +2127,7 @@ class SalesReportExportHandler {
           y,
           {
             width: 80,
-          }
+          },
         );
 
       // Percentage
@@ -2140,7 +2140,7 @@ class SalesReportExportHandler {
           y,
           {
             width: 40,
-          }
+          },
         );
     });
 
@@ -2163,13 +2163,13 @@ class SalesReportExportHandler {
 
     // Group insights by priority
     const highPriority = data.business_insights.filter(
-      (/** @type {{ priority: string; }} */ i) => i.priority === "HIGH"
+      (/** @type {{ priority: string; }} */ i) => i.priority === "HIGH",
     );
     const mediumPriority = data.business_insights.filter(
-      (/** @type {{ priority: string; }} */ i) => i.priority === "MEDIUM"
+      (/** @type {{ priority: string; }} */ i) => i.priority === "MEDIUM",
     );
     const lowPriority = data.business_insights.filter(
-      (/** @type {{ priority: string; }} */ i) => i.priority === "LOW"
+      (/** @type {{ priority: string; }} */ i) => i.priority === "LOW",
     );
 
     // High Priority Insights
@@ -2183,7 +2183,7 @@ class SalesReportExportHandler {
       highPriority.forEach(
         (
           /** @type {{ title: any; type: any; impact: any; action: any; }} */ insight,
-          /** @type {number} */ index
+          /** @type {number} */ index,
         ) => {
           doc.moveDown(0.5);
           doc
@@ -2205,7 +2205,7 @@ class SalesReportExportHandler {
             .text(`Recommendation: ${insight.action}`, { indent: 40 });
 
           doc.moveDown(0.5);
-        }
+        },
       );
     }
 
@@ -2221,7 +2221,7 @@ class SalesReportExportHandler {
       mediumPriority.forEach(
         (
           /** @type {{ title: any; type: any; impact: any; action: any; }} */ insight,
-          /** @type {number} */ index
+          /** @type {number} */ index,
         ) => {
           doc.moveDown(0.5);
           doc
@@ -2243,7 +2243,7 @@ class SalesReportExportHandler {
             .text(`Recommendation: ${insight.action}`, { indent: 40 });
 
           doc.moveDown(0.5);
-        }
+        },
       );
     }
 
@@ -2297,7 +2297,7 @@ class SalesReportExportHandler {
             {
               align: "center",
               width: doc.page.width - 80,
-            }
+            },
           );
 
         // Footer separator
@@ -2313,10 +2313,10 @@ class SalesReportExportHandler {
           .fontSize(7)
           .fillColor("#999999")
           .text(
-            `Sales Performance Report | Generated: ${new Date().toLocaleDateString()} | InventoryPro Sales Analytics v2.0 | Report Type: ${data.metadata.report_type} | Confidential`,
+            `Sales Performance Report | Generated: ${new Date().toLocaleDateString()} | stashly Sales Analytics v2.0 | Report Type: ${data.metadata.report_type} | Confidential`,
             40,
             doc.page.height - 20,
-            { align: "center", width: doc.page.width - 80 }
+            { align: "center", width: doc.page.width - 80 },
           );
       }
     } catch (error) {
@@ -2333,7 +2333,7 @@ class SalesReportExportHandler {
     try {
       // Check if export_history table exists
       const tableCheck = await AppDataSource.query(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='export_history'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='export_history'",
       );
 
       if (!tableCheck || tableCheck.length === 0) {
@@ -2361,7 +2361,7 @@ class SalesReportExportHandler {
 
       // Get history for sales reports
       const history = await AppDataSource.query(
-        "SELECT * FROM export_history WHERE filename LIKE '%sales_performance%' OR filename LIKE '%sales_report%' ORDER BY generated_at DESC LIMIT 50"
+        "SELECT * FROM export_history WHERE filename LIKE '%sales_performance%' OR filename LIKE '%sales_report%' ORDER BY generated_at DESC LIMIT 50",
       );
 
       // Parse filters_json
@@ -2369,7 +2369,7 @@ class SalesReportExportHandler {
         (/** @type {{ filters_json: string; }} */ item) => ({
           ...item,
           filters: item.filters_json ? JSON.parse(item.filters_json) : {},
-        })
+        }),
       );
 
       return {
@@ -2405,7 +2405,7 @@ class SalesReportExportHandler {
           exportData.generated_at,
           exportData.file_size,
           exportData.filters || "{}",
-        ]
+        ],
       );
 
       return true;
@@ -2589,7 +2589,7 @@ if (ipcMain) {
   });
 } else {
   console.warn(
-    "ipcMain is not available - running in non-Electron environment"
+    "ipcMain is not available - running in non-Electron environment",
   );
 }
 

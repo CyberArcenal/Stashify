@@ -8,7 +8,7 @@ import productAPI from "../../../api/core/product";
 
 export interface ProductFilters {
   search: string;
-  category_id: string;
+  categoryId: string;
   is_published: string;
   low_stock: string;
   is_deleted: string;
@@ -54,13 +54,18 @@ interface UseProductsReturn {
   handleSort: (key: string) => void;
 }
 
-const useProducts = (initialFilters?: Partial<ProductFilters>): UseProductsReturn => {
+const useProducts = (
+  initialFilters?: Partial<ProductFilters>,
+): UseProductsReturn => {
   const [allProducts, setAllProducts] = useState<ProductWithDetails[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" }>({
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc";
+  }>({
     key: "created_at",
     direction: "desc",
   });
@@ -69,7 +74,7 @@ const useProducts = (initialFilters?: Partial<ProductFilters>): UseProductsRetur
 
   const [filters, setFilters] = useState<ProductFilters>({
     search: "",
-    category_id: "",
+    categoryId: "",
     is_published: "",
     low_stock: "",
     is_deleted: "false",
@@ -90,7 +95,11 @@ const useProducts = (initialFilters?: Partial<ProductFilters>): UseProductsRetur
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const response = await categoryAPI.getAll({ sortBy: "name", sortOrder: "ASC", limit: 1000 });
+        const response = await categoryAPI.getAll({
+          sortBy: "name",
+          sortOrder: "ASC",
+          limit: 1000,
+        });
         if (response.status && mountedRef.current) {
           setCategories(response.data);
         }
@@ -101,26 +110,34 @@ const useProducts = (initialFilters?: Partial<ProductFilters>): UseProductsRetur
     loadCategories();
   }, []);
 
-  const getTotalQuantity = useCallback(async (productId: number): Promise<number> => {
-    if (stockCache.current.has(productId)) {
-      return stockCache.current.get(productId)!;
-    }
-    try {
-      const response = await stockItemAPI.getByProduct(productId);
-      const qty = response.status ? response.data.reduce((sum, item) => sum + item.quantity, 0) : 0;
-      stockCache.current.set(productId, qty);
-      return qty;
-    } catch (err) {
-      console.error(`Failed to fetch stock for product ${productId}:`, err);
-      return 0;
-    }
-  }, []);
+  const getTotalQuantity = useCallback(
+    async (productId: number): Promise<number> => {
+      if (stockCache.current.has(productId)) {
+        return stockCache.current.get(productId)!;
+      }
+      try {
+        const response = await stockItemAPI.getByProduct(productId);
+        const qty = response.status
+          ? response.data.reduce((sum, item) => sum + item.quantity, 0)
+          : 0;
+        stockCache.current.set(productId, qty);
+        return qty;
+      } catch (err) {
+        console.error(`Failed to fetch stock for product ${productId}:`, err);
+        return 0;
+      }
+    },
+    [],
+  );
 
-  const determineStatus = useCallback((qty: number): ProductWithDetails["status"] => {
-    if (qty === 0) return "out-of-stock";
-    if (qty <= 5) return "low-stock";
-    return "in-stock";
-  }, []);
+  const determineStatus = useCallback(
+    (qty: number): ProductWithDetails["status"] => {
+      if (qty === 0) return "out-of-stock";
+      if (qty <= 5) return "low-stock";
+      return "in-stock";
+    },
+    [],
+  );
 
   // Fetch products – defined as a reusable function
   const fetchProducts = useCallback(async () => {
@@ -141,11 +158,13 @@ const useProducts = (initialFilters?: Partial<ProductFilters>): UseProductsRetur
         sortOrder: sortConfig.direction,
       };
       if (filters.search) params.search = filters.search;
-      if (filters.category_id) params.categoryId = parseInt(filters.category_id);
-      if (filters.is_published) params.is_published = filters.is_published === "true";
+      if (filters.categoryId) params.categoryId = parseInt(filters.categoryId);
+      if (filters.is_published)
+        params.is_published = filters.is_published === "true";
 
       const response = await productAPI.getAll(params);
-      if (!response.status) throw new Error(response.message || "Failed to fetch products");
+      if (!response.status)
+        throw new Error(response.message || "Failed to fetch products");
 
       // Fetch stock for all products in parallel
       const stockPromises = response.data.map(async (p) => {
@@ -154,30 +173,36 @@ const useProducts = (initialFilters?: Partial<ProductFilters>): UseProductsRetur
       });
 
       const stockResults = await Promise.all(stockPromises);
-      const quantityMap = new Map(stockResults.map(r => [r.productId, r.quantity]));
+      const quantityMap = new Map(
+        stockResults.map((r) => [r.productId, r.quantity]),
+      );
 
-      const productsWithQuantity: ProductWithDetails[] = response.data.map((p) => {
-        const totalQty = quantityMap.get(p.id) ?? 0;
-        return {
-          ...p,
-          total_quantity: totalQty,
-          category_name: p.category?.name,
-          status: determineStatus(totalQty),
-        };
-      });
+      const productsWithQuantity: ProductWithDetails[] = response.data.map(
+        (p) => {
+          const totalQty = quantityMap.get(p.id) ?? 0;
+          return {
+            ...p,
+            total_quantity: totalQty,
+            category_name: p.category?.name,
+            status: determineStatus(totalQty),
+          };
+        },
+      );
 
       // Apply client-side filters
       let filtered = productsWithQuantity;
       if (filters.is_deleted === "true") {
-        filtered = filtered.filter(p => p.is_deleted === true);
+        filtered = filtered.filter((p) => p.is_deleted === true);
       } else if (filters.is_deleted === "false") {
-        filtered = filtered.filter(p => p.is_deleted === false);
+        filtered = filtered.filter((p) => p.is_deleted === false);
       }
 
       if (filters.low_stock === "true") {
-        filtered = filtered.filter(p => p.total_quantity > 0 && p.total_quantity <= 5);
+        filtered = filtered.filter(
+          (p) => p.total_quantity > 0 && p.total_quantity <= 5,
+        );
       } else if (filters.low_stock === "false") {
-        filtered = filtered.filter(p => p.total_quantity > 5);
+        filtered = filtered.filter((p) => p.total_quantity > 5);
       }
 
       if (mountedRef.current) {
@@ -197,7 +222,7 @@ const useProducts = (initialFilters?: Partial<ProductFilters>): UseProductsRetur
     }
   }, [
     filters.search,
-    filters.category_id,
+    filters.categoryId,
     filters.is_published,
     filters.low_stock,
     filters.is_deleted,
@@ -249,7 +274,7 @@ const useProducts = (initialFilters?: Partial<ProductFilters>): UseProductsRetur
   const totalPages = Math.ceil(totalItems / pageSize);
   const paginatedProducts = sortedProducts.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
   const pagination = {
@@ -259,15 +284,18 @@ const useProducts = (initialFilters?: Partial<ProductFilters>): UseProductsRetur
     page_size: pageSize,
   };
 
-  const handleFilterChange = useCallback((key: keyof ProductFilters, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-    setCurrentPage(1);
-  }, []);
+  const handleFilterChange = useCallback(
+    (key: keyof ProductFilters, value: string) => {
+      setFilters((prev) => ({ ...prev, [key]: value }));
+      setCurrentPage(1);
+    },
+    [],
+  );
 
   const resetFilters = useCallback(() => {
     setFilters({
       search: "",
-      category_id: "",
+      categoryId: "",
       is_published: "",
       low_stock: "",
       is_deleted: "false",
@@ -277,13 +305,15 @@ const useProducts = (initialFilters?: Partial<ProductFilters>): UseProductsRetur
 
   const toggleProductSelection = useCallback((id: number) => {
     setSelectedProducts((prev) =>
-      prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id],
     );
   }, []);
 
   const toggleSelectAll = useCallback(() => {
     setSelectedProducts((prev) =>
-      prev.length === paginatedProducts.length ? [] : paginatedProducts.map((p) => p.id)
+      prev.length === paginatedProducts.length
+        ? []
+        : paginatedProducts.map((p) => p.id),
     );
   }, [paginatedProducts]);
 

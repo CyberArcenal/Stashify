@@ -327,13 +327,12 @@ async function safeCloseDatabase() {
 // ===================== WINDOW MANAGEMENT =====================
 /**
  * Get icon path based on platform and environment
- * @returns {string | null}
+ * @returns {string}
  */
 function getIconPath() {
   const platform = process.platform;
   const iconDir = APP_CONFIG.isDev
-    ? path.resolve(__dirname, "..", "..", "assets")
-    // @ts-ignore
+    ? path.resolve(__dirname, "..", "..", "build")
     : path.join(process.resourcesPath, "build");
 
   const iconMap = {
@@ -346,6 +345,7 @@ function getIconPath() {
   const iconFile = iconMap[platform] || "icon.png";
   const iconPath = path.join(iconDir, iconFile);
 
+  // @ts-ignore
   return fsSync.existsSync(iconPath) ? iconPath : null;
 }
 

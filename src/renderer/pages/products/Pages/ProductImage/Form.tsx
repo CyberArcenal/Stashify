@@ -263,7 +263,7 @@ const ProductImageFormPage: React.FC = () => {
             result.id.toString(),
             {
               action: "created_image",
-              product_id: parsedProductId,
+              productId: parsedProductId,
               image_data: result,
             },
             undefined, // IP address - you might get this from your auth context
@@ -275,7 +275,7 @@ const ProductImageFormPage: React.FC = () => {
             result.id.toString(),
             {
               action: "updated_image",
-              product_id: parsedProductId,
+              productId: parsedProductId,
               previous_data: image,
               new_data: result,
             },

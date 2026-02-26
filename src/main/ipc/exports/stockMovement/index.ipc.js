@@ -7,15 +7,14 @@ const os = require("os");
 const { AppDataSource } = require("../../../db/datasource");
 const StockMovement = require("../../../../entities/StockMovement");
 
-
 class StockMovementExportHandler {
   constructor() {
     this.SUPPORTED_FORMATS = ["csv", "excel", "pdf"];
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "InventoryPro",
-      "stock_movement_exports"
+      "stashly",
+      "stock_movement_exports",
     );
 
     // Create export directory if it doesn't exist
@@ -35,7 +34,7 @@ class StockMovementExportHandler {
       console.warn(
         "ExcelJS not available for enhanced Excel export:",
         // @ts-ignore
-        error.message
+        error.message,
       );
     }
   }
@@ -205,29 +204,37 @@ class StockMovementExportHandler {
 
     // Apply filters
     if (params.warehouse) {
-      queryBuilder.andWhere("sm.warehouse_id = :warehouseId", { warehouseId: params.warehouse });
+      queryBuilder.andWhere("sm.warehouseId = :warehouseId", {
+        warehouseId: params.warehouse,
+      });
     }
 
     if (params.movement_type && params.movement_type !== "all") {
-      queryBuilder.andWhere("sm.movement_type = :movementType", { movementType: params.movement_type });
+      queryBuilder.andWhere("sm.movement_type = :movementType", {
+        movementType: params.movement_type,
+      });
     }
 
     if (params.date_from) {
-      queryBuilder.andWhere("sm.created_at >= :dateFrom", { dateFrom: params.date_from });
+      queryBuilder.andWhere("sm.created_at >= :dateFrom", {
+        dateFrom: params.date_from,
+      });
     }
 
     if (params.date_to) {
       // Add time to end of day
       const endDate = new Date(params.date_to);
       endDate.setHours(23, 59, 59, 999);
-      queryBuilder.andWhere("sm.created_at <= :dateTo", { dateTo: endDate.toISOString() });
+      queryBuilder.andWhere("sm.created_at <= :dateTo", {
+        dateTo: endDate.toISOString(),
+      });
     }
 
     if (params.search) {
       const searchTerm = `%${params.search}%`;
       queryBuilder.andWhere(
         "(p.name LIKE :search OR p.sku LIKE :search OR w.name LIKE :search OR u.username LIKE :search OR sm.reference_code LIKE :search)",
-        { search: searchTerm }
+        { search: searchTerm },
       );
     }
 
@@ -244,7 +251,7 @@ class StockMovementExportHandler {
 
       const sku = movement.variant_sku || movement.product_sku || "N/A";
       const movementTypeDisplay = this._getMovementTypeDisplay(
-        movement.sm_movement_type
+        movement.sm_movement_type,
       );
       const direction = movement.sm_change > 0 ? "IN" : "OUT";
 
@@ -574,7 +581,7 @@ class StockMovementExportHandler {
         .fillColor("#333333")
         .text(
           `Generated: ${new Date().toLocaleString()} | Total: ${Array.isArray(movements) ? movements.length : 0} movements`,
-          { align: "center" }
+          { align: "center" },
         );
       doc.moveDown(0.5);
 
@@ -628,7 +635,7 @@ class StockMovementExportHandler {
         }
         const requiredRowHeight = Math.max(
           minRowHeight,
-          Math.ceil(maxCellHeight + cellPaddingV * 2)
+          Math.ceil(maxCellHeight + cellPaddingV * 2),
         );
 
         // Page break if not enough space
@@ -713,7 +720,7 @@ class StockMovementExportHandler {
               {
                 width: columnWidths[dirIndex] - cellPaddingH * 2,
                 align: "center",
-              }
+              },
             );
         } else if (cells[dirIndex] === "OUT") {
           doc
@@ -729,7 +736,7 @@ class StockMovementExportHandler {
               {
                 width: columnWidths[dirIndex] - cellPaddingH * 2,
                 align: "center",
-              }
+              },
             );
         }
 
@@ -876,7 +883,7 @@ if (ipcMain) {
   });
 } else {
   console.warn(
-    "ipcMain is not available - running in non-Electron environment"
+    "ipcMain is not available - running in non-Electron environment",
   );
 }
 

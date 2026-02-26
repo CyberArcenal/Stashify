@@ -14,7 +14,7 @@ class ProductVariantExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "InventoryPro",
+      "stashly",
       "product_variant_exports",
     );
 
@@ -187,7 +187,7 @@ class ProductVariantExportHandler {
       .subQuery()
       .select("COALESCE(SUM(si.quantity), 0)")
       .from(StockItem, "si")
-      .where("si.variant_id = pv.id")
+      .where("si.variantId = pv.id")
       .andWhere("si.is_deleted = 0")
       .getQuery();
 
@@ -215,13 +215,13 @@ class ProductVariantExportHandler {
 
     // Apply filters
     if (params.product) {
-      queryBuilder.andWhere("pv.product_id = :productId", {
+      queryBuilder.andWhere("pv.productId = :productId", {
         productId: params.product,
       });
     }
 
     if (params.category) {
-      queryBuilder.andWhere("p.category_id = :categoryId", {
+      queryBuilder.andWhere("p.categoryId = :categoryId", {
         categoryId: params.category,
       });
     }

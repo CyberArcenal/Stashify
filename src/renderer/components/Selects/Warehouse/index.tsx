@@ -243,8 +243,8 @@ const WarehouseSelect: React.FC<WarehouseSelectProps> = ({
                     onClick={() => handleSelect(warehouse)}
                     className={`
                       w-full px-3 py-2 text-left flex items-center gap-2
-                      transition-colors text-sm cursor-pointer hover:bg-gray-800
-                      ${warehouse.id === value ? "bg-gray-800" : ""}
+                      transition-colors text-sm cursor-pointer hover:bg-[var(--card-hover-bg)]
+                      ${warehouse.id === value ? "bg-[var(--accent-blue-light)]" : ""}
                     `}
                     style={{ borderBottom: "1px solid var(--border-color)" }}
                   >

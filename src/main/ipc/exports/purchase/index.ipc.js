@@ -7,15 +7,14 @@ const os = require("os");
 const { AppDataSource } = require("../../../db/datasource");
 const Purchase = require("../../../../entities/Purchase");
 
-
 class PurchaseExportHandler {
   constructor() {
     this.SUPPORTED_FORMATS = ["csv", "excel", "pdf"];
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "InventoryPro",
-      "purchase_exports"
+      "stashly",
+      "purchase_exports",
     );
 
     // Create export directory if it doesn't exist
@@ -35,7 +34,7 @@ class PurchaseExportHandler {
       console.warn(
         "ExcelJS not available for enhanced Excel export:",
         // @ts-ignore
-        error.message
+        error.message,
       );
     }
   }
@@ -220,26 +219,34 @@ class PurchaseExportHandler {
     }
 
     if (params.supplier) {
-      queryBuilder.andWhere("p.supplier_id = :supplierId", { supplierId: params.supplier });
+      queryBuilder.andWhere("p.supplier_id = :supplierId", {
+        supplierId: params.supplier,
+      });
     }
 
     if (params.warehouse) {
-      queryBuilder.andWhere("p.warehouse_id = :warehouseId", { warehouseId: params.warehouse });
+      queryBuilder.andWhere("p.warehouseId = :warehouseId", {
+        warehouseId: params.warehouse,
+      });
     }
 
     if (params.start_date) {
-      queryBuilder.andWhere("DATE(p.created_at) >= DATE(:startDate)", { startDate: params.start_date });
+      queryBuilder.andWhere("DATE(p.created_at) >= DATE(:startDate)", {
+        startDate: params.start_date,
+      });
     }
 
     if (params.end_date) {
-      queryBuilder.andWhere("DATE(p.created_at) <= DATE(:endDate)", { endDate: params.end_date });
+      queryBuilder.andWhere("DATE(p.created_at) <= DATE(:endDate)", {
+        endDate: params.end_date,
+      });
     }
 
     if (params.search) {
       const searchTerm = `%${params.search}%`;
       queryBuilder.andWhere(
         "(p.purchase_number LIKE :search OR s.name LIKE :search OR w.name LIKE :search OR u.username LIKE :search)",
-        { search: searchTerm }
+        { search: searchTerm },
       );
     }
 
@@ -399,7 +406,7 @@ class PurchaseExportHandler {
       purchases.forEach(
         (
           /** @type {{ [x: string]: any; }} */ purchase,
-          /** @type {number} */ index
+          /** @type {number} */ index,
         ) => {
           const row = worksheet.addRow([
             purchase["Purchase Number"],
@@ -461,7 +468,7 @@ class PurchaseExportHandler {
               fgColor: { argb: "C6EFCE" },
             };
           }
-        }
+        },
       );
 
       // Freeze header row
@@ -536,7 +543,7 @@ class PurchaseExportHandler {
           `Generated: ${new Date().toLocaleDateString()} | Total: ${purchases.length} purchases`,
           {
             align: "center",
-          }
+          },
         );
 
       doc.moveDown(0.5);
@@ -867,7 +874,7 @@ class PurchaseExportHandler {
           exportData.file_size,
           exportData.filters || "{}",
           "purchase",
-        ]
+        ],
       );
 
       return true;
@@ -900,7 +907,7 @@ class PurchaseExportHandler {
       `);
 
       const history = await AppDataSource.query(
-        "SELECT * FROM export_history WHERE export_type = 'purchase' ORDER BY generated_at DESC LIMIT 50"
+        "SELECT * FROM export_history WHERE export_type = 'purchase' ORDER BY generated_at DESC LIMIT 50",
       );
 
       // Parse filters_json
@@ -908,7 +915,7 @@ class PurchaseExportHandler {
         (/** @type {{ filters_json: string; }} */ item) => ({
           ...item,
           filters: item.filters_json ? JSON.parse(item.filters_json) : {},
-        })
+        }),
       );
 
       return {
@@ -967,7 +974,7 @@ if (ipcMain) {
   });
 } else {
   console.warn(
-    "ipcMain is not available - running in non-Electron environment"
+    "ipcMain is not available - running in non-Electron environment",
   );
 }
 

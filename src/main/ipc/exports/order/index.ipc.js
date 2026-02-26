@@ -13,7 +13,7 @@ class OrderExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "InventoryPro",
+      "stashly",
       "order_exports",
     );
 

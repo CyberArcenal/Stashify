@@ -13,8 +13,8 @@ class SupplierExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "InventoryPro",
-      "supplier_exports"
+      "stashly",
+      "supplier_exports",
     );
 
     // Create export directory if it doesn't exist
@@ -41,7 +41,7 @@ class SupplierExportHandler {
       console.warn(
         "ExcelJS not available for enhanced Excel export:",
         // @ts-ignore
-        error.message
+        error.message,
       );
     }
   }
@@ -210,7 +210,7 @@ class SupplierExportHandler {
       const searchTerm = `%${params.search}%`;
       queryBuilder.andWhere(
         "(s.name LIKE :search OR s.contact_person LIKE :search OR s.email LIKE :search OR s.phone LIKE :search OR s.tax_id LIKE :search)",
-        { search: searchTerm }
+        { search: searchTerm },
       );
     }
 
@@ -221,14 +221,18 @@ class SupplierExportHandler {
     }
 
     if (params.start_date) {
-      queryBuilder.andWhere("s.created_at >= :startDate", { startDate: params.start_date });
+      queryBuilder.andWhere("s.created_at >= :startDate", {
+        startDate: params.start_date,
+      });
     }
 
     if (params.end_date) {
       // Add time to end of day
       const endDate = new Date(params.end_date);
       endDate.setHours(23, 59, 59, 999);
-      queryBuilder.andWhere("s.created_at <= :endDate", { endDate: endDate.toISOString() });
+      queryBuilder.andWhere("s.created_at <= :endDate", {
+        endDate: endDate.toISOString(),
+      });
     }
 
     queryBuilder.orderBy("s.name");
@@ -501,7 +505,7 @@ class SupplierExportHandler {
           `Generated: ${new Date().toLocaleDateString()} | Total: ${suppliers.length} suppliers`,
           {
             align: "center",
-          }
+          },
         );
 
       doc.moveDown(0.5);
@@ -806,7 +810,7 @@ if (ipcMain) {
   });
 } else {
   console.warn(
-    "ipcMain is not available - running in non-Electron environment"
+    "ipcMain is not available - running in non-Electron environment",
   );
 }
 

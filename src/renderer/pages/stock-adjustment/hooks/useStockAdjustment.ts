@@ -129,7 +129,7 @@ const useStockAdjustment = (): UseStockAdjustmentReturn => {
         limit: pageSize,
       };
       if (filters.warehouse !== "all")
-        params.warehouse_id = parseInt(filters.warehouse);
+        params.warehouseId = parseInt(filters.warehouse);
       if (filters.date_from) params.startDate = filters.date_from;
       if (filters.date_to) params.endDate = filters.date_to;
 
@@ -154,9 +154,9 @@ const useStockAdjustment = (): UseStockAdjustmentReturn => {
             product_name =
               (movement.stockItem.product as any).name || "Unknown";
             product_sku = (movement.stockItem.product as any).sku || "";
-          } else if (movement.stockItem?.product_id) {
+          } else if (movement.stockItem?.productId) {
             const prod = products.find(
-              (p) => p.id === movement.stockItem?.product_id,
+              (p) => p.id === movement.stockItem?.productId,
             );
             if (prod) {
               product_name = prod.name;
@@ -166,8 +166,8 @@ const useStockAdjustment = (): UseStockAdjustmentReturn => {
 
           if (movement.warehouse) {
             warehouse_name = (movement.warehouse as any).name || "Unknown";
-          } else if (movement.warehouse_id) {
-            const wh = warehouses.find((w) => w.id === movement.warehouse_id);
+          } else if (movement.warehouseId) {
+            const wh = warehouses.find((w) => w.id === movement.warehouseId);
             if (wh) warehouse_name = wh.name;
           }
 

@@ -13,8 +13,8 @@ import {
 import GeneralSettingsTab from "./components/GeneralSettingsTab";
 import EmailSettingsTab from "./components/EmailSettingsTab";
 import TaxSettingsTab from "./components/TaxSettingsTab";
-import AlertBanner from "./components/AlertBanner";
-import LoadingSpinner from "./components/LoadingSpinner";
+import AlertBanner from "../../components/AlertBanner";
+import LoadingSpinner from "../../components/LoadingSpinner";
 import SettingsTabs from "./components/SettingsTab";
 import StickySaveButton from "./components/StickySaveButton";
 import SupplierTaxSettingsTab from "./components/SupplierTaxSettingsTab";

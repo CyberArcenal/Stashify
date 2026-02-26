@@ -39,18 +39,15 @@ import {
   PieChart as PieChartIcon,
   Layers,
 } from "lucide-react";
-import profitLossAPI, {
-  ProfitLossReportData,
-  ProfitLossByMonth,
-  ProfitLossSummary,
-} from "@/renderer/api/profitLoss";
+import type { ProfitLossReportData } from "../../../api/analytics/profitLoss";
+import profitLossAPI from "../../../api/analytics/profitLoss";
+import { dialogs } from "../../../utils/dialogs";
 import {
   profitLossExportAPI,
-  ProfitLossExportParams,
-} from "@/renderer/api/exports/profitLoss";
-import { formatCurrency } from "@/renderer/utils/formatters";
-import { showApiError, showSuccess } from "@/renderer/utils/notification";
-import { dialogs } from "@/renderer/utils/dialogs";
+  type ProfitLossExportParams,
+} from "../../../api/exports/profitLoss";
+import { showApiError, showSuccess } from "../../../utils/notification";
+import { formatCurrency } from "../../../utils/formatters";
 
 // Color palettes using CSS variables
 const COLORS = [
@@ -980,8 +977,8 @@ const ProfitLossReportPage: React.FC = () => {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percentage }) =>
-                      `${name} (${percentage.toFixed(1)}%)`
+                    label={({ name, payload }) =>
+                      `${name} (${payload?.percentage.toFixed(1)}%)`
                     }
                     outerRadius={80}
                     fill="#8884d8"

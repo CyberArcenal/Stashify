@@ -6,12 +6,11 @@ const path = require("path");
 const os = require("os");
 
 const { getGeneralCurrencySign } = require(
-  path.join(__dirname, "..", "..", "utils", "settings", "system")
+  path.join(__dirname, "..", "..", "utils", "settings", "system"),
 );
 const { inventoryReportHandler } = require(
-  path.join(__dirname, "..", "reports", "inventoryReport")
+  path.join(__dirname, "..", "reports", "inventoryReport"),
 );
-
 
 let currency = "$";
 (async () => {
@@ -24,8 +23,8 @@ class InventoryReportExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "InventoryPro",
-      "inventory_report_exports"
+      "stashly",
+      "inventory_report_exports",
     );
 
     // Create export directory if it doesn't exist
@@ -65,7 +64,7 @@ class InventoryReportExportHandler {
       console.warn(
         "ExcelJS not available for enhanced Excel export:",
         // @ts-ignore
-        error.message
+        error.message,
       );
     }
 
@@ -245,7 +244,7 @@ class InventoryReportExportHandler {
       // Transform the data to match the expected format
       const transformedData = await this._transformInventoryReportData(
         reportData,
-        params
+        params,
       );
 
       return transformedData;
@@ -275,7 +274,7 @@ class InventoryReportExportHandler {
     const transformedCategories = stockByCategory.map(
       (
         /** @type {{ name: any; value: any; stockValue: any; color: any; percentage: any; }} */ item,
-        /** @type {any} */ index
+        /** @type {any} */ index,
       ) => ({
         id: index,
         name: item.name,
@@ -283,14 +282,14 @@ class InventoryReportExportHandler {
         stock_value: item.stockValue || 0,
         color: item.color,
         percentage: item.percentage || 0,
-      })
+      }),
     );
 
     // Transform low stock products
     const transformedLowStock = lowStockProducts.map(
       (
         /** @type {{ name: any; stock: number; reorderLevel: number; category: any; currentValue: any; productId: any; variantId: any; }} */ item,
-        /** @type {any} */ index
+        /** @type {any} */ index,
       ) => ({
         id: index,
         product_name: item.name,
@@ -298,10 +297,10 @@ class InventoryReportExportHandler {
         reorder_level: item.reorderLevel,
         category: item.category,
         stock_value: item.currentValue || 0,
-        product_id: item.productId,
-        variant_id: item.variantId || null,
+        productId: item.productId,
+        variantId: item.variantId || null,
         stock_status: this._getStockStatus(item.stock, item.reorderLevel),
-      })
+      }),
     );
 
     // Calculate additional analytics
@@ -309,7 +308,7 @@ class InventoryReportExportHandler {
       transformedCategories,
       transformedLowStock,
       stockMovements,
-      summary
+      summary,
     );
 
     return {
@@ -379,11 +378,11 @@ class InventoryReportExportHandler {
     // Value analysis
     const totalInventoryValue = categories.reduce(
       (sum, cat) => sum + cat.stock_value,
-      0
+      0,
     );
     const lowStockValue = lowStock.reduce(
       (sum, item) => sum + item.stock_value,
-      0
+      0,
     );
 
     return {
@@ -435,7 +434,7 @@ class InventoryReportExportHandler {
     csvContent.push(`Generated,${new Date().toISOString()}`);
     csvContent.push(`Report Type,${data.metadata.report_type}`);
     csvContent.push(
-      `Date Range,${data.date_range.startDate} to ${data.date_range.endDate}`
+      `Date Range,${data.date_range.startDate} to ${data.date_range.endDate}`,
     );
     csvContent.push(`Period,${data.filters.period}`);
     csvContent.push(`Currency,${data.metadata.currency}`);
@@ -524,7 +523,7 @@ class InventoryReportExportHandler {
 
     data.stock_by_category.forEach(
       (
-        /** @type {{ name: any; stock_quantity: any; stock_value: number; percentage: any; color: any; }} */ category
+        /** @type {{ name: any; stock_quantity: any; stock_value: number; percentage: any; color: any; }} */ category,
       ) => {
         csvContent.push(
           [
@@ -533,21 +532,21 @@ class InventoryReportExportHandler {
             this._formatCurrency(category.stock_value),
             `${category.percentage || 0}%`,
             category.color,
-          ].join(",")
+          ].join(","),
         );
-      }
+      },
     );
     csvContent.push("");
 
     // Low Stock Products
     csvContent.push("⚠️ LOW STOCK ALERTS");
     csvContent.push(
-      "Product,Current Stock,Reorder Level,Category,Stock Value,Status,Product ID"
+      "Product,Current Stock,Reorder Level,Category,Stock Value,Status,Product ID",
     );
 
     data.low_stock_products.forEach(
       (
-        /** @type {{ product_name: any; current_stock: any; reorder_level: any; category: any; stock_value: number; stock_status: any; product_id: any; }} */ item
+        /** @type {{ product_name: any; current_stock: any; reorder_level: any; category: any; stock_value: number; stock_status: any; productId: any; }} */ item,
       ) => {
         csvContent.push(
           [
@@ -557,10 +556,10 @@ class InventoryReportExportHandler {
             `"${item.category}"`,
             this._formatCurrency(item.stock_value),
             item.stock_status,
-            item.product_id,
-          ].join(",")
+            item.productId,
+          ].join(","),
         );
-      }
+      },
     );
     csvContent.push("");
 
@@ -570,7 +569,7 @@ class InventoryReportExportHandler {
 
     data.stock_movements.forEach(
       (
-        /** @type {{ netChange: number; month: any; stockIn: any; stockOut: any; }} */ movement
+        /** @type {{ netChange: number; month: any; stockIn: any; stockOut: any; }} */ movement,
       ) => {
         const trend =
           movement.netChange > 0
@@ -585,9 +584,9 @@ class InventoryReportExportHandler {
             movement.stockOut,
             movement.netChange,
             trend,
-          ].join(",")
+          ].join(","),
         );
-      }
+      },
     );
     csvContent.push("");
 
@@ -643,14 +642,14 @@ class InventoryReportExportHandler {
           rec.area,
           `"${rec.recommendation}"`,
           `"${rec.impact}"`,
-        ].join(",")
+        ].join(","),
       );
     });
     csvContent.push("");
 
     // Footer
     csvContent.push("🏁 REPORT FOOTER");
-    csvContent.push("Generated by,InventoryPro Management System v2.0");
+    csvContent.push("Generated by,stashly Management System v2.0");
     csvContent.push("Data Source,Inventory Database");
     csvContent.push("Report Type,Comprehensive Inventory Analysis");
     csvContent.push("Confidentiality,Internal Use Only");
@@ -683,7 +682,7 @@ class InventoryReportExportHandler {
       const filepath = path.join(this.EXPORT_DIR, filename);
 
       const workbook = new this.excelJS.Workbook();
-      workbook.creator = "InventoryPro Management System";
+      workbook.creator = "stashly Management System";
       workbook.created = new Date();
 
       // ==================== COVER PAGE ====================
@@ -880,7 +879,7 @@ class InventoryReportExportHandler {
       data.stock_by_category.forEach(
         (
           /** @type {{ name: any; stock_quantity: any; stock_value: number; percentage: any; color: string; }} */ category,
-          /** @type {number} */ index
+          /** @type {number} */ index,
         ) => {
           const row = analysisSheet.addRow({
             category: category.name,
@@ -906,7 +905,7 @@ class InventoryReportExportHandler {
             pattern: "solid",
             fgColor: { argb: category.color.replace("#", "") },
           };
-        }
+        },
       );
 
       // ==================== LOW STOCK ALERTS PAGE ====================
@@ -937,7 +936,7 @@ class InventoryReportExportHandler {
       data.low_stock_products.forEach(
         (
           /** @type {{ product_name: any; current_stock: any; reorder_level: any; category: any; stock_value: number; stock_status: string | number; }} */ item,
-          /** @type {number} */ index
+          /** @type {number} */ index,
         ) => {
           const row = alertsSheet.addRow({
             product: item.product_name,
@@ -969,7 +968,7 @@ class InventoryReportExportHandler {
             fgColor: statusColor,
           };
           statusCell.font = { bold: true };
-        }
+        },
       );
 
       // ==================== STOCK MOVEMENTS PAGE ====================
@@ -1002,7 +1001,7 @@ class InventoryReportExportHandler {
       data.stock_movements.forEach(
         (
           /** @type {{ netChange: number; month: any; stockIn: any; stockOut: any; }} */ movement,
-          /** @type {number} */ index
+          /** @type {number} */ index,
         ) => {
           const trend =
             movement.netChange > 0
@@ -1034,7 +1033,7 @@ class InventoryReportExportHandler {
           } else if (movement.netChange < 0) {
             netCell.font = { bold: true, color: { argb: "E74C3C" } };
           }
-        }
+        },
       );
 
       // ==================== ANALYTICS PAGE ====================
@@ -1174,7 +1173,7 @@ class InventoryReportExportHandler {
         margin: 40,
         info: {
           Title: "Inventory Analysis Report",
-          Author: "InventoryPro Management System",
+          Author: "stashly Management System",
           Subject: "Inventory Analysis Report",
           Keywords: "inventory, stock, analysis, report",
           CreationDate: new Date(),
@@ -1293,13 +1292,13 @@ class InventoryReportExportHandler {
         {
           width: pageWidth - margin * 2,
           align: "center",
-        }
+        },
       );
 
     doc
       .fontSize(10)
       .fillColor(this.CHART_COLORS.light)
-      .text("InventoryPro Management System", margin, headerPaddingTop + 92, {
+      .text("stashly Management System", margin, headerPaddingTop + 92, {
         width: pageWidth - margin * 2,
         align: "center",
       });
@@ -1466,7 +1465,7 @@ class InventoryReportExportHandler {
     const gap = 14;
     const colCount = Math.min(maxCols, kpis.length);
     const boxWidth = Math.floor(
-      (contentWidth - gap * (colCount - 1)) / colCount
+      (contentWidth - gap * (colCount - 1)) / colCount,
     );
     const boxHeight = 64;
     let cursorY = doc.y;
@@ -1690,7 +1689,7 @@ class InventoryReportExportHandler {
       .forEach(
         (
           /** @type {{ name: string; stock_quantity: { toString: () => any; }; stock_value: number; percentage: any; }} */ category,
-          /** @type {number} */ rowIndex
+          /** @type {number} */ rowIndex,
         ) => {
           const y = startY + 20 + rowIndex * 20;
 
@@ -1701,7 +1700,7 @@ class InventoryReportExportHandler {
                 startX,
                 y,
                 colWidths.reduce((a, b) => a + b, 0),
-                20
+                20,
               )
               .fillColor("#F8F9F9")
               .fill();
@@ -1731,7 +1730,7 @@ class InventoryReportExportHandler {
                 width: colWidths[i] - 10,
               });
           });
-        }
+        },
       );
 
     doc.moveDown(data.stock_by_category.length / 2 + 1);
@@ -1786,7 +1785,7 @@ class InventoryReportExportHandler {
       .forEach(
         (
           /** @type {{ product_name: string; current_stock: { toString: () => any; }; reorder_level: { toString: () => any; }; category: string; stock_status: any; }} */ item,
-          /** @type {number} */ rowIndex
+          /** @type {number} */ rowIndex,
         ) => {
           const y = startY + 20 + rowIndex * 20;
 
@@ -1797,7 +1796,7 @@ class InventoryReportExportHandler {
                 startX,
                 y,
                 colWidths.reduce((a, b) => a + b, 0),
-                20
+                20,
               )
               .fillColor("#F8F9F9")
               .fill();
@@ -1828,7 +1827,7 @@ class InventoryReportExportHandler {
                 width: colWidths[i] - 10,
               });
           });
-        }
+        },
       );
 
     doc.moveDown(data.low_stock_products.length / 2 + 1);
@@ -1915,107 +1914,112 @@ class InventoryReportExportHandler {
     };
 
     // Draw rows
-    movements.forEach((/** @type {{ month: any; period: any; stockIn: null; stockOut: null; netChange: null; }} */ movement, /** @type {number} */ rowIndex) => {
-      ensureSpace(rowH + 6);
+    movements.forEach(
+      (
+        /** @type {{ month: any; period: any; stockIn: null; stockOut: null; netChange: null; }} */ movement,
+        /** @type {number} */ rowIndex,
+      ) => {
+        ensureSpace(rowH + 6);
 
-      // Zebra background
-      if (rowIndex % 2 === 0) {
-        doc.rect(tableX - 4, y - 2, tableWidth + 8, rowH).fill("#F8F9F9");
-      }
+        // Zebra background
+        if (rowIndex % 2 === 0) {
+          doc.rect(tableX - 4, y - 2, tableWidth + 8, rowH).fill("#F8F9F9");
+        }
 
-      // Cell borders
-      let cx = tableX;
-      colWidths.forEach((w) => {
+        // Cell borders
+        let cx = tableX;
+        colWidths.forEach((w) => {
+          doc
+            .rect(cx, y - 2, w, rowH)
+            .strokeColor("#E0E0E0")
+            .lineWidth(0.5)
+            .stroke();
+          cx += w;
+        });
+
+        // Prepare values safely
+        const period = String(
+          movement.month ?? movement.period ?? "",
+        ).substring(0, 20);
+        const stockIn =
+          movement.stockIn != null ? String(movement.stockIn) : "0";
+        const stockOut =
+          movement.stockOut != null ? String(movement.stockOut) : "0";
+        const netChangeVal =
+          movement.netChange != null
+            ? Number(movement.netChange)
+            : Number(movement.stockIn || 0) - Number(movement.stockOut || 0);
+        const netChange =
+          typeof movement.netChange === "number"
+            ? formatCurrency(netChangeVal)
+            : String(netChangeVal);
+        const trend =
+          netChangeVal > 0 ? "Up" : netChangeVal < 0 ? "Down" : "Flat";
+        const trendColor =
+          netChangeVal > 0
+            ? // @ts-ignore
+              this.CHART_COLORS?.success || "#2E7D32"
+            : netChangeVal < 0
+              ? this.CHART_COLORS?.danger || "#C62828"
+              : "#607D8B";
+
+        // Render cells
+        let cellX = tableX;
+        // Period
         doc
-          .rect(cx, y - 2, w, rowH)
-          .strokeColor("#E0E0E0")
-          .lineWidth(0.5)
-          .stroke();
-        cx += w;
-      });
+          .font("Helvetica")
+          .fontSize(9)
+          .fillColor("#333333")
+          .text(period, cellX + 6, y + 4, { width: colWidths[0] - 12 });
+        cellX += colWidths[0];
 
-      // Prepare values safely
-      const period = String(movement.month ?? movement.period ?? "").substring(
-        0,
-        20
-      );
-      const stockIn = movement.stockIn != null ? String(movement.stockIn) : "0";
-      const stockOut =
-        movement.stockOut != null ? String(movement.stockOut) : "0";
-      const netChangeVal =
-        movement.netChange != null
-          ? Number(movement.netChange)
-          : Number(movement.stockIn || 0) - Number(movement.stockOut || 0);
-      const netChange =
-        typeof movement.netChange === "number"
-          ? formatCurrency(netChangeVal)
-          : String(netChangeVal);
-      const trend =
-        netChangeVal > 0 ? "Up" : netChangeVal < 0 ? "Down" : "Flat";
-      const trendColor =
-        netChangeVal > 0
-          // @ts-ignore
-          ? this.CHART_COLORS?.success || "#2E7D32"
-          : netChangeVal < 0
-            ? this.CHART_COLORS?.danger || "#C62828"
-            : "#607D8B";
+        // Stock In
+        doc
+          .font("Helvetica")
+          .fontSize(9)
+          .fillColor("#333333")
+          .text(stockIn, cellX + 6, y + 4, {
+            width: colWidths[1] - 12,
+            align: "right",
+          });
+        cellX += colWidths[1];
 
-      // Render cells
-      let cellX = tableX;
-      // Period
-      doc
-        .font("Helvetica")
-        .fontSize(9)
-        .fillColor("#333333")
-        .text(period, cellX + 6, y + 4, { width: colWidths[0] - 12 });
-      cellX += colWidths[0];
+        // Stock Out
+        doc
+          .font("Helvetica")
+          .fontSize(9)
+          .fillColor("#333333")
+          .text(stockOut, cellX + 6, y + 4, {
+            width: colWidths[2] - 12,
+            align: "right",
+          });
+        cellX += colWidths[2];
 
-      // Stock In
-      doc
-        .font("Helvetica")
-        .fontSize(9)
-        .fillColor("#333333")
-        .text(stockIn, cellX + 6, y + 4, {
-          width: colWidths[1] - 12,
-          align: "right",
-        });
-      cellX += colWidths[1];
+        // Net Change
+        doc
+          .font("Helvetica")
+          .fontSize(9)
+          .fillColor("#333333")
+          .text(netChange, cellX + 6, y + 4, {
+            width: colWidths[3] - 12,
+            align: "right",
+          });
+        cellX += colWidths[3];
 
-      // Stock Out
-      doc
-        .font("Helvetica")
-        .fontSize(9)
-        .fillColor("#333333")
-        .text(stockOut, cellX + 6, y + 4, {
-          width: colWidths[2] - 12,
-          align: "right",
-        });
-      cellX += colWidths[2];
+        // Trend (colored)
+        doc
+          .font("Helvetica-Bold")
+          .fontSize(9)
+          .fillColor(trendColor)
+          .text(trend, cellX + 6, y + 4, {
+            width: colWidths[4] - 12,
+            align: "center",
+          });
 
-      // Net Change
-      doc
-        .font("Helvetica")
-        .fontSize(9)
-        .fillColor("#333333")
-        .text(netChange, cellX + 6, y + 4, {
-          width: colWidths[3] - 12,
-          align: "right",
-        });
-      cellX += colWidths[3];
-
-      // Trend (colored)
-      doc
-        .font("Helvetica-Bold")
-        .fontSize(9)
-        .fillColor(trendColor)
-        .text(trend, cellX + 6, y + 4, {
-          width: colWidths[4] - 12,
-          align: "center",
-        });
-
-      // Advance y
-      y += rowH;
-    });
+        // Advance y
+        y += rowH;
+      },
+    );
 
     // Move doc cursor below table
     doc.y = y + 12;
@@ -2096,7 +2100,7 @@ class InventoryReportExportHandler {
             {
               align: "center",
               width: doc.page.width - 80,
-            }
+            },
           );
 
         // Footer separator
@@ -2112,10 +2116,10 @@ class InventoryReportExportHandler {
           .fontSize(7)
           .fillColor("#999999")
           .text(
-            `Inventory Analysis Report | Generated: ${new Date().toLocaleDateString()} | InventoryPro v2.0 | Report Type: ${data.metadata.report_type} | Confidential`,
+            `Inventory Analysis Report | Generated: ${new Date().toLocaleDateString()} | stashly v2.0 | Report Type: ${data.metadata.report_type} | Confidential`,
             40,
             doc.page.height - 20,
-            { align: "center", width: doc.page.width - 80 }
+            { align: "center", width: doc.page.width - 80 },
           );
       }
     } catch (error) {
@@ -2230,14 +2234,13 @@ class InventoryReportExportHandler {
   async getExportHistory() {
     try {
       const db = require(
-        path.join(__dirname, "..", "..", "models", "BaseQuerySet")
+        path.join(__dirname, "..", "..", "models", "BaseQuerySet"),
       ).getDb();
-
 
       // Check if export_history table exists
       // @ts-ignore
       const tableExists = await db.get(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='export_history'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='export_history'",
       );
 
       if (!tableExists) {
@@ -2267,7 +2270,7 @@ class InventoryReportExportHandler {
       // Get history
       // @ts-ignore
       const history = await db.all(
-        "SELECT * FROM export_history WHERE filename LIKE '%inventory_report%' ORDER BY generated_at DESC LIMIT 50"
+        "SELECT * FROM export_history WHERE filename LIKE '%inventory_report%' ORDER BY generated_at DESC LIMIT 50",
       );
 
       // Parse filters_json
@@ -2275,7 +2278,7 @@ class InventoryReportExportHandler {
         (/** @type {{ filters_json: string; }} */ item) => ({
           ...item,
           filters: item.filters_json ? JSON.parse(item.filters_json) : {},
-        })
+        }),
       );
 
       return {
@@ -2301,9 +2304,8 @@ class InventoryReportExportHandler {
   async _saveExportHistory(exportData) {
     try {
       const db = require(
-        path.join(__dirname, "..", "..", "models", "BaseQuerySet")
+        path.join(__dirname, "..", "..", "models", "BaseQuerySet"),
       ).getDb();
-
 
       // @ts-ignore
       await db.run(
@@ -2316,7 +2318,7 @@ class InventoryReportExportHandler {
           exportData.generated_at,
           exportData.file_size,
           exportData.filters || "{}",
-        ]
+        ],
       );
 
       return true;
@@ -2402,7 +2404,7 @@ if (ipcMain) {
   });
 } else {
   console.warn(
-    "ipcMain is not available - running in non-Electron environment"
+    "ipcMain is not available - running in non-Electron environment",
   );
 }
 

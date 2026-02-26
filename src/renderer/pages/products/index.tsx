@@ -16,7 +16,10 @@ import ProductTable from "./components/ProductTable";
 import ProductFormDialog from "./components/ProductFormDialog";
 import ProductViewDialog from "./components/ProductViewDialog";
 
-import { productExportAPI, type ProductExportParams } from "../../api/exports/product"; // from second product.ts
+import {
+  productExportAPI,
+  type ProductExportParams,
+} from "../../api/exports/product"; // from second product.ts
 import productAPI from "../../api/core/product";
 
 const ProductsPage: React.FC = () => {
@@ -48,7 +51,9 @@ const ProductsPage: React.FC = () => {
 
   const [showFilters, setShowFilters] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
-  const [exportFormat, setExportFormat] = useState<"csv" | "excel" | "pdf">("csv");
+  const [exportFormat, setExportFormat] = useState<"csv" | "excel" | "pdf">(
+    "csv",
+  );
 
   const handleDelete = async (product: any) => {
     const confirmed = await dialogs.confirm({
@@ -92,7 +97,9 @@ const ProductsPage: React.FC = () => {
     if (!confirmed) return;
     try {
       await Promise.all(
-        selectedProducts.map((id) => productAPI.update(id, { is_deleted: true }))
+        selectedProducts.map((id) =>
+          productAPI.update(id, { is_deleted: true }),
+        ),
       );
       showSuccess(`${selectedProducts.length} products archived.`);
       setSelectedProducts([]);
@@ -112,7 +119,9 @@ const ProductsPage: React.FC = () => {
     if (!confirmed) return;
     try {
       await Promise.all(
-        selectedProducts.map((id) => productAPI.update(id, { is_deleted: false }))
+        selectedProducts.map((id) =>
+          productAPI.update(id, { is_deleted: false }),
+        ),
       );
       showSuccess(`${selectedProducts.length} products restored.`);
       setSelectedProducts([]);
@@ -133,11 +142,21 @@ const ProductsPage: React.FC = () => {
     try {
       const exportParams: ProductExportParams = {
         format: exportFormat,
-        category: filters.category_id
-          ? categories.find((c) => c.id.toString() === filters.category_id)?.name
+        category: filters.categoryId
+          ? categories.find((c) => c.id.toString() === filters.categoryId)?.name
           : undefined,
-        status: filters.is_published === "true" ? "published" : filters.is_published === "false" ? "unpublished" : undefined,
-        low_stock: filters.low_stock === "true" ? "true" : filters.low_stock === "false" ? "false" : undefined,
+        status:
+          filters.is_published === "true"
+            ? "published"
+            : filters.is_published === "false"
+              ? "unpublished"
+              : undefined,
+        low_stock:
+          filters.low_stock === "true"
+            ? "true"
+            : filters.low_stock === "false"
+              ? "false"
+              : undefined,
         search: filters.search || undefined,
       };
       await productExportAPI.exportProducts(exportParams);
@@ -167,10 +186,16 @@ const ProductsPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-sm mb-4">
         <div>
-          <h2 className="text-base font-semibold" style={{ color: "var(--sidebar-text)" }}>
+          <h2
+            className="text-base font-semibold"
+            style={{ color: "var(--sidebar-text)" }}
+          >
             Products
           </h2>
-          <p className="mt-xs text-sm" style={{ color: "var(--text-secondary)" }}>
+          <p
+            className="mt-xs text-sm"
+            style={{ color: "var(--text-secondary)" }}
+          >
             Manage your product inventory and details
           </p>
         </div>
@@ -186,16 +211,16 @@ const ProductsPage: React.FC = () => {
             <Filter className="icon-sm mr-xs" />
             Filters {showFilters ? "↑" : "↓"}
           </button>
-           <button
-              onClick={reload}
-              disabled={loading}
-              className="btn btn-secondary btn-sm rounded-md flex items-center transition-all duration-200 ease-in-out hover:scale-105 hover:shadow-md disabled:opacity-50"
-            >
-              <RefreshCw
-                className={`icon-sm mr-1 ${loading ? "animate-spin" : ""}`}
-              />
-              {loading ? "Refreshing..." : "Refresh"}
-            </button>
+          <button
+            onClick={reload}
+            disabled={loading}
+            className="btn btn-secondary btn-sm rounded-md flex items-center transition-all duration-200 ease-in-out hover:scale-105 hover:shadow-md disabled:opacity-50"
+          >
+            <RefreshCw
+              className={`icon-sm mr-1 ${loading ? "animate-spin" : ""}`}
+            />
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
 
           {/* Export */}
           <div
@@ -206,7 +231,10 @@ const ProductsPage: React.FC = () => {
             }}
           >
             <div className="flex items-center gap-1">
-              <label className="text-xs" style={{ color: "var(--sidebar-text)" }}>
+              <label
+                className="text-xs"
+                style={{ color: "var(--sidebar-text)" }}
+              >
                 Export:
               </label>
               <select
@@ -262,11 +290,17 @@ const ProductsPage: React.FC = () => {
             </span>
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-[var(--accent-red)]"></span>
-              {products.filter((p) => p.total_quantity === 0).length} Out of Stock
+              {products.filter((p) => p.total_quantity === 0).length} Out of
+              Stock
             </span>
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-[var(--accent-blue)]"></span>
-              {products.filter((p) => p.total_quantity > 0 && p.total_quantity <= 5).length} Low Stock
+              {
+                products.filter(
+                  (p) => p.total_quantity > 0 && p.total_quantity <= 5,
+                ).length
+              }{" "}
+              Low Stock
             </span>
           </div>
           <div className="text-xs" style={{ color: "var(--text-secondary)" }}>
@@ -294,7 +328,10 @@ const ProductsPage: React.FC = () => {
             borderColor: "var(--accent-blue)",
           }}
         >
-          <span className="font-medium text-sm" style={{ color: "var(--accent-green)" }}>
+          <span
+            className="font-medium text-sm"
+            style={{ color: "var(--accent-green)" }}
+          >
             {selectedProducts.length} product(s) selected
           </span>
           <div className="flex gap-xs">
@@ -393,7 +430,9 @@ const ProductsPage: React.FC = () => {
             onToggleSelectAll={toggleSelectAll}
             onSort={handleSort}
             sortConfig={sortConfig}
-            onView={(product) => {viewDialog.open(product.id)}}
+            onView={(product) => {
+              viewDialog.open(product.id);
+            }}
             onEdit={formDialog.openEdit}
             onDelete={handleDelete}
           />
@@ -404,11 +443,17 @@ const ProductsPage: React.FC = () => {
               className="text-center py-8 border rounded-md"
               style={{ borderColor: "var(--border-color)" }}
             >
-              <Package className="icon-xl mx-auto mb-2" style={{ color: "var(--text-secondary)" }} />
+              <Package
+                className="icon-xl mx-auto mb-2"
+                style={{ color: "var(--text-secondary)" }}
+              />
               <p className="text-base" style={{ color: "var(--sidebar-text)" }}>
                 No products found.
               </p>
-              <p className="mt-xs text-sm" style={{ color: "var(--text-tertiary)" }}>
+              <p
+                className="mt-xs text-sm"
+                style={{ color: "var(--text-tertiary)" }}
+              >
                 {Object.values(filters).some((v) => v)
                   ? "Try adjusting your search or filters"
                   : "Start by creating your first product"}
@@ -417,7 +462,10 @@ const ProductsPage: React.FC = () => {
                 {Object.values(filters).some((v) => v) && (
                   <button
                     className="compact-button rounded-md"
-                    style={{ backgroundColor: "var(--accent-blue)", color: "white" }}
+                    style={{
+                      backgroundColor: "var(--accent-blue)",
+                      color: "white",
+                    }}
                     onClick={resetFilters}
                   >
                     Clear Filters
@@ -426,7 +474,10 @@ const ProductsPage: React.FC = () => {
                 <Link
                   to="/products/form"
                   className="compact-button rounded-md inline-block"
-                  style={{ backgroundColor: "var(--accent-green)", color: "white" }}
+                  style={{
+                    backgroundColor: "var(--accent-green)",
+                    color: "white",
+                  }}
                 >
                   Add First Product
                 </Link>

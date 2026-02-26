@@ -75,7 +75,7 @@ async function getCompletedOrders(dateRange, category, productId) {
   if (productId) {
     queryBuilder
       .innerJoin("o.items", "oi2")
-      .andWhere("oi2.product_id = :productId", { productId });
+      .andWhere("oi2.productId = :productId", { productId });
   }
 
   const orders = await queryBuilder.getMany();
@@ -147,7 +147,7 @@ async function getSalesByPeriodWithProfit(orders, groupBy, dateRange) {
       "SUM(COALESCE(COALESCE(v.cost_per_item, p.cost_per_item, 0) * oi.quantity, 0))",
       "cogs",
     )
-    .where("oi.order_id IN (:...orderIds)", { orderIds })
+    .where("oi.orderId IN (:...orderIds)", { orderIds })
     .groupBy("period")
     .orderBy("period")
     .getRawMany();
@@ -223,19 +223,19 @@ async function getTopProductsWithProfitMargin(
     .addSelect("c.name", "category_name")
     .addSelect("SUM(oi.line_gross_total)", "revenue")
     .addSelect("SUM(oi.quantity)", "units_sold")
-    .addSelect("COUNT(DISTINCT oi.order_id)", "order_count")
+    .addSelect("COUNT(DISTINCT oi.orderId)", "order_count")
     .addSelect(
       "SUM(COALESCE(COALESCE(v.cost_per_item, p.cost_per_item, 0) * oi.quantity, 0))",
       "cogs",
     )
-    .where("oi.order_id IN (:...orderIds)", { orderIds })
+    .where("oi.orderId IN (:...orderIds)", { orderIds })
     .groupBy("p.id, p.name, c.name");
 
   if (categoryFilter) {
     queryBuilder.andWhere("c.name = :category", { category: categoryFilter });
   }
   if (productId) {
-    queryBuilder.andWhere("oi.product_id = :productId", { productId });
+    queryBuilder.andWhere("oi.productId = :productId", { productId });
   }
 
   const topProducts = await queryBuilder
@@ -277,7 +277,7 @@ async function getSalesByCategory(orders) {
     .innerJoin("p.category", "c")
     .select("c.name", "category_name")
     .addSelect("SUM(oi.line_gross_total)", "sales")
-    .where("oi.order_id IN (:...orderIds)", { orderIds })
+    .where("oi.orderId IN (:...orderIds)", { orderIds })
     .andWhere("c.name IS NOT NULL")
     .groupBy("c.id, c.name")
     .orderBy("sales", "DESC")
@@ -420,7 +420,7 @@ async function calculatePreviousPeriodValue(
     if (productId) {
       queryBuilder
         .innerJoin("o.items", "oi2")
-        .andWhere("oi2.product_id = :productId", { productId });
+        .andWhere("oi2.productId = :productId", { productId });
     }
 
     const result = await queryBuilder.getRawOne();
@@ -463,7 +463,7 @@ async function getQuickStats(orders, dateRange, categoryFilter, productId) {
       "SUM(COALESCE(COALESCE(v.cost_per_item, p.cost_per_item, 0) * oi.quantity, 0))",
       "total_cogs",
     )
-    .where("oi.order_id IN (:...orderIds)", { orderIds })
+    .where("oi.orderId IN (:...orderIds)", { orderIds })
     .getRawOne();
 
   const totalSales = parseFloat(orderStats?.total_sales) || 0;
@@ -665,7 +665,7 @@ function getFallbackReportData(period, dateRange) {
       filtersApplied: {
         period,
         category: null,
-        product_id: null,
+        productId: null,
         group_by: "month",
       },
       fallbackUsed: true,
@@ -688,7 +688,7 @@ function generateMetadata(reportData, options) {
     filtersApplied: {
       period: options.period,
       category: options.category,
-      product_id: options.product_id,
+      productId: options.productId,
       group_by: options.group_by,
     },
   };
@@ -708,14 +708,14 @@ async function generateSalesReport(params = {}) {
     // @ts-ignore
     category,
     // @ts-ignore
-    product_id,
+    productId,
     // @ts-ignore
     group_by = "month",
   } = params;
   const dateRange = getDateRange({ period, start_date, end_date });
 
   try {
-    const orders = await getCompletedOrders(dateRange, category, product_id);
+    const orders = await getCompletedOrders(dateRange, category, productId);
     if (!orders.length) {
       return getFallbackReportData(period, dateRange);
     }
@@ -728,12 +728,12 @@ async function generateSalesReport(params = {}) {
       performanceMetrics,
     ] = await Promise.all([
       getSalesByPeriodWithProfit(orders, group_by, dateRange),
-      getTopProductsWithProfitMargin(orders, category, product_id, 10),
+      getTopProductsWithProfitMargin(orders, category, productId, 10),
       getSalesByCategory(orders),
-      getQuickStats(orders, dateRange, category, product_id),
+      getQuickStats(orders, dateRange, category, productId),
       getPerformanceMetrics(
         orders,
-        await getQuickStats(orders, dateRange, category, product_id),
+        await getQuickStats(orders, dateRange, category, productId),
       ),
     ]);
 
@@ -759,7 +759,7 @@ async function generateSalesReport(params = {}) {
           quickStats,
           performanceMetrics,
         },
-        { period, category, product_id, group_by },
+        { period, category, productId, group_by },
       ),
     };
   } catch (error) {

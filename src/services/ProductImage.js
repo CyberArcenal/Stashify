@@ -49,7 +49,11 @@ class ProductImageService {
    * @returns {Promise<any>}
    */
   async create(data, user = "system") {
-    const { saveDb, updateDb, removeDb } = require("../utils/dbUtils/dbActions");
+    const {
+      saveDb,
+      updateDb,
+      removeDb,
+    } = require("../utils/dbUtils/dbActions");
     const { image: repo, product: productRepo } = await this.getRepositories();
     try {
       // Validate required fields
@@ -132,13 +136,17 @@ class ProductImageService {
       .createQueryBuilder()
       .update()
       .set({ is_primary: false })
-      .where("product_id = :productId", { productId })
+      .where("productId = :productId", { productId })
       .execute();
   }
 
   // @ts-ignore
   async update(id, data, user = "system") {
-    const { saveDb, updateDb, removeDb } = require("../utils/dbUtils/dbActions");
+    const {
+      saveDb,
+      updateDb,
+      removeDb,
+    } = require("../utils/dbUtils/dbActions");
     const { image: repo, product: productRepo } = await this.getRepositories();
     try {
       // @ts-ignore
@@ -204,7 +212,11 @@ class ProductImageService {
 
   // @ts-ignore
   async delete(id, user = "system") {
-    const { saveDb, updateDb, removeDb } = require("../utils/dbUtils/dbActions");
+    const {
+      saveDb,
+      updateDb,
+      removeDb,
+    } = require("../utils/dbUtils/dbActions");
     const { image: repo } = await this.getRepositories();
     try {
       // @ts-ignore

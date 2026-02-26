@@ -7,15 +7,14 @@ const os = require("os");
 const { AppDataSource } = require("../../../db/datasource");
 const StockItem = require("../../../../entities/StockItem");
 
-
 class StockItemExportHandler {
   constructor() {
     this.SUPPORTED_FORMATS = ["csv", "excel", "pdf"];
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "InventoryPro",
-      "stock_item_exports"
+      "stashly",
+      "stock_item_exports",
     );
 
     // Create export directory if it doesn't exist
@@ -35,7 +34,7 @@ class StockItemExportHandler {
       console.warn(
         "ExcelJS not available for enhanced Excel export:",
         // @ts-ignore
-        error.message
+        error.message,
       );
     }
   }
@@ -201,13 +200,17 @@ class StockItemExportHandler {
 
     // Apply filters
     if (params.warehouse) {
-      queryBuilder.andWhere("si.warehouse_id = :warehouseId", { warehouseId: params.warehouse });
+      queryBuilder.andWhere("si.warehouseId = :warehouseId", {
+        warehouseId: params.warehouse,
+      });
     }
 
     if (params.stock_status) {
       switch (params.stock_status) {
         case "low_stock":
-          queryBuilder.andWhere("si.quantity > 0 AND si.quantity <= si.reorder_level");
+          queryBuilder.andWhere(
+            "si.quantity > 0 AND si.quantity <= si.reorder_level",
+          );
           break;
         case "out_of_stock":
           queryBuilder.andWhere("si.quantity = 0");
@@ -222,7 +225,7 @@ class StockItemExportHandler {
       const searchTerm = `%${params.search}%`;
       queryBuilder.andWhere(
         "(p.name LIKE :search OR p.sku LIKE :search OR w.name LIKE :search OR pv.name LIKE :search OR pv.sku LIKE :search)",
-        { search: searchTerm }
+        { search: searchTerm },
       );
     }
 
@@ -514,7 +517,7 @@ class StockItemExportHandler {
           `Generated: ${new Date().toLocaleDateString()} | Total: ${stockItems.length} items`,
           {
             align: "center",
-          }
+          },
         );
 
       doc.moveDown(0.5);
@@ -829,7 +832,7 @@ if (ipcMain) {
   });
 } else {
   console.warn(
-    "ipcMain is not available - running in non-Electron environment"
+    "ipcMain is not available - running in non-Electron environment",
   );
 }
 

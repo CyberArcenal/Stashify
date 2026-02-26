@@ -23,12 +23,14 @@ class NotificationManager {
   private bannerContainer: HTMLElement | null;
   private loadingOverlay: HTMLElement | null;
   private nextToastId: number;
+  private currentToast: HTMLElement | null; // ← track current toast
 
   constructor() {
     this.toastContainer = null;
     this.bannerContainer = null;
     this.loadingOverlay = null;
     this.nextToastId = 1;
+    this.currentToast = null; // ← initialize
     this.initContainers();
   }
 
@@ -38,20 +40,20 @@ class NotificationManager {
     if (this.bannerContainer) this.bannerContainer.remove();
     if (this.loadingOverlay) this.loadingOverlay.remove();
 
-    // Create toast container (bottom center for mobile)
+    // Create toast container (bottom right, single toast)
     this.toastContainer = document.createElement("div");
     this.toastContainer.id = "toast-container";
     this.toastContainer.className =
-      "fixed bottom-4 left-0 right-0 z-[9999] px-4 flex flex-col items-center space-y-3 pointer-events-none";
+      "fixed bottom-4 right-4 z-[9999] pointer-events-none"; // ← changed
     document.body.appendChild(this.toastContainer);
 
-    // Create banner container (below navigation)
+    // Create banner container (below navigation) – unchanged
     this.bannerContainer = document.createElement("div");
     this.bannerContainer.id = "banner-container";
     this.bannerContainer.className = "fixed top-16 left-0 right-0 z-[9998]";
     document.body.appendChild(this.bannerContainer);
 
-    // Create loading overlay
+    // Create loading overlay – unchanged
     this.loadingOverlay = document.createElement("div");
     this.loadingOverlay.id = "loading-overlay";
     this.loadingOverlay.className =
@@ -66,6 +68,7 @@ class NotificationManager {
   }
 
   private getIcon(type: NotificationType): string {
+    // ... (unchanged) ...
     const icons = {
       success: `
         <svg class="h-6 w-6 text-[var(--success-color)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -116,15 +119,20 @@ class NotificationManager {
   }
 
   private getBannerClasses(type: NotificationType): string {
+    // ... (unchanged) ...
     const baseClasses =
       "w-full py-3 px-4 shadow-md border-b-2 animate-slideInTop";
 
     const typeClasses = {
-      success: "bg-[var(--status-completed-bg)] border-[var(--success-color)] text-[var(--text-primary)]",
-      error: "bg-[var(--status-cancelled-bg)] border-[var(--danger-color)] text-[var(--text-primary)]",
-      warning: "bg-[var(--status-pending-bg)] border-[var(--warning-color)] text-[var(--text-primary)]",
+      success:
+        "bg-[var(--status-completed-bg)] border-[var(--success-color)] text-[var(--text-primary)]",
+      error:
+        "bg-[var(--status-cancelled-bg)] border-[var(--danger-color)] text-[var(--text-primary)]",
+      warning:
+        "bg-[var(--status-pending-bg)] border-[var(--warning-color)] text-[var(--text-primary)]",
       info: "bg-[var(--status-processing-bg)] border-[var(--info-color)] text-[var(--text-primary)]",
-      critical: "bg-[var(--status-cancelled-bg)] border-[var(--danger-color)] text-[var(--text-primary)]",
+      critical:
+        "bg-[var(--status-cancelled-bg)] border-[var(--danger-color)] text-[var(--text-primary)]",
     };
 
     return `${baseClasses} ${typeClasses[type]}`;
@@ -133,8 +141,13 @@ class NotificationManager {
   public showToast(
     message: string,
     type: NotificationType = "info",
-    options: NotificationOptions = {}
+    options: NotificationOptions = {},
   ): HTMLElement {
+    // If there's already a toast, remove it first (with animation)
+    if (this.currentToast) {
+      this.removeToast(this.currentToast);
+    }
+
     const toastId = `toast-${this.nextToastId++}`;
     const defaultOptions: NotificationOptions = {
       duration: 5000,
@@ -164,6 +177,7 @@ class NotificationManager {
     `;
 
     this.toastContainer?.appendChild(toast);
+    this.currentToast = toast; // ← store as current
 
     // Add close button handler
     const closeBtn = toast.querySelector("button");
@@ -187,18 +201,24 @@ class NotificationManager {
   }
 
   public removeToast(toastElement: HTMLElement): void {
-    if (toastElement) {
-      toastElement.classList.remove("animate-slideInBottom");
-      toastElement.classList.add("animate-slideOutBottom");
-      setTimeout(() => {
-        if (toastElement.parentNode) {
-          toastElement.parentNode.removeChild(toastElement);
-        }
-      }, 300);
+    if (!toastElement) return;
+
+    // If this is the current toast, clear the reference
+    if (this.currentToast === toastElement) {
+      this.currentToast = null;
     }
+
+    toastElement.classList.remove("animate-slideInBottom");
+    toastElement.classList.add("animate-slideOutBottom");
+    setTimeout(() => {
+      if (toastElement.parentNode) {
+        toastElement.parentNode.removeChild(toastElement);
+      }
+    }, 300);
   }
 
   private addSwipeClose(toast: HTMLElement): void {
+    // ... (unchanged) ...
     let startX = 0;
     let currentX = 0;
     let isDragging = false;
@@ -234,6 +254,7 @@ class NotificationManager {
     toast.addEventListener("touchend", onTouchEnd);
   }
 
+  // ... other methods (showLoading, hideLoading, createBanner, removeBanner) remain unchanged ...
   public showLoading(message = "Processing request..."): void {
     const textElement = this.loadingOverlay?.querySelector("p");
     if (textElement) textElement.textContent = message;
@@ -247,14 +268,14 @@ class NotificationManager {
   public createBanner(
     message: string,
     type: NotificationType = "info",
-    options: NotificationOptions = {}
+    options: NotificationOptions = {},
   ): HTMLElement {
     // Remove existing banner if any
     const existingBanner = this.bannerContainer?.querySelector(".banner");
     if (existingBanner) existingBanner.remove();
 
     const defaultOptions: NotificationOptions = {
-      duration: 0, // 0 means don't auto-close
+      duration: 0,
       autoClose: false,
       showClose: true,
       ...options,
@@ -287,13 +308,11 @@ class NotificationManager {
 
     this.bannerContainer?.appendChild(banner);
 
-    // Add close handler if close button exists
     if (defaultOptions.showClose) {
       const closeBtn = banner.querySelector("button");
       closeBtn?.addEventListener("click", () => this.removeBanner(banner));
     }
 
-    // Auto-close if duration is set
     if (
       defaultOptions.autoClose &&
       defaultOptions.duration &&
@@ -321,7 +340,7 @@ class NotificationManager {
 // Singleton instance
 const notificationManager = new NotificationManager();
 
-// Add global styles for animations and inventory app theme
+// Add global styles – unchanged
 const style = document.createElement("style");
 style.textContent = `
   @keyframes slideInBottom {
@@ -377,38 +396,38 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Export functions
+// Export functions – unchanged
 export const showToast = (
   message: string,
   type: NotificationType = "info",
-  options: NotificationOptions = {}
+  options: NotificationOptions = {},
 ): HTMLElement => {
   return notificationManager.showToast(message, type, options);
 };
 
 export const showSuccess = (
   message: string,
-  options?: NotificationOptions
+  options?: NotificationOptions,
 ): HTMLElement => showToast(message, "success", options);
 
 export const showError = (
   message: string,
-  options?: NotificationOptions
+  options?: NotificationOptions,
 ): HTMLElement => showToast(message, "error", options);
 
 export const showWarning = (
   message: string,
-  options?: NotificationOptions
+  options?: NotificationOptions,
 ): HTMLElement => showToast(message, "warning", options);
 
 export const showInfo = (
   message: string,
-  options?: NotificationOptions
+  options?: NotificationOptions,
 ): HTMLElement => showToast(message, "info", options);
 
 export const showCritical = (
   message: string,
-  options?: NotificationOptions
+  options?: NotificationOptions,
 ): HTMLElement => showToast(message, "critical", options);
 
 export const showLoading = (message?: string): void => {
@@ -422,21 +441,18 @@ export const hideLoading = (): void => {
 export const showBanner = (
   message: string,
   type: NotificationType = "info",
-  options: NotificationOptions = {}
+  options: NotificationOptions = {},
 ): HTMLElement => {
   return notificationManager.createBanner(message, type, options);
 };
 
 export const showCriticalBanner = (
   message: string,
-  options?: NotificationOptions
+  options?: NotificationOptions,
 ): HTMLElement => showBanner(message, "critical", options);
 
-/**
- * Extracts error message from backend response
- */
 export const extractErrorMessage = (error: ApiError): string => {
-  // Handle network errors
+  // ... unchanged ...
   if (!error.response) {
     return "Network error. Please check your connection.";
   }
@@ -444,23 +460,19 @@ export const extractErrorMessage = (error: ApiError): string => {
   const response = error.response;
   const data = response.data;
 
-  // Handle string responses
   if (typeof data === "string") {
     return data;
   }
 
-  // Handle array responses
   if (Array.isArray(data)) {
     return data
       .map((item) =>
-        typeof item === "string" ? item : item.string || JSON.stringify(item)
+        typeof item === "string" ? item : item.string || JSON.stringify(item),
       )
       .join(". ");
   }
 
-  // Handle object responses
   if (typeof data === "object" && data !== null) {
-    // Common fields
     if (data.detail)
       return typeof data.detail === "string"
         ? data.detail
@@ -477,7 +489,6 @@ export const extractErrorMessage = (error: ApiError): string => {
     if (data.errors && Array.isArray(data.errors))
       return data.errors.join(". ");
 
-    // General validation errors
     const messages: string[] = [];
     Object.values(data).forEach((value) => {
       if (Array.isArray(value)) {
@@ -508,32 +519,25 @@ export const extractErrorMessage = (error: ApiError): string => {
     }
   }
 
-  // Fallback
   return response.statusText || `Request failed with status ${response.status}`;
 };
 
-/**
- * Shows appropriate toast based on API response error
- */
 export const showApiError = (
   error: unknown,
   fallback: string = "",
-  options: NotificationOptions = {}
+  options: NotificationOptions = {},
 ): void => {
+  // ... unchanged ...
   let message = "An unexpected error occurred";
   let status: number | undefined;
 
-  // Handle different error formats
   if (typeof error === "object" && error !== null) {
     const err = error as Record<string, any>;
 
-    // Axios-style error with response object
     if (err.response) {
       status = err.response.status;
       message = extractErrorMessage(err as ApiError);
-    }
-    // Django REST Framework-style error
-    else if (err.status) {
+    } else if (err.status) {
       status = err.status;
       if (err.data) {
         message = extractErrorMessage({
@@ -542,22 +546,15 @@ export const showApiError = (
       } else {
         message = err.message || fallback;
       }
-    }
-    // Simple error object with message
-    else if (err.message) {
+    } else if (err.message) {
       message = err.message;
-    }
-    // Direct API response data
-    else if (err.detail || err.error || err.message) {
+    } else if (err.detail || err.error || err.message) {
       message = extractErrorMessage({ response: { data: error } } as ApiError);
     }
-  }
-  // String errors
-  else if (typeof error === "string") {
+  } else if (typeof error === "string") {
     message = error;
   }
 
-  // Determine error type based on status code
   let type: NotificationType = "error";
   if (status === 401) type = "critical";
   if (status === 403) type = "critical";
@@ -571,9 +568,7 @@ export const showApiError = (
   });
 };
 
-// Convenience notification functions for inventory app
 export const inventoryNotifications = {
-  // Product-related notifications
   productCreated: (productName: string) =>
     showSuccess(`Product "${productName}" created successfully`),
   productUpdated: (productName: string) =>
@@ -582,12 +577,11 @@ export const inventoryNotifications = {
     showSuccess(`Product "${productName}" deleted successfully`),
   lowStockWarning: (productName: string, quantity: number) =>
     showWarning(
-      `Low stock alert: "${productName}" has only ${quantity} units left`
+      `Low stock alert: "${productName}" has only ${quantity} units left`,
     ),
   outOfStock: (productName: string) =>
     showError(`Out of stock: "${productName}" is no longer available`),
 
-  // Order-related notifications
   orderCreated: (orderId: string) =>
     showSuccess(`Order #${orderId} created successfully`),
   orderUpdated: (orderId: string) =>
@@ -595,13 +589,11 @@ export const inventoryNotifications = {
   orderCompleted: (orderId: string) =>
     showSuccess(`Order #${orderId} marked as completed`),
 
-  // Purchase-related notifications
   purchaseCreated: (purchaseId: string) =>
     showSuccess(`Purchase order #${purchaseId} created successfully`),
   purchaseReceived: (purchaseId: string) =>
     showSuccess(`Purchase order #${purchaseId} received and stock updated`),
 
-  // System notifications
   dataExported: (format: string) =>
     showSuccess(`${format.toUpperCase()} export completed successfully`),
   backupCreated: () => showSuccess("Database backup created successfully"),
