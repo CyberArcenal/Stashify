@@ -1,18 +1,42 @@
-// src/renderer/pages/settings/components/InventorySettingsTab.tsx
+// src/renderer/pages/settings/components/GeneralSettingsTab.tsx
 import React, { useState } from "react";
-import { Package } from "lucide-react";
-import type { InventorySettings } from "../../../api/core/system_config";
+import { Building } from "lucide-react";
+import type { GeneralSettings } from "../../../api/core/system_config";
 
-interface InventorySettingsTabProps {
-  settings: InventorySettings;
-  onSave: (data: Partial<InventorySettings>) => Promise<void>;
+const TIMEZONES = [
+  "Asia/Manila",
+  "Asia/Singapore",
+  "Asia/Tokyo",
+  "America/New_York",
+  "America/Los_Angeles",
+  "Europe/London",
+  "UTC",
+];
+
+const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "PHP", "SGD"];
+
+const LANGUAGES = [
+  { value: "en", label: "English" },
+  { value: "es", label: "Spanish" },
+  { value: "fr", label: "French" },
+  { value: "de", label: "German" },
+  { value: "zh", label: "Chinese" },
+  { value: "ja", label: "Japanese" },
+];
+
+interface GeneralSettingsTabProps {
+  settings: GeneralSettings;
+  onSave: (data: Partial<GeneralSettings>) => Promise<void>;
 }
 
-const InventorySettingsTab: React.FC<InventorySettingsTabProps> = ({ settings, onSave }) => {
+const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
+  settings,
+  onSave,
+}) => {
   const [form, setForm] = useState(settings);
   const [saving, setSaving] = useState(false);
 
-  const handleChange = (field: keyof InventorySettings, value: any) => {
+  const handleChange = (field: keyof GeneralSettings, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -29,121 +53,109 @@ const InventorySettingsTab: React.FC<InventorySettingsTabProps> = ({ settings, o
   return (
     <form onSubmit={handleSubmit} className="bg-[var(--card-bg)] rounded-xl shadow-sm border border-[var(--border-color)] p-6">
       <h2 className="text-lg font-semibold text-[var(--sidebar-text)] mb-6 flex items-center">
-        <Package className="w-5 h-5 mr-2" />
-        Inventory Settings
+        <Building className="w-5 h-5 mr-2" />
+        General Settings
       </h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
-              Default Reorder Level
+              Company Name
             </label>
             <input
-              type="number"
-              value={form?.reorder_level_default || 0}
-              onChange={(e) => handleChange("reorder_level_default", parseInt(e.target.value) || 0)}
+              type="text"
+              value={form.company_name || ""}
+              onChange={(e) => handleChange("company_name", e.target.value)}
               className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-              min="0"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
-              Default Reorder Quantity
+              Store Location
             </label>
             <input
-              type="number"
-              value={form?.reorder_qty_default || 0}
-              onChange={(e) => handleChange("reorder_qty_default", parseInt(e.target.value) || 0)}
+              type="text"
+              value={form.store_location || ""}
+              onChange={(e) => handleChange("store_location", e.target.value)}
               className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-              min="0"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
-              Stock Alert Threshold
+              Timezone
             </label>
-            <input
-              type="number"
-              value={form?.stock_alert_threshold || 0}
-              onChange={(e) => handleChange("stock_alert_threshold", parseInt(e.target.value) || 0)}
+            <select
+              value={form.default_timezone || form.timezone || "Asia/Manila"}
+              onChange={(e) => {
+                handleChange("default_timezone", e.target.value);
+                handleChange("timezone", e.target.value);
+              }}
               className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-              min="0"
-            />
+            >
+              {TIMEZONES.map((tz) => (
+                <option key={tz} value={tz}>{tz}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
+              Currency
+            </label>
+            <select
+              value={form.currency || "USD"}
+              onChange={(e) => handleChange("currency", e.target.value)}
+              className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
+            >
+              {CURRENCIES.map((cur) => (
+                <option key={cur} value={cur}>{cur}</option>
+              ))}
+            </select>
           </div>
         </div>
 
         <div className="space-y-4">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={form?.auto_reorder_enabled || false}
-              onChange={(e) => handleChange("auto_reorder_enabled", e.target.checked)}
-              className="rounded border-[var(--border-color)] text-[var(--accent-blue)]"
-            />
-            <span className="ml-2 text-sm text-[var(--sidebar-text)]">Enable Auto‑Reorder</span>
-          </label>
-
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={form?.allow_negative_stock || false}
-              onChange={(e) => handleChange("allow_negative_stock", e.target.checked)}
-              className="rounded border-[var(--border-color)] text-[var(--accent-blue)]"
-            />
-            <span className="ml-2 text-sm text-[var(--sidebar-text)]">Allow Negative Stock</span>
-          </label>
-
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={form?.inventory_sync_enabled || false}
-              onChange={(e) => handleChange("inventory_sync_enabled", e.target.checked)}
-              className="rounded border-[var(--border-color)] text-[var(--accent-blue)]"
-            />
-            <span className="ml-2 text-sm text-[var(--sidebar-text)]">Enable Inventory Sync</span>
-          </label>
-        </div>
-      </div>
-
-      {/* Auto‑update rules */}
-      <div className="mt-6 p-4 bg-[var(--accent-blue-light)] rounded-lg">
-        <h3 className="font-medium text-[var(--accent-blue)] text-sm mb-3">Auto‑Update Rules</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <h4 className="text-xs font-semibold text-[var(--sidebar-text)]">Orders</h4>
-            <label className="flex items-center text-xs">
-              <input type="checkbox" checked={form?.auto_update_stock_order_confirm || false} onChange={(e) => handleChange("auto_update_stock_order_confirm", e.target.checked)} className="mr-2" /> On confirm
+          <div>
+            <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
+              Language
             </label>
-            <label className="flex items-center text-xs">
-              <input type="checkbox" checked={form?.auto_update_stock_order_complete || false} onChange={(e) => handleChange("auto_update_stock_order_complete", e.target.checked)} className="mr-2" /> On complete
-            </label>
-            <label className="flex items-center text-xs">
-              <input type="checkbox" checked={form?.auto_reverse_stock_order_cancel || false} onChange={(e) => handleChange("auto_reverse_stock_order_cancel", e.target.checked)} className="mr-2" /> Reverse on cancel
-            </label>
-            <label className="flex items-center text-xs">
-              <input type="checkbox" checked={form?.auto_reverse_stock_order_refund || false} onChange={(e) => handleChange("auto_reverse_stock_order_refund", e.target.checked)} className="mr-2" /> Reverse on refund
-            </label>
+            <select
+              value={form.language || "en"}
+              onChange={(e) => handleChange("language", e.target.value)}
+              className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
+            >
+              {LANGUAGES.map((lang) => (
+                <option key={lang.value} value={lang.value}>{lang.label}</option>
+              ))}
+            </select>
           </div>
-          <div className="space-y-2">
-            <h4 className="text-xs font-semibold text-[var(--sidebar-text)]">Purchases</h4>
-            <label className="flex items-center text-xs">
-              <input type="checkbox" checked={form?.auto_update_stock_purchase_received || false} onChange={(e) => handleChange("auto_update_stock_purchase_received", e.target.checked)} className="mr-2" /> On received
+
+          <div>
+            <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
+              Receipt Footer Message
             </label>
-            <label className="flex items-center text-xs">
-              <input type="checkbox" checked={form?.auto_reverse_stock_purchase_cancel || false} onChange={(e) => handleChange("auto_reverse_stock_purchase_cancel", e.target.checked)} className="mr-2" /> Reverse on cancel
-            </label>
+            <textarea
+              value={form.receipt_footer_message || ""}
+              onChange={(e) => handleChange("receipt_footer_message", e.target.value)}
+              rows={3}
+              className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
+            />
           </div>
-          <div className="space-y-2">
-            <h4 className="text-xs font-semibold text-[var(--sidebar-text)]">Returns</h4>
-            <label className="flex items-center text-xs">
-              <input type="checkbox" checked={form?.auto_update_stock_on_return || false} onChange={(e) => handleChange("auto_update_stock_on_return", e.target.checked)} className="mr-2" /> On return
+
+          <div>
+            <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
+              Auto Logout (minutes)
             </label>
-            <label className="flex items-center text-xs">
-              <input type="checkbox" checked={form?.auto_reverse_stock_on_return_cancel || false} onChange={(e) => handleChange("auto_reverse_stock_on_return_cancel", e.target.checked)} className="mr-2" /> Reverse on return cancel
-            </label>
+            <input
+              type="number"
+              value={form.auto_logout_minutes || 30}
+              onChange={(e) => handleChange("auto_logout_minutes", parseInt(e.target.value) || 30)}
+              className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
+              min="0"
+            />
           </div>
         </div>
       </div>
@@ -154,11 +166,11 @@ const InventorySettingsTab: React.FC<InventorySettingsTabProps> = ({ settings, o
           disabled={saving}
           className="px-6 py-3 bg-[var(--accent-blue)] text-white rounded-lg hover:bg-[var(--accent-blue-hover)] disabled:opacity-50"
         >
-          {saving ? "Saving..." : "Save Inventory Settings"}
+          {saving ? "Saving..." : "Save General Settings"}
         </button>
       </div>
     </form>
   );
 };
 
-export default InventorySettingsTab;
+export default GeneralSettingsTab;

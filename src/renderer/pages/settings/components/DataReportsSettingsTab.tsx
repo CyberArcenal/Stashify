@@ -3,6 +3,14 @@ import React, { useState } from "react";
 import { FileText } from "lucide-react";
 import type { DataReportsSettings } from "../../../api/core/system_config";
 
+const EXPORT_FORMATS = ["CSV", "Excel", "PDF", "JSON"];
+const BACKUP_SCHEDULES = [
+  { value: "0 2 * * *", label: "Daily at 2 AM" },
+  { value: "0 2 * * 0", label: "Weekly on Sunday at 2 AM" },
+  { value: "0 2 1 * *", label: "Monthly on 1st at 2 AM" },
+  { value: "custom", label: "Custom cron" },
+];
+
 interface DataReportsSettingsTabProps {
   settings: DataReportsSettings;
   onSave: (data: Partial<DataReportsSettings>) => Promise<void>;
@@ -11,6 +19,9 @@ interface DataReportsSettingsTabProps {
 const DataReportsSettingsTab: React.FC<DataReportsSettingsTabProps> = ({ settings, onSave }) => {
   const [form, setForm] = useState(settings);
   const [saving, setSaving] = useState(false);
+  const [showCustomCron, setShowCustomCron] = useState(
+    !BACKUP_SCHEDULES.some(s => s.value === form?.backup_schedule)
+  );
 
   const handleChange = (field: keyof DataReportsSettings, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -26,6 +37,17 @@ const DataReportsSettingsTab: React.FC<DataReportsSettingsTabProps> = ({ setting
     }
   };
 
+  const handleBackupScheduleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (val === "custom") {
+      setShowCustomCron(true);
+      // keep existing custom value if any
+    } else {
+      setShowCustomCron(false);
+      handleChange("backup_schedule", val);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="bg-[var(--card-bg)] rounded-xl shadow-sm border border-[var(--border-color)] p-6">
       <h2 className="text-lg font-semibold text-[var(--sidebar-text)] mb-6 flex items-center">
@@ -37,43 +59,68 @@ const DataReportsSettingsTab: React.FC<DataReportsSettingsTabProps> = ({ setting
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
-              Export Formats (comma separated)
+              Export Formats
             </label>
-            <input
-              type="text"
-              value={form?.export_formats?.join(", ") || ""}
-              onChange={(e) => handleChange("export_formats", e.target.value.split(",").map(s => s.trim()))}
-              className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-              placeholder="CSV, Excel, PDF"
-            />
+            <div className="space-y-2">
+              {EXPORT_FORMATS.map(format => (
+                <label key={format} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={form?.export_formats?.includes(format) || false}
+                    onChange={(e) => {
+                      const current = form?.export_formats || [];
+                      const newFormats = e.target.checked
+                        ? [...current, format]
+                        : current.filter(f => f !== format);
+                      handleChange("export_formats", newFormats);
+                    }}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-[var(--sidebar-text)]">{format}</span>
+                </label>
+              ))}
+            </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
               Default Export Format
             </label>
-            <input
-              type="text"
-              value={form?.default_export_format || ""}
+            <select
+              value={form?.default_export_format || "CSV"}
               onChange={(e) => handleChange("default_export_format", e.target.value)}
               className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-              placeholder="CSV"
-            />
+            >
+              {EXPORT_FORMATS.map(format => <option key={format} value={format}>{format}</option>)}
+            </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
               Backup Schedule
             </label>
-            <input
-              type="text"
-              value={form?.backup_schedule || ""}
-              onChange={(e) => handleChange("backup_schedule", e.target.value)}
-              className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-              placeholder="daily, weekly"
-            />
+            <select
+              value={showCustomCron ? "custom" : (form?.backup_schedule || "0 2 * * *")}
+              onChange={handleBackupScheduleSelect}
+              className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)] mb-2"
+            >
+              {BACKUP_SCHEDULES.map(s => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+            {showCustomCron && (
+              <input
+                type="text"
+                value={form?.backup_schedule || ""}
+                onChange={(e) => handleChange("backup_schedule", e.target.value)}
+                placeholder="Enter cron expression"
+                className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
+              />
+            )}
           </div>
+        </div>
 
+        <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
               Backup Location
@@ -99,9 +146,7 @@ const DataReportsSettingsTab: React.FC<DataReportsSettingsTabProps> = ({ setting
               min="0"
             />
           </div>
-        </div>
 
-        <div className="space-y-4">
           <label className="flex items-center">
             <input
               type="checkbox"

@@ -3,16 +3,16 @@ import React, { useState, useEffect } from "react";
 import LoadingSpinner from "./components/LoadingSpinner";
 import AlertBanner from "./components/AlertBanner";
 import SettingsTabs from "./components/SettingsTabs";
-import InventorySettingsTab from "./components/InventorySettingsTab";
 import SalesSettingsTab from "./components/SalesSettingsTab";
 import CashierSettingsTab from "./components/CashierSettingsTab";
 import NotificationsSettingsTab from "./components/NotificationsSettingsTab";
 import DataReportsSettingsTab from "./components/DataReportsSettingsTab";
 import IntegrationsSettingsTab from "./components/IntegrationsSettingsTab";
 import AuditSecuritySettingsTab from "./components/AuditSecuritySettingsTab";
-import GeneralSettingsTab from "./components/GeneralSettingsTab";
 import { useSettings } from "./hooks/useSettings";
 import { showSuccess } from "../../utils/notification";
+import GeneralSettingsTab from "./components/GeneralSettingsTab";
+import InventorySettingsTab from "./components/InventorySettingsTab";
 
 const SettingsPage: React.FC = () => {
   const {

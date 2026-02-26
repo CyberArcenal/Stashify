@@ -3,6 +3,9 @@ import React, { useState } from "react";
 import { Wallet } from "lucide-react";
 import type { CashierSettings } from "../../../api/core/system_config";
 
+const PRINTER_TYPES = ["thermal", "dot-matrix", "laser"];
+const CONNECTION_TYPES = ["printer", "usb", "serial", "network"];
+
 interface CashierSettingsTabProps {
   settings: CashierSettings;
   onSave: (data: Partial<CashierSettings>) => Promise<void>;
@@ -52,26 +55,27 @@ const CashierSettingsTab: React.FC<CashierSettingsTabProps> = ({ settings, onSav
             <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
               Receipt Printer Type
             </label>
-            <input
-              type="text"
-              value={form?.receipt_printer_type || ""}
+            <select
+              value={form?.receipt_printer_type || "thermal"}
               onChange={(e) => handleChange("receipt_printer_type", e.target.value)}
               className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-              placeholder="thermal, dot-matrix"
-            />
+            >
+              {PRINTER_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+            </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
               Cash Drawer Connection
             </label>
-            <input
-              type="text"
+            <select
               value={form?.cash_drawer_connection || ""}
               onChange={(e) => handleChange("cash_drawer_connection", e.target.value)}
               className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-              placeholder="printer, usb, serial"
-            />
+            >
+              <option value="">None</option>
+              {CONNECTION_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+            </select>
           </div>
 
           <div>
