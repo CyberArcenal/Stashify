@@ -26,7 +26,7 @@ module.exports = async (params, queryRunner) => {
     const downloadsPath = app.getPath("downloads");
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const filename = `low_stock_report_${timestamp}.${format}`;
-    const fullPath = path.join(downloadsPath, "stashly", filename);
+    const fullPath = path.join(downloadsPath, "Stashify", filename);
 
     await fs.mkdir(path.dirname(fullPath), { recursive: true });
 

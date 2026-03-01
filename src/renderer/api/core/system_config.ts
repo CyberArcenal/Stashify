@@ -970,7 +970,7 @@ class SystemConfigAPI {
     const defaultSettings = [
       {
         key: "company_name",
-        value: "Inventory Management",
+        value: "Stashify",
         setting_type: SettingType.GENERAL,
         description: "Company name",
       },

@@ -1,15 +1,15 @@
-# Stashly
+# Stashify
 
-Stashly is a modern offline‑first inventory management system built with **Electron, React, TypeScript, and TypeORM**. It streamlines stock tracking, warehouse limits, purchases, and orders while offering reporting, exports, and notifications. Designed for scalability and simplicity, Stashly empowers businesses to manage inventory with clarity and control.
+Stashify is a modern offline‑first inventory management system built with **Electron, React, TypeScript, and TypeORM**. It streamlines stock tracking, warehouse limits, purchases, and orders while offering reporting, exports, and notifications. Designed for scalability and simplicity, Stashify empowers businesses to manage inventory with clarity and control.
 
 ## 📸 Screenshots
 
 _Sample screens – replace with actual images of your application._
 
-![Dashboard](https://github.com/CyberArcenal/Stashly/blob/main/screenshots/1.png?raw=true)
-![Inventory List](https://github.com/CyberArcenal/Stashly/blob/main/screenshots/3.png?raw=true)
-![Product Form](https://github.com/CyberArcenal/Stashly/blob/main/screenshots/2.png?raw=true)
-![Reports](https://github.com/CyberArcenal/Stashly/blob/main/screenshots/4.png?raw=true)
+![Dashboard](https://github.com/CyberArcenal/Stashify/blob/main/screenshots/1.png?raw=true)
+![Inventory List](https://github.com/CyberArcenal/Stashify/blob/main/screenshots/3.png?raw=true)
+![Product Form](https://github.com/CyberArcenal/Stashify/blob/main/screenshots/2.png?raw=true)
+![Reports](https://github.com/CyberArcenal/Stashify/blob/main/screenshots/4.png?raw=true)
 
 ## 🚀 Features
 
@@ -59,7 +59,7 @@ _Sample screens – replace with actual images of your application._
 ## 📁 Project Structure
 
 ```
-stashly/
+Stashify/
 ├── src/
 │   ├── channels/                # IPC channels
 │   ├── drivers/                 # External drivers/adapters
@@ -99,8 +99,8 @@ stashly/
 1. Clone the repository
 
    ```bash
-   git clone https://github.com/CyberArcenal/stashly.git
-   cd stashly
+   git clone https://github.com/CyberArcenal/Stashify.git
+   cd Stashify
    ```
 
 2. Install dependencies
@@ -213,6 +213,7 @@ If you find this project helpful, consider supporting its development:
 [![Ko-fi](https://img.shields.io/badge/Support-Ko--fi-red)](https://ko-fi.com/cyberarcenal60019)
 
 ## 📱 Donate via GCash
+
 Scan the QR code below to send your support:
 
 ![GCash QR](https://github.com/CyberArcenal/Kabisilya-Management/blob/main/screenshots/gcash-qr.JPG?raw=true)

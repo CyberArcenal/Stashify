@@ -14,7 +14,7 @@ import { dialogs } from "../../../utils/dialogs";
 
 // ========== Default values for every category (full interfaces from system_config.ts) ==========
 const DEFAULT_GENERAL: GeneralSettings = {
-  company_name: "Inventory Management",
+  company_name: "Stashify",
   store_location: "",
   default_timezone: "Asia/Manila",
   timezone: "Asia/Manila", // kept for compatibility

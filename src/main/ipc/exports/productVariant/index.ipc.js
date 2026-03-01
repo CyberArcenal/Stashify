@@ -14,7 +14,7 @@ class ProductVariantExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "stashly",
+      "Stashify",
       "product_variant_exports",
     );
 
@@ -443,53 +443,251 @@ class ProductVariantExportHandler {
    * @param {any[]} variants
    * @param {any} params
    */
-async _exportPDF(variants, params) {
-  try {
-    let PDFKit;
+  async _exportPDF(variants, params) {
     try {
-      PDFKit = require("pdfkit");
-    } catch (error) {
-      console.warn("PDFKit not available, falling back to CSV");
-      return await this._exportCSV(variants, params);
-    }
+      let PDFKit;
+      try {
+        PDFKit = require("pdfkit");
+      } catch (error) {
+        console.warn("PDFKit not available, falling back to CSV");
+        return await this._exportCSV(variants, params);
+      }
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const filename = `product_variants_${timestamp}.pdf`;
-    const filepath = path.join(this.EXPORT_DIR, filename);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const filename = `product_variants_${timestamp}.pdf`;
+      const filepath = path.join(this.EXPORT_DIR, filename);
 
-    const doc = new PDFKit({
-      size: "A4",
-      layout: "landscape",
-      margin: 20,
-      info: {
-        Title: "Product Variants List",
-        Author: "Product Management System",
-        CreationDate: new Date(),
-      },
-      bufferPages: true,
-    });
+      const doc = new PDFKit({
+        size: "A4",
+        layout: "landscape",
+        margin: 20,
+        info: {
+          Title: "Product Variants List",
+          Author: "Product Management System",
+          CreationDate: new Date(),
+        },
+        bufferPages: true,
+      });
 
-    const writeStream = fs.createWriteStream(filepath);
-    doc.pipe(writeStream);
+      const writeStream = fs.createWriteStream(filepath);
+      doc.pipe(writeStream);
 
-    // Title
-    doc.fontSize(14).font("Helvetica-Bold").text("Product Variants List", {
-      align: "center",
-    });
+      // Title
+      doc.fontSize(14).font("Helvetica-Bold").text("Product Variants List", {
+        align: "center",
+      });
 
-    doc
-      .fontSize(9)
-      .font("Helvetica")
-      .text(
-        `Generated: ${new Date().toLocaleDateString()} | Total: ${variants.length} variants`,
-        { align: "center" },
-      );
+      doc
+        .fontSize(9)
+        .font("Helvetica")
+        .text(
+          `Generated: ${new Date().toLocaleDateString()} | Total: ${variants.length} variants`,
+          { align: "center" },
+        );
 
-    doc.moveDown(0.5);
+      doc.moveDown(0.5);
 
-    if (variants.length === 0) {
-      doc.fontSize(11).text("No variants found.", { align: "center" });
+      if (variants.length === 0) {
+        doc.fontSize(11).text("No variants found.", { align: "center" });
+        doc.end();
+        await new Promise((resolve, reject) => {
+          // @ts-ignore
+          writeStream.on("finish", resolve);
+          writeStream.on("error", reject);
+        });
+
+        const stats = fs.statSync(filepath);
+        return {
+          filename: filename,
+          fileSize: this._formatFileSize(stats.size),
+        };
+      }
+
+      const pageWidth = 842; // A4 landscape width
+      const pageHeight = 595;
+      const leftMargin = 20;
+      const rightMargin = 20;
+      const topMargin = doc.y;
+      const availableWidth = pageWidth - leftMargin - rightMargin;
+
+      // ✅ Bagong column widths – eksaktong 100% ang kabuuan
+      const columnWidths = [
+        availableWidth * 0.1, // SKU
+        availableWidth * 0.15, // Name
+        availableWidth * 0.12, // Product Name
+        availableWidth * 0.1, // Product SKU
+        availableWidth * 0.09, // Category
+        availableWidth * 0.06, // Net Price
+        availableWidth * 0.05, // Cost
+        availableWidth * 0.04, // Stock
+        availableWidth * 0.07, // Status
+        availableWidth * 0.12, // Barcode (mas malaki para sa довгих barcode)
+        availableWidth * 0.1, // Created Date
+      ];
+
+      const rowHeight = 15;
+      let currentY = topMargin;
+      const headers = [
+        "SKU",
+        "Name",
+        "Product Name",
+        "Product SKU",
+        "Category",
+        "Net Price",
+        "Cost",
+        "Stock",
+        "Status",
+        "Barcode",
+        "Created Date",
+      ];
+
+      // Draw header
+      doc
+        .rect(leftMargin, currentY, availableWidth, rowHeight)
+        .fillColor("#4A6FA5")
+        .fill();
+
+      doc.fillColor("white").fontSize(8).font("Helvetica-Bold");
+
+      let xPos = leftMargin;
+      headers.forEach((header, i) => {
+        doc.text(header, xPos + 3, currentY + 4, {
+          width: columnWidths[i] - 6,
+          align: this._getColumnAlignment(header),
+        });
+        xPos += columnWidths[i];
+      });
+
+      currentY += rowHeight;
+      doc.fontSize(8).font("Helvetica");
+
+      for (let i = 0; i < variants.length; i++) {
+        const variant = variants[i];
+
+        // New page if needed
+        if (currentY + rowHeight > pageHeight - 20) {
+          doc.addPage({ size: "A4", layout: "landscape", margin: 20 });
+          currentY = 20;
+
+          // Redraw header
+          doc
+            .rect(leftMargin, currentY, availableWidth, rowHeight)
+            .fillColor("#4A6FA5")
+            .fill();
+
+          doc.fillColor("white").fontSize(8).font("Helvetica-Bold");
+          xPos = leftMargin;
+          headers.forEach((header, j) => {
+            doc.text(header, xPos + 3, currentY + 4, {
+              width: columnWidths[j] - 6,
+              align: this._getColumnAlignment(header),
+            });
+            xPos += columnWidths[j];
+          });
+          currentY += rowHeight;
+
+          doc.fontSize(8).font("Helvetica");
+        }
+
+        // Zebra striping
+        if (i % 2 === 0) {
+          doc
+            .rect(leftMargin, currentY, availableWidth, rowHeight)
+            .fillColor("#F8F9FA")
+            .fill();
+        } else {
+          doc
+            .rect(leftMargin, currentY, availableWidth, rowHeight)
+            .fillColor("#FFFFFF")
+            .fill();
+        }
+
+        // Cell borders
+        doc.lineWidth(0.2);
+        xPos = leftMargin;
+        for (let j = 0; j < columnWidths.length; j++) {
+          doc
+            .moveTo(xPos, currentY)
+            .lineTo(xPos, currentY + rowHeight)
+            .strokeColor("#CCCCCC")
+            .stroke();
+          xPos += columnWidths[j];
+        }
+        doc
+          .moveTo(leftMargin, currentY + rowHeight)
+          .lineTo(leftMargin + availableWidth, currentY + rowHeight)
+          .strokeColor("#CCCCCC")
+          .stroke();
+
+        // Cell content
+        doc.fillColor("#000000");
+        xPos = leftMargin;
+
+        const variantData = [
+          variant.SKU,
+          variant.Name,
+          variant["Product Name"],
+          variant["Product SKU"],
+          variant.Category,
+          variant["Net Price"],
+          variant.Cost,
+          variant.Stock.toString(),
+          variant.Status,
+          variant.Barcode,
+          variant["Created Date"],
+        ];
+
+        variantData.forEach((cellValue, j) => {
+          let displayValue = String(cellValue);
+
+          // Truncate only very long text fields (hindi ang barcode)
+          if (j === 1 && displayValue.length > 25) {
+            displayValue = displayValue.substring(0, 22) + "...";
+          } else if (j === 2 && displayValue.length > 20) {
+            displayValue = displayValue.substring(0, 17) + "...";
+          } else if (j === 3 && displayValue.length > 18) {
+            displayValue = displayValue.substring(0, 15) + "...";
+          }
+
+          // Format currency
+          if ((j === 5 || j === 6) && displayValue !== "N/A") {
+            displayValue = "$" + displayValue;
+          }
+
+          doc.text(displayValue, xPos + 3, currentY + 4, {
+            width: columnWidths[j] - 6,
+            align: this._getColumnAlignment(headers[j]),
+            ellipsis: false, // Huwag gumamit ng ellipsis, mag-wrapping na lang
+          });
+
+          xPos += columnWidths[j];
+        });
+
+        currentY += rowHeight;
+      }
+
+      // ✅ FIXED: Footer na may tamang page numbering
+      const range = doc.bufferedPageRange();
+      const start = range.start || 0;
+      const count = range.count || 0;
+      for (let p = start; p < start + count; p++) {
+        doc.switchToPage(p);
+        doc
+          .fontSize(7)
+          .fillColor("#666666")
+          .text(
+            `Page ${p - start + 1} of ${count}`,
+            leftMargin,
+            pageHeight - 15,
+            {
+              align: "right",
+              width: availableWidth,
+            },
+          );
+      }
+
       doc.end();
+
       await new Promise((resolve, reject) => {
         // @ts-ignore
         writeStream.on("finish", resolve);
@@ -501,204 +699,11 @@ async _exportPDF(variants, params) {
         filename: filename,
         fileSize: this._formatFileSize(stats.size),
       };
+    } catch (error) {
+      console.error("PDF export error:", error);
+      return await this._exportCSV(variants, params);
     }
-
-    const pageWidth = 842; // A4 landscape width
-    const pageHeight = 595;
-    const leftMargin = 20;
-    const rightMargin = 20;
-    const topMargin = doc.y;
-    const availableWidth = pageWidth - leftMargin - rightMargin;
-
-    // ✅ Bagong column widths – eksaktong 100% ang kabuuan
-    const columnWidths = [
-      availableWidth * 0.10, // SKU
-      availableWidth * 0.15, // Name
-      availableWidth * 0.12, // Product Name
-      availableWidth * 0.10, // Product SKU
-      availableWidth * 0.09, // Category
-      availableWidth * 0.06, // Net Price
-      availableWidth * 0.05, // Cost
-      availableWidth * 0.04, // Stock
-      availableWidth * 0.07, // Status
-      availableWidth * 0.12, // Barcode (mas malaki para sa довгих barcode)
-      availableWidth * 0.10, // Created Date
-    ];
-
-    const rowHeight = 15;
-    let currentY = topMargin;
-    const headers = [
-      "SKU",
-      "Name",
-      "Product Name",
-      "Product SKU",
-      "Category",
-      "Net Price",
-      "Cost",
-      "Stock",
-      "Status",
-      "Barcode",
-      "Created Date",
-    ];
-
-    // Draw header
-    doc
-      .rect(leftMargin, currentY, availableWidth, rowHeight)
-      .fillColor("#4A6FA5")
-      .fill();
-
-    doc.fillColor("white").fontSize(8).font("Helvetica-Bold");
-
-    let xPos = leftMargin;
-    headers.forEach((header, i) => {
-      doc.text(header, xPos + 3, currentY + 4, {
-        width: columnWidths[i] - 6,
-        align: this._getColumnAlignment(header),
-      });
-      xPos += columnWidths[i];
-    });
-
-    currentY += rowHeight;
-    doc.fontSize(8).font("Helvetica");
-
-    for (let i = 0; i < variants.length; i++) {
-      const variant = variants[i];
-
-      // New page if needed
-      if (currentY + rowHeight > pageHeight - 20) {
-        doc.addPage({ size: "A4", layout: "landscape", margin: 20 });
-        currentY = 20;
-
-        // Redraw header
-        doc
-          .rect(leftMargin, currentY, availableWidth, rowHeight)
-          .fillColor("#4A6FA5")
-          .fill();
-
-        doc.fillColor("white").fontSize(8).font("Helvetica-Bold");
-        xPos = leftMargin;
-        headers.forEach((header, j) => {
-          doc.text(header, xPos + 3, currentY + 4, {
-            width: columnWidths[j] - 6,
-            align: this._getColumnAlignment(header),
-          });
-          xPos += columnWidths[j];
-        });
-        currentY += rowHeight;
-
-        doc.fontSize(8).font("Helvetica");
-      }
-
-      // Zebra striping
-      if (i % 2 === 0) {
-        doc
-          .rect(leftMargin, currentY, availableWidth, rowHeight)
-          .fillColor("#F8F9FA")
-          .fill();
-      } else {
-        doc
-          .rect(leftMargin, currentY, availableWidth, rowHeight)
-          .fillColor("#FFFFFF")
-          .fill();
-      }
-
-      // Cell borders
-      doc.lineWidth(0.2);
-      xPos = leftMargin;
-      for (let j = 0; j < columnWidths.length; j++) {
-        doc
-          .moveTo(xPos, currentY)
-          .lineTo(xPos, currentY + rowHeight)
-          .strokeColor("#CCCCCC")
-          .stroke();
-        xPos += columnWidths[j];
-      }
-      doc
-        .moveTo(leftMargin, currentY + rowHeight)
-        .lineTo(leftMargin + availableWidth, currentY + rowHeight)
-        .strokeColor("#CCCCCC")
-        .stroke();
-
-      // Cell content
-      doc.fillColor("#000000");
-      xPos = leftMargin;
-
-      const variantData = [
-        variant.SKU,
-        variant.Name,
-        variant["Product Name"],
-        variant["Product SKU"],
-        variant.Category,
-        variant["Net Price"],
-        variant.Cost,
-        variant.Stock.toString(),
-        variant.Status,
-        variant.Barcode,
-        variant["Created Date"],
-      ];
-
-      variantData.forEach((cellValue, j) => {
-        let displayValue = String(cellValue);
-
-        // Truncate only very long text fields (hindi ang barcode)
-        if (j === 1 && displayValue.length > 25) {
-          displayValue = displayValue.substring(0, 22) + "...";
-        } else if (j === 2 && displayValue.length > 20) {
-          displayValue = displayValue.substring(0, 17) + "...";
-        } else if (j === 3 && displayValue.length > 18) {
-          displayValue = displayValue.substring(0, 15) + "...";
-        }
-
-        // Format currency
-        if ((j === 5 || j === 6) && displayValue !== "N/A") {
-          displayValue = "$" + displayValue;
-        }
-
-        doc.text(displayValue, xPos + 3, currentY + 4, {
-          width: columnWidths[j] - 6,
-          align: this._getColumnAlignment(headers[j]),
-          ellipsis: false, // Huwag gumamit ng ellipsis, mag-wrapping na lang
-        });
-
-        xPos += columnWidths[j];
-      });
-
-      currentY += rowHeight;
-    }
-
-    // ✅ FIXED: Footer na may tamang page numbering
-    const range = doc.bufferedPageRange();
-    const start = range.start || 0;
-    const count = range.count || 0;
-    for (let p = start; p < start + count; p++) {
-      doc.switchToPage(p);
-      doc
-        .fontSize(7)
-        .fillColor("#666666")
-        .text(`Page ${p - start + 1} of ${count}`, leftMargin, pageHeight - 15, {
-          align: "right",
-          width: availableWidth,
-        });
-    }
-
-    doc.end();
-
-    await new Promise((resolve, reject) => {
-      // @ts-ignore
-      writeStream.on("finish", resolve);
-      writeStream.on("error", reject);
-    });
-
-    const stats = fs.statSync(filepath);
-    return {
-      filename: filename,
-      fileSize: this._formatFileSize(stats.size),
-    };
-  } catch (error) {
-    console.error("PDF export error:", error);
-    return await this._exportCSV(variants, params);
   }
-}
 
   // @ts-ignore
   _getColumnAlignment(header) {

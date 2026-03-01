@@ -22,7 +22,7 @@ class ProductExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "stashly",
+      "Stashify",
       "product_exports",
     );
 

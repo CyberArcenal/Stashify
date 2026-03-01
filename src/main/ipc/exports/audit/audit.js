@@ -14,7 +14,7 @@ class AuditLogExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "stashly",
+      "Stashify",
       "audit_log_exports",
     );
 

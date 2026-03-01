@@ -1,7 +1,7 @@
 // src/main/index.js
 // @ts-check
 /**
- * @file Main entry point for Inventory Management System
+ * @file Main entry point for Stashify System
  * @version 1.2.0
  * @author CyberArcenal
  * @description Electron main process with TypeORM, SQLite, React, and auto-updater

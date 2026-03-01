@@ -13,7 +13,7 @@ class StockItemExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "stashly",
+      "Stashify",
       "stock_item_exports",
     );
 
@@ -335,7 +335,7 @@ class StockItemExportHandler {
       const filepath = path.join(this.EXPORT_DIR, filename);
 
       const workbook = new this.excelJS.Workbook();
-      workbook.creator = "Inventory Management System";
+      workbook.creator = "Stashify System";
       workbook.created = new Date();
 
       const worksheet = workbook.addWorksheet("Stock Items");
@@ -497,7 +497,7 @@ class StockItemExportHandler {
         margin: 20,
         info: {
           Title: "Stock Items List",
-          Author: "Inventory Management System",
+          Author: "Stashify System",
           CreationDate: new Date(),
         },
         bufferPages: true, // ✅ kailangan para sa bufferedPageRange

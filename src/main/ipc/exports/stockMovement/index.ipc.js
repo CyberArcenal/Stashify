@@ -13,7 +13,7 @@ class StockMovementExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "stashly",
+      "Stashify",
       "stock_movement_exports",
     );
 
@@ -341,7 +341,7 @@ class StockMovementExportHandler {
       const filepath = path.join(this.EXPORT_DIR, filename);
 
       const workbook = new this.excelJS.Workbook();
-      workbook.creator = "Inventory Management System";
+      workbook.creator = "Stashify System";
       workbook.created = new Date();
 
       const worksheet = workbook.addWorksheet("Stock Movements");
@@ -487,7 +487,7 @@ class StockMovementExportHandler {
         margin: 20,
         info: {
           Title: "Stock Movements List",
-          Author: "Inventory Management System",
+          Author: "Stashify System",
           CreationDate: new Date(),
         },
         bufferPages: true,

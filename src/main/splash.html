@@ -14,7 +14,11 @@
       }
 
       body {
-        font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
         background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
         color: #1e293b;
         height: 100vh;
@@ -144,7 +148,8 @@
       }
 
       @keyframes pulse {
-        0%, 100% {
+        0%,
+        100% {
           transform: scale(1);
           opacity: 0.3;
           background-color: rgba(14, 157, 124, 0.3);
@@ -184,7 +189,11 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(243, 244, 246, 0.95) 100%);
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.95) 0%,
+          rgba(243, 244, 246, 0.95) 100%
+        );
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -257,7 +266,7 @@
   <body>
     <div class="splash-container">
       <div class="center-content">
-        <h1>Stashly</h1>
+        <h1>Stashify</h1>
         <div class="subtitle">Inventory Management System</div>
       </div>
 
@@ -563,7 +572,9 @@
     <script>
       const updateOverlay = document.getElementById("updateOverlay");
       const updateVersion = document.getElementById("updateVersion");
-      const updateProgressContainer = document.getElementById("updateProgressContainer");
+      const updateProgressContainer = document.getElementById(
+        "updateProgressContainer",
+      );
       const updateProgressFill = document.getElementById("updateProgressFill");
       const updateProgressText = document.getElementById("updateProgressText");
       const updateInstallBtn = document.getElementById("updateInstallBtn");
@@ -653,7 +664,7 @@
         localStorage.setItem("lastUpdatePrompt", Date.now());
         localStorage.setItem(
           "updateDeferredVersion",
-          updateVersion.textContent.split(" ")[1]
+          updateVersion.textContent.split(" ")[1],
         );
       });
     </script>

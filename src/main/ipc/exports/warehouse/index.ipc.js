@@ -14,7 +14,7 @@ class WarehouseExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "stashly",
+      "Stashify",
       "warehouse_exports",
     );
 

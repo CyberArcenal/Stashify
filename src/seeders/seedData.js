@@ -1,5 +1,5 @@
 // seedData.js
-// Inventory Management System Seeder
+// Stashify System Seeder
 // Run with: node seedData.js [options]
 
 const { DataSource } = require("typeorm");
@@ -1339,7 +1339,7 @@ function parseArgs() {
         console.log(`
 Usage: node seedData.js [options]
 
-Seed the inventory management database with test data.
+Seed the Stashify database with test data.
 
 Options:
   --clear-only                Only wipe database, do not seed.

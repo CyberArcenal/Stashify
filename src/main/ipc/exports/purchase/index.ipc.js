@@ -13,7 +13,7 @@ class PurchaseExportHandler {
     this.EXPORT_DIR = path.join(
       os.homedir(),
       "Downloads",
-      "stashly",
+      "Stashify",
       "purchase_exports",
     );
 

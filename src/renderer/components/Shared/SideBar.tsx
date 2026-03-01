@@ -62,7 +62,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
 
   const menuItems = [
     // Core Sections
-    { path: "/dashboard", name: "Dashboard", icon: LayoutDashboard, category: "core" },
+    {
+      path: "/dashboard",
+      name: "Dashboard",
+      icon: LayoutDashboard,
+      category: "core",
+    },
     {
       path: "",
       name: "Products",
@@ -138,7 +143,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       icon: Users,
       category: "customers",
       children: [
-        {path: "/suppliers", name: "Suppliers", icon: TruckElectricIcon},
+        { path: "/suppliers", name: "Suppliers", icon: TruckElectricIcon },
         { path: "/customers", name: "Customers", icon: Users },
         { path: "/customers/loyalty", name: "Loyalty's", icon: Award },
       ],
@@ -152,7 +157,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       category: "system",
       children: [
         { path: "/audit", name: "Audit Trail", icon: Lock },
-        { path: "/notification-log", name: "Notify Log's", icon: BellElectricIcon},
+        {
+          path: "/notification-log",
+          name: "Notify Log's",
+          icon: BellElectricIcon,
+        },
         { path: "/settings", name: "Settings", icon: Settings },
         { name: "Activation", icon: Key, path: "/activation" },
       ],
@@ -363,7 +372,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       {/* Header */}
       <div className="flex-shrink-0 border-b border-[var(--sidebar-border)] bg-[var(--card-bg)] p-6">
         <div className="flex items-center gap-3">
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--primary-color)] flex items-center justify-center overflow-hidden">
+          <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center overflow-hidden">
             <img
               src={"/icon.png"}
               alt="Inventory Pro Logo"
@@ -373,7 +382,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
           {isOpen && (
             <div className="min-w-0">
               <h2 className="truncate text-lg font-bold text-[var(--sidebar-text)]">
-                StashLY
+                Stashify
               </h2>
               <p className="text-xs text-[var(--sidebar-text)]">
                 Business Management
@@ -409,7 +418,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       <div className="p-4 border-t border-[var(--sidebar-border)] text-center flex-shrink-0">
         {isOpen ? (
           <p className="text-xs text-[var(--sidebar-text)]">
-            v{version} • © {new Date().getFullYear()} stashly
+            v{version} • © {new Date().getFullYear()} Stashify
           </p>
         ) : (
           <p className="text-xs text-[var(--sidebar-text)]">

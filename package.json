@@ -1,5 +1,5 @@
 {
-  "name": "stashly",
+  "name": "stashify",
   "version": "0.0.0-beta",
   "private": true,
   "main": "src/main/index.js",
@@ -16,6 +16,9 @@
     "migration:revert": "npx typeorm migration:revert -d src/main/db/datasource.js",
     "dev": "cross-env NODE_ENV=development concurrently \"vite\" \"tsc -w -p tsconfig.node.json\" \"electron ./src/main/index.js\"",
     "build": "vite build && electron-builder",
+    "dist:win": "vite build && electron-builder --win",
+    "dist:mac": "vite build && electron-builder --mac",
+    "dist:linux": "vite build && electron-builder --linux",
     "seed": "node src/seeders/seedData.js",
     "seed:reset": "ts-node src/seeders/seedData.js --reset",
     "postinstall": "electron-rebuild",
@@ -23,25 +26,30 @@
   },
   "build": {
     "appId": "com.CyberArcenal",
-    "productName": "Stashly",
+    "productName": "Stashify",
     "directories": {
       "output": "release"
     },
     "win": {
-      "target": "nsis",
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "target": "nsis"
     },
     "mac": {
-      "icon": "build/icon.icns"
+      "icon": "build/icon.icns",
+      "target": "dmg"
     },
     "linux": {
-      "icon": "build/icon.png"
+      "icon": "build/icon.png",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
     },
     "publish": [
       {
         "provider": "github",
         "owner": "CyberArcenal",
-        "repo": "stashly"
+        "repo": "Stashify"
       }
     ]
   },

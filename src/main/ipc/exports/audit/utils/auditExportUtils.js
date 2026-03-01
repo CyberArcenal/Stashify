@@ -9,7 +9,7 @@ const SUPPORTED_FORMATS = ["csv", "excel", "pdf"];
 const EXPORT_DIR = path.join(
   os.homedir(),
   "Downloads",
-  "stashly",
+  "Stashify",
   "audit_log_exports",
 );
 
