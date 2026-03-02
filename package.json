@@ -3,6 +3,14 @@
   "version": "0.0.0-beta",
   "private": true,
   "main": "src/main/index.js",
+  "author": {
+    "name": "CyberArcenal",
+    "email": "cyberarcenal1@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CyberArcenal/Stashify.git"
+  },
   "scripts": {
     "build:main": "tsc -p tsconfig.main.json",
     "lint": "eslint . --ext .ts,.tsx",
@@ -45,13 +53,7 @@
         "deb"
       ]
     },
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "CyberArcenal",
-        "repo": "Stashify"
-      }
-    ]
+    "publish": null
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
