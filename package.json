@@ -1,6 +1,6 @@
 {
   "name": "stashify",
-  "version": "v0.0.1-beta",
+  "version": "v0.0.2-beta",
   "private": true,
   "main": "src/main/index.js",
   "author": {
