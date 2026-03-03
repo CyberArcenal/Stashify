@@ -19,8 +19,10 @@ import {
 } from "../../api/exports/variant";
 import Button from "../../components/UI/Button";
 import Pagination from "../../components/Shared/Pagination1";
+import { useBulkVariantTaxAssignment  } from "../inventory/hooks/bulk/useVariantTaxAssignment";
 import VariantTaxAssignmentDialog from "../inventory/components/VariantTaxAssignmentDialog";
 import { useVariantTaxAssignment } from "../inventory/hooks/useVariantTaxAssignment";
+import BulkVariantTaxAssignmentDialog from "../inventory/components/bulk/VariantTaxAssignmentDialog";
 
 const VariantsPage: React.FC = () => {
   const {
@@ -49,6 +51,8 @@ const VariantsPage: React.FC = () => {
   const formDialog = useVariantForm();
   const variantView = useVariantView();
   const taxAssignmentHook = useVariantTaxAssignment(reload);
+
+  const bulkTaxAssignmentHook = useBulkVariantTaxAssignment(reload);
 
   const [showFilters, setShowFilters] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
@@ -326,6 +330,14 @@ const VariantsPage: React.FC = () => {
             {selectedVariants.length} variant(s) selected
           </span>
           <div className="flex gap-xs">
+      
+              <button
+              className="compact-button bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-hover)] text-white rounded-md"
+              onClick={() => bulkTaxAssignmentHook.open(selectedVariants)}
+              title="Assign taxes to selected products"
+            >
+              Assign Tax
+            </button>
             <button
               className="compact-button rounded-md"
               style={{ backgroundColor: "var(--accent-blue)", color: "white" }}
@@ -501,6 +513,7 @@ const VariantsPage: React.FC = () => {
       />
 
       <VariantTaxAssignmentDialog hook={taxAssignmentHook} />
+      <BulkVariantTaxAssignmentDialog hook={bulkTaxAssignmentHook} />
 
       <VariantViewDialog
         isOpen={variantView.isOpen}

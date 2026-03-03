@@ -1,6 +1,4 @@
 // src/main/ipc/order/create.ipc.js
-
-
 const orderService = require("../../../../services/Order");
 
 /**
@@ -24,14 +22,22 @@ const orderService = require("../../../../services/Order");
 module.exports = async (params, queryRunner, user = "system") => {
   try {
     // Validate required fields
-    if (!params.order_number || typeof params.order_number !== "string" || params.order_number.trim() === "") {
+    if (
+      !params.order_number ||
+      typeof params.order_number !== "string" ||
+      params.order_number.trim() === ""
+    ) {
       return {
         status: false,
         message: "Order number is required and must be a non-empty string.",
         data: null,
       };
     }
-    if (!params.items || !Array.isArray(params.items) || params.items.length === 0) {
+    if (
+      !params.items ||
+      !Array.isArray(params.items) ||
+      params.items.length === 0
+    ) {
       return {
         status: false,
         message: "At least one order item is required.",
@@ -50,6 +56,70 @@ module.exports = async (params, queryRunner, user = "system") => {
         };
       }
       params.customerId = custId;
+    }
+
+    // Validate new fields
+    if (
+      params.usedLoyalty !== undefined &&
+      typeof params.usedLoyalty !== "boolean"
+    ) {
+      return {
+        status: false,
+        message: "usedLoyalty must be a boolean.",
+        data: null,
+      };
+    }
+    if (params.loyaltyRedeemed !== undefined) {
+      const val = Number(params.loyaltyRedeemed);
+      if (isNaN(val) || val < 0) {
+        return {
+          status: false,
+          message: "loyaltyRedeemed must be a non-negative number.",
+          data: null,
+        };
+      }
+      params.loyaltyRedeemed = val;
+    }
+    if (
+      params.usedDiscount !== undefined &&
+      typeof params.usedDiscount !== "boolean"
+    ) {
+      return {
+        status: false,
+        message: "usedDiscount must be a boolean.",
+        data: null,
+      };
+    }
+    if (params.totalDiscount !== undefined) {
+      const val = Number(params.totalDiscount);
+      if (isNaN(val) || val < 0) {
+        return {
+          status: false,
+          message: "totalDiscount must be a non-negative number.",
+          data: null,
+        };
+      }
+      params.totalDiscount = val;
+    }
+    if (
+      params.usedVoucher !== undefined &&
+      typeof params.usedVoucher !== "boolean"
+    ) {
+      return {
+        status: false,
+        message: "usedVoucher must be a boolean.",
+        data: null,
+      };
+    }
+    if (
+      params.voucherCode !== undefined &&
+      typeof params.voucherCode !== "string"
+    ) {
+      return {
+        status: false,
+        message: "voucherCode must be a string.",
+        data: null,
+      };
     }
 
     // Validate each item
@@ -156,6 +226,12 @@ module.exports = async (params, queryRunner, user = "system") => {
       customerId: params.customerId,
       notes: params.notes,
       items: params.items,
+      usedLoyalty: params.usedLoyalty,
+      loyaltyRedeemed: params.loyaltyRedeemed,
+      usedDiscount: params.usedDiscount,
+      totalDiscount: params.totalDiscount,
+      usedVoucher: params.usedVoucher,
+      voucherCode: params.voucherCode,
     };
 
     // Create order using service

@@ -1,6 +1,5 @@
 // src/main/ipc/order/update.ipc.js
 
-
 const orderService = require("../../../../services/Order");
 
 /**
@@ -38,67 +37,15 @@ module.exports = async (params, queryRunner, user = "system") => {
       };
     }
 
-    // Validate order_number if provided
-    if (params.order_number !== undefined && (typeof params.order_number !== "string" || params.order_number.trim() === "")) {
-      return {
-        status: false,
-        message: "order_number must be a non-empty string.",
-        data: null,
-      };
-    }
-
-    // Validate status if provided
-    const validStatuses = ['initiated', 'pending', 'confirmed', 'completed', 'cancelled', 'refunded'];
-    if (params.status && !validStatuses.includes(params.status)) {
-      return {
-        status: false,
-        message: `Invalid status. Must be one of: ${validStatuses.join(', ')}.`,
-        data: null,
-      };
-    }
-
-    // Validate customerId if provided
-    if (params.customerId !== undefined && params.customerId !== null) {
-      const custId = Number(params.customerId);
-      if (!Number.isInteger(custId) || custId <= 0) {
-        return {
-          status: false,
-          message: "Invalid customerId. Must be a positive integer.",
-          data: null,
-        };
-      }
-      params.customerId = custId;
-    }
-
-    // Validate numeric fields if provided
-    const numericFields = ['subtotal', 'tax_amount', 'total'];
-    for (const field of numericFields) {
-      if (params[field] !== undefined) {
-        const val = Number(params[field]);
-        if (isNaN(val) || val < 0) {
-          return {
-            status: false,
-            message: `${field} must be a non-negative number.`,
-            data: null,
-          };
-        }
-        params[field] = val;
-      }
-    }
-
-    // Prepare update data
     const updateData = {
-      order_number: params.order_number?.trim(),
-      customerId: params.customerId,
       notes: params.notes,
-      status: params.status,
-      subtotal: params.subtotal,
-      tax_amount: params.tax_amount,
-      total: params.total,
+      items: params.items,
     };
 
     // Remove undefined values
-    Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
+    Object.keys(updateData).forEach(
+      (key) => updateData[key] === undefined && delete updateData[key],
+    );
 
     if (Object.keys(updateData).length === 0) {
       return {

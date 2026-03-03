@@ -25,8 +25,6 @@ import type { Tax } from "./tax";
 
 // Minimal na representasyon ng Product (para sa relation)
 
-// Minimal na representasyon ng StockItem (para sa sync result)
-
 export interface ProductVariant {
   id: number;
   name: string;
@@ -48,6 +46,7 @@ export interface ProductVariant {
   orderItems?: Order[]; // maaaring i-define kung kinakailangan
   purchaseItems?: PurchaseItem[];
   taxes?: Tax[];
+  purchaseTaxes?: Tax[];
 }
 
 // Para sa pag-create ng product variant
@@ -253,7 +252,14 @@ class ProductVariantAPI {
       throw new Error(error.message || "Failed to update product variant");
     }
   }
-
+  // src/renderer/api/productVariantAPI.ts
+  async bulkAssignTaxes(data: {
+    variantIds: number[];
+    taxIds: number[];
+    operation: "replace" | "add" | "remove";
+  }): Promise<{ status: boolean; message: string; data: any }> {
+    return this.call("bulkAssignTaxes", data);
+  }
   /**
    * Mag-soft delete ng product variant (itakda ang is_deleted = true).
    * @param id - Variant ID

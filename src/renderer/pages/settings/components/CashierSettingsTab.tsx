@@ -154,30 +154,6 @@ const CashierSettingsTab: React.FC<CashierSettingsTabProps> = ({
               Enable Barcode Scanning
             </span>
           </label>
-          {/* 
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={form?.enable_touchscreen_mode || false}
-              onChange={(e) => handleChange("enable_touchscreen_mode", e.target.checked)}
-              className="rounded border-[var(--border-color)] text-[var(--accent-blue)]"
-            />
-            <span className="ml-2 text-sm text-[var(--sidebar-text)]">Enable Touchscreen Mode</span>
-          </label> */}
-
-          {/* <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={form?.quick_sale_enabled || false}
-              onChange={(e) =>
-                handleChange("quick_sale_enabled", e.target.checked)
-              }
-              className="rounded border-[var(--border-color)] text-[var(--accent-blue)]"
-            />
-            <span className="ml-2 text-sm text-[var(--sidebar-text)]">
-              Enable Quick Sale
-            </span>
-          </label> */}
         </div>
       </div>
 

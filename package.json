@@ -27,7 +27,7 @@
     "dist:win": "vite build && electron-builder --win",
     "dist:mac": "vite build && electron-builder --mac",
     "dist:linux": "vite build && electron-builder --linux",
-    "seed": "node src/seeders/seedData.js",
+    "seed": "node src/seeders/seedData.js --skip-orders --skip-purchases",
     "seed:reset": "ts-node src/seeders/seedData.js --reset",
     "postinstall": "electron-rebuild",
     "rebuild": "electron-rebuild -f -w sqlite3"

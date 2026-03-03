@@ -1,12 +1,11 @@
 // seedData.js
-// Stashify System Seeder
+// Stashify System Seeder – Updated for new tax schema and transaction fixes
 // Run with: node seedData.js [options]
 
 const { DataSource } = require("typeorm");
 const { AppDataSource } = require("../main/db/datasource"); // adjust path as needed
 
 // Import all entities (using require because they are EntitySchema)
-const AuditLog = require("../entities/AuditLog");
 const Category = require("../entities/Category");
 const Customer = require("../entities/Customer");
 const LoyaltyTransaction = require("../entities/LoyaltyTransaction");
@@ -17,11 +16,13 @@ const OrderItem = require("../entities/OrderItem");
 const Product = require("../entities/Product");
 const ProductImage = require("../entities/ProductImage");
 const ProductVariant = require("../entities/ProductVariant");
+const ProductTaxChange = require("../entities/ProductTaxChange");
 const Purchase = require("../entities/Purchase");
 const PurchaseItem = require("../entities/PurchaseItem");
 const StockItem = require("../entities/StockItem");
 const StockMovement = require("../entities/StockMovement");
 const Supplier = require("../entities/Supplier");
+const Tax = require("../entities/Tax");
 const Warehouse = require("../entities/Warehouse");
 
 // Handle AuditLog which is exported as an object
@@ -43,6 +44,7 @@ const DEFAULT_CONFIG = {
   notificationCount: 40,
   notificationLogCount: 50,
   auditLogCount: 60,
+  taxCount: 5, // number of tax definitions to seed
   clearOnly: false,
   skipWarehouses: false,
   skipCategories: false,
@@ -59,6 +61,7 @@ const DEFAULT_CONFIG = {
   skipNotifications: false,
   skipNotificationLogs: false,
   skipAuditLogs: false,
+  skipTaxes: false,
 };
 
 // ========== RANDOM HELPERS ==========
@@ -214,10 +217,26 @@ const random = {
     return random.element(words);
   },
   // Tax helpers
-  taxEnabled: () => random.boolean(0.8), // 80% of items have tax enabled
-  taxType: () => random.element(['vat', 'sale_tax', 'import_duty']),
+  taxCode: () =>
+    random.element([
+      "vat",
+      "sales_tax",
+      "import_duty",
+      "excise_tax",
+      "service_tax",
+    ]),
+  taxName: (code) => {
+    const map = {
+      vat: "VAT",
+      sales_tax: "Sales Tax",
+      import_duty: "Import Duty",
+      excise_tax: "Excise Tax",
+      service_tax: "Service Tax",
+    };
+    return map[code] || code;
+  },
   taxRate: () => random.float(0, 15, 1), // 0-15%
-  taxInclusive: () => random.boolean(0.5),
+  taxType: () => random.element(["percentage", "fixed"]),
 };
 
 // ========== SEEDER CLASS ==========
@@ -234,6 +253,7 @@ class InventorySeeder {
     // Caches for quick access
     this.productPriceCache = new Map(); // product id -> net_price
     this.variantPriceCache = new Map(); // variant id -> net_price
+    this.taxCache = []; // list of seeded taxes
   }
 
   async init() {
@@ -266,11 +286,14 @@ class InventorySeeder {
       await this.queryRunner.clearTable("stock_items");
       await this.queryRunner.clearTable("product_images");
       await this.queryRunner.clearTable("product_variants");
+      await this.queryRunner.clearTable("product_tax_changes");
+      await this.queryRunner.clearTable("product_taxes"); // many-to-many join table
       await this.queryRunner.clearTable("products");
       await this.queryRunner.clearTable("customers");
       await this.queryRunner.clearTable("suppliers");
       await this.queryRunner.clearTable("categories");
       await this.queryRunner.clearTable("warehouses");
+      await this.queryRunner.clearTable("taxes");
     } finally {
       await this.queryRunner.query("PRAGMA foreign_keys = ON;");
     }
@@ -281,6 +304,7 @@ class InventorySeeder {
 
   async seedWarehouses() {
     console.log(`🏭 Seeding ${this.config.warehouseCount} warehouses...`);
+    const repo = this.queryRunner.manager.getRepository(Warehouse);
     const warehouses = [];
     const types = ["warehouse", "store", "online"];
     for (let i = 0; i < this.config.warehouseCount; i++) {
@@ -298,7 +322,6 @@ class InventorySeeder {
         is_deleted: false,
       });
     }
-    const repo = this.dataSource.getRepository(Warehouse);
     const saved = await repo.save(warehouses);
     console.log(`✅ ${saved.length} warehouses saved`);
     return saved;
@@ -308,7 +331,7 @@ class InventorySeeder {
     console.log(
       `📂 Seeding ${this.config.categoryCount} categories with hierarchy...`,
     );
-    const repo = this.dataSource.getRepository(Category);
+    const repo = this.queryRunner.manager.getRepository(Category);
     const categories = [];
 
     // Create top-level categories first
@@ -379,6 +402,7 @@ class InventorySeeder {
 
   async seedSuppliers() {
     console.log(`🏭 Seeding ${this.config.supplierCount} suppliers...`);
+    const repo = this.queryRunner.manager.getRepository(Supplier);
     const suppliers = [];
     const statuses = ["pending", "approved", "rejected"];
     for (let i = 0; i < this.config.supplierCount; i++) {
@@ -407,7 +431,6 @@ class InventorySeeder {
         updated_at: createdAt,
       });
     }
-    const repo = this.dataSource.getRepository(Supplier);
     const saved = await repo.save(suppliers);
     console.log(`✅ ${saved.length} suppliers saved`);
     return saved;
@@ -415,6 +438,7 @@ class InventorySeeder {
 
   async seedCustomers() {
     console.log(`👥 Seeding ${this.config.customerCount} customers...`);
+    const repo = this.queryRunner.manager.getRepository(Customer);
     const customers = [];
     const statuses = ["regular", "vip", "elite"];
     for (let i = 0; i < this.config.customerCount; i++) {
@@ -432,38 +456,113 @@ class InventorySeeder {
         updatedAt: createdAt,
       });
     }
-    const repo = this.dataSource.getRepository(Customer);
     const saved = await repo.save(customers);
     console.log(`✅ ${saved.length} customers saved`);
     return saved;
   }
 
+  async seedTaxes() {
+    console.log(`💰 Seeding ${this.config.taxCount} tax definitions...`);
+    const taxRepo = this.queryRunner.manager.getRepository(Tax);
+    const taxes = [];
+    const codes = [
+      "vat",
+      "sales_tax",
+      "import_duty",
+      "excise_tax",
+      "service_tax",
+    ];
+    for (let i = 0; i < Math.min(this.config.taxCount, codes.length); i++) {
+      const code = codes[i];
+      taxes.push({
+        name: random.taxName(code),
+        code: code,
+        rate: random.taxRate(),
+        type: random.taxType(),
+        is_enabled: random.boolean(0.9),
+        is_default: i === 0, // first one is default
+        description: `${code} tax`,
+        created_at: random.pastDate(),
+        updated_at: random.pastDate(),
+        is_deleted: false,
+      });
+    }
+    // If we need more taxes, generate generic ones
+    for (let i = codes.length; i < this.config.taxCount; i++) {
+      const code = `tax_${i + 1}`;
+      taxes.push({
+        name: `Custom Tax ${i + 1}`,
+        code: code,
+        rate: random.taxRate(),
+        type: random.taxType(),
+        is_enabled: random.boolean(0.9),
+        is_default: false,
+        description: null,
+        created_at: random.pastDate(),
+        updated_at: random.pastDate(),
+        is_deleted: false,
+      });
+    }
+    const saved = await taxRepo.save(taxes);
+    console.log(
+      `✅ ${saved.length} tax definitions saved. Tax IDs: ${saved.map((t) => t.id).join(", ")}`,
+    );
+    this.taxCache = saved;
+    return saved;
+  }
+
+  // Helper to assign random taxes to an entity (product or variant)
+  async assignRandomTaxes(entity, taxes) {
+    if (!taxes || taxes.length === 0) return;
+    const numTaxes = random.int(0, Math.min(3, taxes.length));
+    if (numTaxes === 0) return;
+    const selectedTaxes = [];
+    const shuffled = [...taxes].sort(() => 0.5 - Math.random());
+    for (let i = 0; i < numTaxes; i++) {
+      selectedTaxes.push(shuffled[i % shuffled.length]);
+    }
+    entity.taxes = selectedTaxes; // just assign, no save here
+  }
+
+  // Compute gross price based on net price and assigned taxes
+  computeGrossPrice(netPrice, taxes) {
+    if (!netPrice || !taxes || taxes.length === 0) return netPrice;
+    let gross = netPrice;
+    for (const tax of taxes) {
+      if (tax.type === "percentage") {
+        gross = gross * (1 + tax.rate / 100);
+      } else {
+        gross = gross + tax.rate;
+      }
+    }
+    return gross;
+  }
+
+  // ========== UPDATED METHODS ==========
+
   async seedProducts(categories) {
+    // ← tanggalin ang taxes parameter
     console.log(`📦 Seeding ${this.config.productCount} products...`);
+    const productRepo = this.queryRunner.manager.getRepository(Product);
     const products = [];
     for (let i = 0; i < this.config.productCount; i++) {
-      const price = random.float(10, 500);
-      const cost = price * random.float(0.5, 0.8);
+      const netPrice = random.float(10, 500);
+      const cost = netPrice * random.float(0.5, 0.8);
       const sku = random.sku(this.usedSkus);
       const barcode = random.barcode(this.usedBarcodes);
       const createdAt = random.pastDate();
 
-      // Tax fields
-      const taxEnabled = random.taxEnabled();
-      const taxType = taxEnabled ? random.taxType() : null;
-      const taxRate = taxEnabled ? random.taxRate() : null;
-      const taxInclusive = taxEnabled ? random.taxInclusive() : true; // default true if disabled
-
-      products.push({
+      const product = {
         name: random.productName(),
         slug: `${sku}-${random.word()}`.toLowerCase(),
         description: random.description(),
-        net_price: price,
+        net_price: netPrice,
+        gross_price: netPrice, // ← set gross = net (no tax)
         cost_per_item: cost,
         track_quantity: true,
         allow_backorder: random.boolean(0.1),
         compare_price: random.boolean(0.3)
-          ? price * random.float(1.1, 1.3)
+          ? netPrice * random.float(1.1, 1.3)
           : null,
         sku: sku,
         barcode: barcode,
@@ -478,47 +577,42 @@ class InventorySeeder {
         is_deleted: false,
         is_active: random.boolean(0.9),
         category: random.element(categories),
-        // Tax fields
-        tax_enabled: taxEnabled,
-        tax_type: taxType,
-        tax_rate: taxRate,
-        tax_inclusive: taxInclusive,
-      });
+        // taxes: [] ← hindi na kailangan, default ay empty array
+      };
+      products.push(product);
     }
-    const repo = this.dataSource.getRepository(Product);
-    const saved = await repo.save(products);
-    saved.forEach((p) =>
-      this.productPriceCache.set(p.id, parseFloat(p.net_price)),
+    const saved = await productRepo.save(products);
+    console.log(
+      `✅ ${saved.length} products saved. Product IDs: ${saved.map((p) => p.id).join(", ")}`,
     );
-    console.log(`✅ ${saved.length} products saved`);
+
+    // I-cache ang net price para sa variants (kung kailangan)
+    for (const product of saved) {
+      this.productPriceCache.set(product.id, parseFloat(product.net_price));
+    }
     return saved;
   }
 
   async seedProductVariants(products) {
+    // ← tanggalin ang taxes parameter
     console.log(`🔀 Seeding variants for products...`);
-    const variantRepo = this.dataSource.getRepository(ProductVariant);
+    const variantRepo = this.queryRunner.manager.getRepository(ProductVariant);
     const variants = [];
     for (const product of products) {
-      // Randomly decide to create variants for this product (approx 60% of products)
       if (random.boolean(0.6)) {
         const numVariants = random.int(1, this.config.variantPerProduct);
         for (let j = 0; j < numVariants; j++) {
-          const price =
+          const netPrice =
             this.productPriceCache.get(product.id) * random.float(0.9, 1.2);
-          const cost = price * random.float(0.5, 0.8);
+          const cost = netPrice * random.float(0.5, 0.8);
           const sku = random.sku(this.usedSkus);
           const barcode = random.barcode(this.usedBarcodes);
 
-          // Tax fields (can be independent or inherit from product? We'll make them independent for variety)
-          const taxEnabled = random.taxEnabled();
-          const taxType = taxEnabled ? random.taxType() : null;
-          const taxRate = taxEnabled ? random.taxRate() : null;
-          const taxInclusive = taxEnabled ? random.taxInclusive() : true;
-
-          variants.push({
+          const variant = {
             name: `Variant ${j + 1} - ${random.word()}`,
             sku: sku,
-            net_price: price,
+            net_price: netPrice,
+            gross_price: netPrice, // ← set gross = net
             cost_per_item: cost,
             barcode: barcode,
             created_at: product.created_at,
@@ -526,12 +620,8 @@ class InventorySeeder {
             is_deleted: false,
             is_active: true,
             product: { id: product.id },
-            // Tax fields
-            tax_enabled: taxEnabled,
-            tax_type: taxType,
-            tax_rate: taxRate,
-            tax_inclusive: taxInclusive,
-          });
+          };
+          variants.push(variant);
         }
       }
     }
@@ -540,16 +630,15 @@ class InventorySeeder {
       return [];
     }
     const saved = await variantRepo.save(variants);
-    saved.forEach((v) =>
-      this.variantPriceCache.set(v.id, parseFloat(v.net_price)),
+    console.log(
+      `✅ ${saved.length} variants saved. Variant IDs: ${saved.map((v) => v.id).join(", ")}`,
     );
-    console.log(`✅ ${saved.length} variants saved`);
     return saved;
   }
 
   async seedProductImages(products, variants) {
     console.log(`🖼️ Seeding product images...`);
-    const imageRepo = this.dataSource.getRepository(ProductImage);
+    const imageRepo = this.queryRunner.manager.getRepository(ProductImage);
     const images = [];
 
     // Images for products
@@ -611,7 +700,7 @@ class InventorySeeder {
     console.log(
       `📊 Seeding stock items for product/variant/warehouse combinations...`,
     );
-    const stockRepo = this.dataSource.getRepository(StockItem);
+    const stockRepo = this.queryRunner.manager.getRepository(StockItem);
     const stockItems = [];
 
     for (const warehouse of warehouses) {
@@ -630,9 +719,6 @@ class InventorySeeder {
               created_at: createdAt,
               updated_at: createdAt,
               is_deleted: false,
-              productId: product.id,
-              variantId: variant.id,
-              warehouseId: warehouse.id,
               product: { id: product.id },
               variant: { id: variant.id },
               warehouse: { id: warehouse.id },
@@ -648,9 +734,6 @@ class InventorySeeder {
             created_at: createdAt,
             updated_at: createdAt,
             is_deleted: false,
-            productId: product.id,
-            variantId: null,
-            warehouseId: warehouse.id,
             product: { id: product.id },
             variant: null,
             warehouse: { id: warehouse.id },
@@ -674,13 +757,16 @@ class InventorySeeder {
     console.log(
       `📥 Seeding ${this.config.purchaseCount} purchases with items...`,
     );
-    const purchaseRepo = this.dataSource.getRepository(Purchase);
-    const purchaseItemRepo = this.dataSource.getRepository(PurchaseItem);
+    const purchaseRepo = this.queryRunner.manager.getRepository(Purchase);
+    const purchaseItemRepo =
+      this.queryRunner.manager.getRepository(PurchaseItem);
     const purchases = [];
     const purchaseItems = [];
 
-    const allProducts = await this.dataSource.getRepository(Product).find();
-    const allVariants = await this.dataSource
+    const allProducts = await this.queryRunner.manager
+      .getRepository(Product)
+      .find();
+    const allVariants = await this.queryRunner.manager
       .getRepository(ProductVariant)
       .find({ relations: ["product"] });
 
@@ -749,7 +835,7 @@ class InventorySeeder {
       }
 
       // Update purchase totals
-      const taxAmount = subtotal * 0.12;
+      const taxAmount = subtotal * 0.12; // 12% tax for purchases (simplified)
       const total = subtotal + taxAmount;
       savedPurchase.subtotal = subtotal;
       savedPurchase.tax_amount = taxAmount;
@@ -766,16 +852,20 @@ class InventorySeeder {
 
   async seedOrders(customers) {
     console.log(`🧾 Seeding ${this.config.orderCount} orders with items...`);
-    const orderRepo = this.dataSource.getRepository(Order);
-    const orderItemRepo = this.dataSource.getRepository(OrderItem);
+    const orderRepo = this.queryRunner.manager.getRepository(Order);
+    const orderItemRepo = this.queryRunner.manager.getRepository(OrderItem);
     const orders = [];
     const orderItems = [];
 
-    const allProducts = await this.dataSource.getRepository(Product).find();
-    const allVariants = await this.dataSource
+    const allProducts = await this.queryRunner.manager
+      .getRepository(Product)
+      .find();
+    const allVariants = await this.queryRunner.manager
       .getRepository(ProductVariant)
       .find({ relations: ["product"] });
-    const warehouses = await this.dataSource.getRepository(Warehouse).find();
+    const warehouses = await this.queryRunner.manager
+      .getRepository(Warehouse)
+      .find();
 
     const statuses = [
       "initiated",
@@ -828,20 +918,11 @@ class InventorySeeder {
         const price = unitPrice || random.float(10, 200);
         const discount = random.boolean(0.3) ? random.float(0, price * 0.2) : 0;
 
-        // Determine tax rate from product/variant if enabled, else 0
-        let taxRate = 0;
-        if (variant && variant.tax_enabled) {
-          taxRate = variant.tax_rate || 0;
-        } else if (product && product.tax_enabled) {
-          taxRate = product.tax_rate || 0;
-        } else {
-          taxRate = 0; // no tax
-        }
-        // Ensure taxRate is a number
-        taxRate = taxRate ? parseFloat(taxRate) : 0;
+        // Use a fixed tax rate for order items (simplified) – in reality it would be sum of product/variant taxes
+        const taxRate = 12; // 12% flat
 
         const lineNet = price * quantity - discount;
-        const lineTax = lineNet * (taxRate / 100); // tax_rate is in percent
+        const lineTax = lineNet * (taxRate / 100);
         const lineGross = lineNet + lineTax;
         subtotal += lineNet;
 
@@ -849,7 +930,7 @@ class InventorySeeder {
           quantity: quantity,
           unit_price: price,
           discount_amount: discount,
-          tax_rate: taxRate, // store percent
+          tax_rate: taxRate, // percent
           line_net_total: lineNet,
           line_tax_total: lineTax,
           line_gross_total: lineGross,
@@ -863,16 +944,11 @@ class InventorySeeder {
         });
       }
 
-      const taxAmount = subtotal * 0.12; // keep this simple? or sum from items? We'll use order items tax total sum later, but for order header we need total tax.
-      // Actually we should compute total tax from items, but for simplicity we'll keep as is.
-      // Better to compute from items: we'll update after saving items.
-      // But we'll just keep existing logic for now (fixed 12%).
-      // We'll update order header after items are saved.
-      // We'll do it later.
-      // For now, set dummy totals and correct after items.
+      const taxAmount = subtotal * 0.12; // simplified
+      const total = subtotal + taxAmount;
       savedOrder.subtotal = subtotal;
-      savedOrder.tax_amount = subtotal * 0.12;
-      savedOrder.total = subtotal + savedOrder.tax_amount;
+      savedOrder.tax_amount = taxAmount;
+      savedOrder.total = total;
       await orderRepo.save(savedOrder);
     }
 
@@ -887,13 +963,13 @@ class InventorySeeder {
     console.log(
       `📦 Seeding ${this.config.stockMovementCount} stock movements...`,
     );
-    const movementRepo = this.dataSource.getRepository(StockMovement);
+    const movementRepo = this.queryRunner.manager.getRepository(StockMovement);
     const movements = [];
 
     // Generate movements from purchase receipts (incoming)
     for (const purchase of purchases) {
       if (purchase.status === "received") {
-        const purchaseItems = await this.dataSource
+        const purchaseItems = await this.queryRunner.manager
           .getRepository(PurchaseItem)
           .find({
             where: { purchase: { id: purchase.id } },
@@ -919,10 +995,12 @@ class InventorySeeder {
     // Generate movements from order fulfillments (outgoing)
     for (const order of orders) {
       if (order.status === "completed") {
-        const orderItems = await this.dataSource.getRepository(OrderItem).find({
-          where: { order: { id: order.id } },
-          relations: ["product", "variant", "warehouse"],
-        });
+        const orderItems = await this.queryRunner.manager
+          .getRepository(OrderItem)
+          .find({
+            where: { order: { id: order.id } },
+            relations: ["product", "variant", "warehouse"],
+          });
         for (const item of orderItems) {
           movements.push({
             change: -item.quantity,
@@ -961,7 +1039,9 @@ class InventorySeeder {
     }
 
     // Link each movement to a random stockItem
-    const stockItems = await this.dataSource.getRepository(StockItem).find();
+    const stockItems = await this.queryRunner.manager
+      .getRepository(StockItem)
+      .find();
     if (stockItems.length === 0) {
       console.log("⚠️ No stock items found, skipping stock movements");
       return [];
@@ -985,7 +1065,8 @@ class InventorySeeder {
     console.log(
       `💳 Seeding ${this.config.loyaltyTransactionCount} loyalty transactions...`,
     );
-    const transactionRepo = this.dataSource.getRepository(LoyaltyTransaction);
+    const transactionRepo =
+      this.queryRunner.manager.getRepository(LoyaltyTransaction);
     const transactions = [];
 
     for (let i = 0; i < this.config.loyaltyTransactionCount; i++) {
@@ -1017,7 +1098,7 @@ class InventorySeeder {
 
   async seedNotifications() {
     console.log(`🔔 Seeding ${this.config.notificationCount} notifications...`);
-    const repo = this.dataSource.getRepository(Notification);
+    const repo = this.queryRunner.manager.getRepository(Notification);
     const types = ["info", "success", "warning", "error", "purchase", "sale"];
     const notifications = [];
 
@@ -1046,7 +1127,7 @@ class InventorySeeder {
     console.log(
       `📧 Seeding ${this.config.notificationLogCount} notification logs...`,
     );
-    const repo = this.dataSource.getRepository(NotificationLog);
+    const repo = this.queryRunner.manager.getRepository(NotificationLog);
     const logs = [];
     const statuses = ["queued", "sent", "failed", "resend"];
 
@@ -1092,6 +1173,7 @@ class InventorySeeder {
       "Warehouse",
       "Variant",
       "LoyaltyTransaction",
+      "Tax",
     ];
 
     const logs = [];
@@ -1111,7 +1193,7 @@ class InventorySeeder {
       });
     }
 
-    const repo = this.dataSource.getRepository(AuditLogEntity);
+    const repo = this.queryRunner.manager.getRepository(AuditLogEntity);
     await repo.save(logs);
     console.log(`✅ ${this.config.auditLogCount} audit logs saved`);
   }
@@ -1136,6 +1218,7 @@ class InventorySeeder {
       let categories = [];
       let suppliers = [];
       let customers = [];
+      let taxes = [];
       let products = [];
       let variants = [];
       let images = [];
@@ -1153,13 +1236,14 @@ class InventorySeeder {
       if (!this.config.skipCategories) categories = await this.seedCategories();
       if (!this.config.skipSuppliers) suppliers = await this.seedSuppliers();
       if (!this.config.skipCustomers) customers = await this.seedCustomers();
+      if (!this.config.skipTaxes) taxes = await this.seedTaxes();
 
       if (!this.config.skipProducts && categories.length) {
-        products = await this.seedProducts(categories);
+        products = await this.seedProducts(categories, taxes);
       }
 
       if (!this.config.skipVariants && products.length) {
-        variants = await this.seedProductVariants(products);
+        variants = await this.seedProductVariants(products, taxes);
       }
 
       if (!this.config.skipImages && products.length) {
@@ -1226,6 +1310,7 @@ class InventorySeeder {
       console.log(`   Categories: ${categories.length}`);
       console.log(`   Suppliers: ${suppliers.length}`);
       console.log(`   Customers: ${customers.length}`);
+      console.log(`   Taxes: ${taxes.length}`);
       console.log(`   Products: ${products.length}`);
       console.log(`   Variants: ${variants.length}`);
       console.log(`   Images: ${images.length}`);
@@ -1278,6 +1363,10 @@ function parseArgs() {
         config.skipCustomers = false;
         config.customerCount =
           parseInt(args[++i]) || DEFAULT_CONFIG.customerCount;
+        break;
+      case "--taxes":
+        config.skipTaxes = false;
+        config.taxCount = parseInt(args[++i]) || DEFAULT_CONFIG.taxCount;
         break;
       case "--products":
         config.skipProducts = false;
@@ -1345,6 +1434,9 @@ function parseArgs() {
       case "--skip-customers":
         config.skipCustomers = true;
         break;
+      case "--skip-taxes":
+        config.skipTaxes = true;
+        break;
       case "--skip-products":
         config.skipProducts = true;
         break;
@@ -1390,6 +1482,7 @@ Options:
   --categories [count]        Seed categories (default: 8)
   --suppliers [count]         Seed suppliers (default: 10)
   --customers [count]         Seed customers (default: 30)
+  --taxes [count]             Seed tax definitions (default: 5)
   --products [count]          Seed products (default: 50)
   --variants [avg]            Average variants per product (default: 2)
   --images [avg]              Average images per product (default: 2)
@@ -1403,7 +1496,7 @@ Options:
   --audit-logs [count]        Seed audit logs (default: 60)
 
 Skip flags:
-  --skip-warehouses, --skip-categories, --skip-suppliers, --skip-customers,
+  --skip-warehouses, --skip-categories, --skip-suppliers, --skip-customers, --skip-taxes,
   --skip-products, --skip-variants, --skip-images, --skip-stock-items,
   --skip-purchases, --skip-orders, --skip-stock-movements,
   --skip-loyalty-transactions, --skip-notifications, --skip-notification-logs,

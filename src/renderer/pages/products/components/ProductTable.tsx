@@ -312,7 +312,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                 className="px-4 py-2 whitespace-nowrap text-sm font-medium"
                 style={{ color: "var(--sidebar-text)" }}
               >
-                {formatCurrency(product.net_price || 0)}
+                {formatCurrency(product.gross_price || 0)}
               </td>
               {/* Active Status */}
               <td className="px-4 py-2 whitespace-nowrap">

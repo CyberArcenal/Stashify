@@ -1,10 +1,15 @@
 // services/PurchaseService.js
-//@ts-check
+// @ts-nocheck
 
+const ProductVariant = require("../entities/ProductVariant");
 const auditLogger = require("../utils/auditLogger");
-
+const UPDATABLE_STATUSES = ["initiated", "pending"];
+const DELETABLE_STATUSES = ["initiated", "pending"];
 const { validatePurchaseData } = require("../utils/purchase");
 // 🔧 SETTINGS INTEGRATION
+// @ts-ignore
+// @ts-ignore
+// @ts-ignore
 const {
   supplierTaxRate,
 
@@ -17,6 +22,7 @@ class PurchaseService {
     this.supplierRepository = null;
     this.warehouseRepository = null;
     this.productRepository = null;
+    this.variantRepository = null;
     this.purchaseItemService = null;
   }
 
@@ -35,6 +41,7 @@ class PurchaseService {
     this.supplierRepository = AppDataSource.getRepository(Supplier);
     this.warehouseRepository = AppDataSource.getRepository(Warehouse);
     this.productRepository = AppDataSource.getRepository(Product);
+    this.variantRepository = AppDataSource.getRepository(ProductVariant);
     this.purchaseItemService = PurchaseItemService;
     await this.purchaseItemService.initialize();
     console.log("PurchaseService initialized");
@@ -49,6 +56,7 @@ class PurchaseService {
       supplier: this.supplierRepository,
       warehouse: this.warehouseRepository,
       product: this.productRepository,
+      variant: this.variantRepository,
       purchaseItemService: this.purchaseItemService,
     };
   }
@@ -58,6 +66,7 @@ class PurchaseService {
    * @param {Object} purchaseData
    * @param {string} user
    */
+
   async create(purchaseData, user = "system") {
     const { saveDb, updateDb } = require("../utils/dbUtils/dbActions");
     const {
@@ -65,6 +74,7 @@ class PurchaseService {
       supplier: supplierRepo,
       warehouse: warehouseRepo,
       product: productRepo,
+      variant: variantRepo,
       purchaseItemService,
     } = await this.getRepositories();
 
@@ -77,9 +87,6 @@ class PurchaseService {
 
       // @ts-ignore
       const { items, supplierId, warehouseId, notes = null } = purchaseData;
-
-      // 🔧 Settings
-      const defaultTaxRate = await supplierTaxRate();
 
       // Fetch supplier and warehouse
       // @ts-ignore
@@ -102,43 +109,84 @@ class PurchaseService {
       let totalTax = 0;
 
       for (const item of items) {
-        // @ts-ignore
-        const product = await productRepo.findOne({
-          where: { id: item.productId, is_deleted: false },
-        });
-        if (!product) throw new Error(`Product ID ${item.productId} not found`);
+        let product, variant;
+        if (item.variantId) {
+          // @ts-ignore
+          variant = await variantRepo.findOne({
+            where: { id: item.variantId, is_deleted: false },
+            relations: ["purchaseTaxes", "product"],
+          });
+          if (!variant)
+            throw new Error(`Variant ID ${item.variantId} not found`);
+          // @ts-ignore
+          product = variant.product;
+        } else {
+          // @ts-ignore
+          product = await productRepo.findOne({
+            where: { id: item.productId, is_deleted: false },
+            relations: ["purchaseTaxes"],
+          });
+          if (!product)
+            throw new Error(`Product ID ${item.productId} not found`);
+        }
 
         const unitCost =
           item.unitCost !== undefined
             ? item.unitCost
             : product.cost_per_item || 0;
         const quantity = item.quantity;
-        const lineTotal = unitCost * quantity;
+        const lineNetTotal = unitCost * quantity; // no discount in purchases (for now)
 
-        // Tax calculation (if purchase is taxable)
-        let tax = 0;
-        if (item.tax !== undefined) {
-          tax = item.tax;
-        } else if (defaultTaxRate > 0) {
-          tax = lineTotal * (defaultTaxRate / 100);
+        // Determine which purchase taxes to use
+        const sourceForTaxes = variant || product;
+        const purchaseTaxes =
+          sourceForTaxes.purchaseTaxes?.filter(
+            // @ts-ignore
+            (t) => t.is_enabled && !t.is_deleted,
+          ) || [];
+
+        // Compute applied taxes
+        const appliedTaxes = [];
+        let lineTaxTotal = 0;
+        for (const tax of purchaseTaxes) {
+          let taxAmount;
+          if (tax.type === "percentage") {
+            taxAmount = lineNetTotal * (tax.rate / 100);
+          } else {
+            taxAmount = tax.rate * quantity; // fixed per item
+          }
+          taxAmount = Math.round(taxAmount * 100) / 100;
+          appliedTaxes.push({
+            taxId: tax.id,
+            name: tax.name,
+            rate: tax.rate,
+            type: tax.type,
+            amount: taxAmount,
+          });
+          lineTaxTotal += taxAmount;
         }
+        lineTaxTotal = Math.round(lineTaxTotal * 100) / 100;
+        const lineGrossTotal = lineNetTotal + lineTaxTotal;
 
         itemDetails.push({
           product,
+          variant,
           quantity,
           unitCost,
-          lineTotal,
-          tax,
+          lineNetTotal,
+          appliedTaxes,
+          lineTaxTotal,
+          lineGrossTotal,
           variantId: item.variantId || null,
         });
 
-        subtotal += lineTotal;
-        totalTax += tax;
+        subtotal += lineNetTotal;
+        totalTax += lineTaxTotal;
       }
 
       const total = subtotal + totalTax;
 
-      // 1. Create purchase with status 'initiated'
+      // Create purchase with status 'initiated'
       // @ts-ignore
       const purchase = purchaseRepo.create({
         // @ts-ignore
@@ -165,7 +213,7 @@ class PurchaseService {
         user,
       );
 
-      // 2. Create purchase items
+      // Create purchase items with tax details
       for (const det of itemDetails) {
         const itemData = {
           purchaseId: savedPurchase.id,
@@ -173,14 +221,16 @@ class PurchaseService {
           variantId: det.variantId,
           quantity: det.quantity,
           unit_cost: det.unitCost,
-          total: det.lineTotal,
-          // If your PurchaseItem entity has a tax field, include it here
+          total: det.lineNetTotal, // net total (cost before tax)
+          applied_taxes: det.appliedTaxes,
+          line_tax_total: det.lineTaxTotal,
+          line_gross_total: det.lineGrossTotal,
         };
         // @ts-ignore
         await purchaseItemService.create(itemData, user);
       }
 
-      // 3. Update purchase status to 'pending'
+      // Update purchase status to 'pending'
       const oldData = { ...savedPurchase };
       savedPurchase.status = "pending";
       savedPurchase.updated_at = new Date();
@@ -212,95 +262,258 @@ class PurchaseService {
    * @param {Object} data
    * @param {string} user
    */
+
+  /**
+   * Update an existing purchase – only notes and items can be changed.
+   * Supplier, warehouse, and other data remain as originally set.
+   * @param {number} id
+   * @param {Object} data
+   * @param {string} user
+   */
   async update(id, data, user = "system") {
-    const { saveDb, updateDb } = require("../utils/dbUtils/dbActions");
     const {
-      purchase: repo,
+      saveDb,
+      updateDb,
+      removeDb,
+    } = require("../utils/dbUtils/dbActions");
+    const {
+      purchase: purchaseRepo,
       supplier: supplierRepo,
       warehouse: warehouseRepo,
+      product: productRepo,
+      variant: variantRepo,
+      purchaseItemService,
     } = await this.getRepositories();
+
     try {
-      // @ts-ignore
-      const existing = await repo.findOne({ where: { id } });
+      // 1. Fetch existing purchase with items (to delete them later)
+      const existing = await purchaseRepo.findOne({
+        where: { id, is_deleted: false },
+        relations: ["items", "supplier", "warehouse"],
+      });
       if (!existing) throw new Error(`Purchase with ID ${id} not found`);
+
+      // Status validation – only allow updates if still editable
+      if (!UPDATABLE_STATUSES.includes(existing.status)) {
+        throw new Error(
+          `Purchase cannot be updated because its status is "${existing.status}"`,
+        );
+      }
+
       const oldData = { ...existing };
 
-      if (
-        // @ts-ignore
-        data.purchase_number &&
-        // @ts-ignore
-        data.purchase_number !== existing.purchase_number
-      ) {
-        // @ts-ignore
-        const numExists = await repo.findOne({
-          // @ts-ignore
-          where: { purchase_number: data.purchase_number },
-        });
-        if (numExists)
-          throw new Error(
-            // @ts-ignore
-            `Purchase with number "${data.purchase_number}" already exists`,
-          );
+      // 2. Update notes if provided
+      if (data.notes !== undefined) existing.notes = data.notes;
+
+      // 3. Handle items – full replacement (if items array is provided)
+      if (!data.items || !Array.isArray(data.items)) {
+        throw new Error("Items array is required when updating a purchase");
       }
 
-      // @ts-ignore
-      if (data.supplierId !== undefined) {
-        // @ts-ignore
-        const supplier = await supplierRepo.findOne({
-          // @ts-ignore
-          where: { id: data.supplierId },
+      // Process new items and compute totals
+      const itemDetails = [];
+      let subtotal = 0;
+      let totalTax = 0;
+
+      for (const item of data.items) {
+        let product, variant;
+        if (item.variantId) {
+          variant = await variantRepo.findOne({
+            where: { id: item.variantId, is_deleted: false },
+            relations: ["purchaseTaxes", "product"],
+          });
+          if (!variant)
+            throw new Error(`Variant ID ${item.variantId} not found`);
+          product = variant.product;
+        } else {
+          product = await productRepo.findOne({
+            where: { id: item.productId, is_deleted: false },
+            relations: ["purchaseTaxes"],
+          });
+          if (!product)
+            throw new Error(`Product ID ${item.productId} not found`);
+        }
+
+        const unitCost =
+          item.unitCost !== undefined
+            ? item.unitCost
+            : product.cost_per_item || 0;
+        const quantity = item.quantity;
+        const lineNetTotal = unitCost * quantity;
+
+        const sourceForTaxes = variant || product;
+        const purchaseTaxes =
+          sourceForTaxes.purchaseTaxes?.filter(
+            (t) => t.is_enabled && !t.is_deleted,
+          ) || [];
+
+        const appliedTaxes = [];
+        let lineTaxTotal = 0;
+        for (const tax of purchaseTaxes) {
+          let taxAmount;
+          if (tax.type === "percentage") {
+            taxAmount = lineNetTotal * (tax.rate / 100);
+          } else {
+            taxAmount = tax.rate * quantity;
+          }
+          taxAmount = Math.round(taxAmount * 100) / 100;
+          appliedTaxes.push({
+            taxId: tax.id,
+            name: tax.name,
+            rate: tax.rate,
+            type: tax.type,
+            amount: taxAmount,
+          });
+          lineTaxTotal += taxAmount;
+        }
+        lineTaxTotal = Math.round(lineTaxTotal * 100) / 100;
+        const lineGrossTotal = lineNetTotal + lineTaxTotal;
+
+        itemDetails.push({
+          product,
+          variant,
+          quantity,
+          unitCost,
+          lineNetTotal,
+          appliedTaxes,
+          lineTaxTotal,
+          lineGrossTotal,
+          variantId: item.variantId || null,
         });
-        if (!supplier)
-          // @ts-ignore
-          throw new Error(`Supplier with ID ${data.supplierId} not found`);
-        // @ts-ignore
-        existing.supplier = supplier;
-        // @ts-ignore
-        delete data.supplierId;
+
+        subtotal += lineNetTotal;
+        totalTax += lineTaxTotal;
       }
 
-      // @ts-ignore
-      if (data.warehouseId !== undefined) {
-        // @ts-ignore
-        const warehouse = await warehouseRepo.findOne({
-          // @ts-ignore
-          where: { id: data.warehouseId },
-        });
-        if (!warehouse)
-          // @ts-ignore
-          throw new Error(`Warehouse with ID ${data.warehouseId} not found`);
-        // @ts-ignore
-        existing.warehouse = warehouse;
-        // @ts-ignore
-        delete data.warehouseId;
-      }
-
-      Object.assign(existing, data);
+      // Update purchase totals
+      existing.subtotal = this.round2(subtotal);
+      existing.tax_amount = this.round2(totalTax);
+      existing.total = this.round2(subtotal + totalTax);
       existing.updated_at = new Date();
 
-      // @ts-ignore
-      const saved = await updateDb(repo, existing);
+      // 4. Save the updated purchase (without items)
+      const saved = await updateDb(purchaseRepo, existing);
       await auditLogger.logUpdate("Purchase", id, oldData, saved, user);
-      return saved;
+
+      // 5. Delete all existing items
+      const oldItems = await purchaseItemService.repository.find({
+        where: { purchase: { id: existing.id } },
+      });
+      for (const item of oldItems) {
+        await removeDb(purchaseItemService.repository, item);
+      }
+
+      // 6. Create new items
+      for (const det of itemDetails) {
+        const itemData = {
+          purchaseId: existing.id,
+          productId: det.product.id,
+          variantId: det.variantId,
+          quantity: det.quantity,
+          unit_cost: det.unitCost,
+          total: det.lineNetTotal,
+          applied_taxes: det.appliedTaxes,
+          line_tax_total: det.lineTaxTotal,
+          line_gross_total: det.lineGrossTotal,
+        };
+        await purchaseItemService.create(itemData, user);
+      }
+
+      // 7. Reload the purchase with all relations using a fresh query builder
+      const updatedPurchase = await purchaseRepo
+        .createQueryBuilder("purchase")
+        .leftJoinAndSelect("purchase.supplier", "supplier")
+        .leftJoinAndSelect("purchase.warehouse", "warehouse")
+        .leftJoinAndSelect("purchase.items", "items")
+        .leftJoinAndSelect("items.product", "product")
+        .leftJoinAndSelect("items.variant", "variant")
+        .where("purchase.id = :id", { id: existing.id })
+        .getOne();
+
+      if (!updatedPurchase)
+        throw new Error("Failed to reload updated purchase");
+
+      return updatedPurchase;
     } catch (error) {
-      // @ts-ignore
       console.error("Failed to update purchase:", error.message);
       throw error;
     }
   }
+  /**
+   * Update purchase status
+   * @param {number} id
+   * @param {string} status - New status
+   * @param {string} user
+   */
+  async updateStatus(id, status, user = "system") {
+    const { updateDb } = require("../utils/dbUtils/dbActions");
+    const { purchase: repo } = await this.getRepositories();
 
+    try {
+      // @ts-ignore
+      const purchase = await repo.findOne({ where: { id, is_deleted: false } });
+      if (!purchase) throw new Error(`Purchase with ID ${id} not found`);
+
+      const oldStatus = purchase.status;
+      if (oldStatus === status) {
+        return purchase; // no change
+      }
+
+      // Allowed status transitions for purchases
+      const allowedTransitions = {
+        initiated: ["pending", "cancelled"],
+        pending: ["confirmed", "cancelled"],
+        confirmed: ["received", "cancelled"],
+        received: ["refunded"], // cannot transition out of received
+        cancelled: [], // cannot transition out of cancelled
+      };
+
+      const allowed = allowedTransitions[oldStatus];
+      if (!allowed || !allowed.includes(status)) {
+        throw new Error(
+          `Invalid status transition from ${oldStatus} to ${status}`,
+        );
+      }
+
+      purchase.status = status;
+      purchase.updated_at = new Date();
+
+      // @ts-ignore
+      const updated = await updateDb(repo, purchase);
+      await auditLogger.logUpdate(
+        "Purchase",
+        id,
+        { status: oldStatus },
+        { status },
+        user,
+      );
+      return updated;
+    } catch (error) {
+      // @ts-ignore
+      console.error("Failed to update purchase status:", error.message);
+      throw error;
+    }
+  }
   /**
    * Soft delete a purchase (set is_deleted = true)
    * @param {number} id
    * @param {string} user
    */
   async delete(id, user = "system") {
+    // @ts-ignore
+    // @ts-ignore
+    // @ts-ignore
     const { saveDb, updateDb } = require("../utils/dbUtils/dbActions");
     const { purchase: repo } = await this.getRepositories();
     try {
       // @ts-ignore
       const purchase = await repo.findOne({ where: { id } });
       if (!purchase) throw new Error(`Purchase with ID ${id} not found`);
+      if (!DELETABLE_STATUSES.includes(purchase.status)) {
+        throw new Error(
+          `Order cannot be deleted because its status is "${purchase.status}"`,
+        );
+      }
       if (purchase.is_deleted)
         throw new Error(`Purchase #${id} is already deleted`);
 
@@ -329,7 +542,13 @@ class PurchaseService {
       // @ts-ignore
       const purchase = await repo.findOne({
         where: { id, is_deleted: false },
-        relations: ["supplier", "warehouse", "items"],
+        relations: [
+          "supplier",
+          "warehouse",
+          "items",
+          "items.product",
+          "items.variant",
+        ],
       });
       if (!purchase) throw new Error(`Purchase with ID ${id} not found`);
       await auditLogger.logView("Purchase", id, "system");
@@ -353,6 +572,9 @@ class PurchaseService {
         .createQueryBuilder("purchase")
         .leftJoinAndSelect("purchase.supplier", "supplier")
         .leftJoinAndSelect("purchase.warehouse", "warehouse")
+        .leftJoinAndSelect("purchase.items", "items")
+        // .leftJoinAndSelect("items.product", "product")
+        // .leftJoinAndSelect("items.variant", "variant")
         .where("purchase.is_deleted = :isDeleted", { isDeleted: false });
 
       // @ts-ignore

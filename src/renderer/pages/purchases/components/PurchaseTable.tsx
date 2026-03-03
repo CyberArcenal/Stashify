@@ -42,7 +42,7 @@ const PurchaseTable: React.FC<PurchaseTableProps> = ({
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { bg: string; text: string; color: string }> = {
       pending: { bg: "bg-yellow-100", text: "text-yellow-700", color: "yellow" },
-      ordered: { bg: "bg-blue-100", text: "text-blue-700", color: "blue" },
+      confirmed: { bg: "bg-blue-100", text: "text-blue-700", color: "blue" },
       received: { bg: "bg-green-100", text: "text-green-700", color: "green" },
       cancelled: { bg: "bg-red-100", text: "text-red-700", color: "red" },
       partially_received: { bg: "bg-orange-100", text: "text-orange-700", color: "orange" },

@@ -1,17 +1,15 @@
 // src/subscribers/OrderSubscriber.js
 // @ts-check
 const Order = require("../entities/Order");
-const { AppDataSource } = require("../main/db/datasource");
-const { OrderStateTransitionService } = require("../stateTransitionServices/Order");
+
 const { logger } = require("../utils/logger");
 
 console.log("[Subscriber] Loading OrderSubscriber");
 
 class OrderSubscriber {
   constructor() {
-    this.transitionService = new OrderStateTransitionService(AppDataSource);
+    console.log("OrderSubscriber module loaded");
   }
-
   listenTo() {
     return Order;
   }
@@ -65,6 +63,11 @@ class OrderSubscriber {
    * @param {{ databaseEntity?: any; entity: any }} event
    */
   async afterUpdate(event) {
+    const { AppDataSource } = require("../main/db/datasource");
+    const {
+      OrderStateTransitionService,
+    } = require("../stateTransitionServices/Order");
+    const transitionService = new OrderStateTransitionService(AppDataSource);
     if (!event.entity) return;
 
     // Log the event (do not catch errors here)
@@ -83,25 +86,20 @@ class OrderSubscriber {
 
     // Trigger appropriate transition based on new status
     switch (newOrder.status) {
+      case "pending":
+        await transitionService.onPending(newOrder, "system");
+        break;
       case "confirmed":
-        await this.transitionService.onConfirm(newOrder, "system");
+        await transitionService.onConfirm(newOrder, "system");
         break;
       case "completed":
-        await this.transitionService.onComplete(newOrder, "system");
+        await transitionService.onComplete(newOrder, "system");
         break;
       case "cancelled":
-        await this.transitionService.onCancel(
-          newOrder,
-          oldOrder?.status,
-          "system",
-        );
+        await transitionService.onCancel(newOrder, oldOrder?.status, "system");
         break;
       case "refunded":
-        await this.transitionService.onRefund(
-          newOrder,
-          oldOrder?.status,
-          "system",
-        );
+        await transitionService.onRefund(newOrder, oldOrder?.status, "system");
         break;
       default:
         // No transition needed for other statuses

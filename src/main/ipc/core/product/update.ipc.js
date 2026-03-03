@@ -98,7 +98,7 @@ module.exports = async (params, queryRunner, user = "system") => {
     }
 
     // Update product using service
-    const updatedProduct = await productService.update(id, updateData, user);
+    const updatedProduct = await productService.update(id, updateData, user, queryRunner);
 
     return {
       status: true,

@@ -116,6 +116,7 @@ class TaxAPI {
     sortOrder?: "ASC" | "DESC";
     page?: number;
     limit?: number;
+    is_default?: boolean;
   }): Promise<TaxesResponse> {
     try {
       const response = await this.call<TaxesResponse>(

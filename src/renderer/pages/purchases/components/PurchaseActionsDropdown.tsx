@@ -133,22 +133,22 @@ const PurchaseActionsDropdown: React.FC<PurchaseActionsDropdownProps> = ({
             {/* Status Update Actions */}
             {purchase.status === "pending" && (
               <button
-                onClick={() => handleStatusChange("ordered")}
+                onClick={(e) =>{e.stopPropagation(); handleStatusChange("confirmed")}}
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100"
               >
                 <Package className="w-4 h-4 text-blue-500" />{" "}
-                <span>Mark as Ordered</span>
+                <span>Mark as Confirmed</span>
               </button>
             )}
             {purchase.status ===
-              ("ordered" as
+              ("confirmed" as
                 | "initiated"
                 | "pending"
                 | "confirmed"
                 | "received"
                 | "cancelled") && (
               <button
-                onClick={() => handleStatusChange("received")}
+                onClick={(e) =>{e.stopPropagation(); handleStatusChange("received")}}
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100"
               >
                 <Truck className="w-4 h-4 text-green-600" />{" "}
@@ -157,14 +157,14 @@ const PurchaseActionsDropdown: React.FC<PurchaseActionsDropdownProps> = ({
             )}
             {(purchase.status === "pending" ||
               purchase.status ===
-                ("ordered" as
+                ("confirmed" as
                   | "initiated"
                   | "pending"
                   | "confirmed"
                   | "received"
                   | "cancelled")) && (
               <button
-                onClick={() => handleStatusChange("cancelled")}
+                onClick={(e) =>{e.stopPropagation(); handleStatusChange("cancelled")}}
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100"
               >
                 <XCircle className="w-4 h-4 text-red-500" />{" "}
@@ -173,7 +173,7 @@ const PurchaseActionsDropdown: React.FC<PurchaseActionsDropdownProps> = ({
             )}
             {purchase.status === "cancelled" && (
               <button
-                onClick={() => handleStatusChange("pending")}
+                onClick={(e) =>{e.stopPropagation(); handleStatusChange("pending")}}
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100"
               >
                 <RotateCcw className="w-4 h-4 text-blue-500" />{" "}

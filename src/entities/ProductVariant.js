@@ -47,6 +47,11 @@ const ProductVariant = new EntitySchema({
       type: "one-to-many",
       inverseSide: "variant",
     },
+      purchaseTaxes: {
+      target: "Tax",
+      type: "many-to-many",
+      joinTable: { name: "product_purchase_taxes" },
+    },
     taxes: {
       target: "Tax",
       type: "many-to-many",

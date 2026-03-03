@@ -157,24 +157,6 @@ const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
               className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
             />
           </div>
-
-          {/* <div>
-            <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
-              Auto Logout (minutes)
-            </label>
-            <input
-              type="number"
-              value={form.auto_logout_minutes || 30}
-              onChange={(e) =>
-                handleChange(
-                  "auto_logout_minutes",
-                  parseInt(e.target.value) || 30,
-                )
-              }
-              className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-              min="0"
-            />
-          </div> */}
         </div>
       </div>
 

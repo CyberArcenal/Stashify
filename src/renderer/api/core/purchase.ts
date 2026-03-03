@@ -3,6 +3,7 @@
 
 import type { PurchaseItem } from "./purchaseItem";
 import type { Supplier } from "./supplier";
+import type { Tax } from "./tax";
 import type { Warehouse } from "./warehouse";
 
 /**
@@ -22,18 +23,17 @@ import type { Warehouse } from "./warehouse";
 // 📦 Types & Interfaces (batay sa Purchase at PurchaseItem entities)
 // ----------------------------------------------------------------------
 
-
 export interface Purchase {
   id: number;
   purchase_number: string;
-  status: 'initiated' | 'pending' | 'confirmed' | 'received' | 'cancelled';
+  status: "initiated" | "pending" | "confirmed" | "received" | "cancelled";
   subtotal: number;
   tax_amount: number;
   total: number;
   notes: string | null;
   is_received: boolean;
-  received_at: string | null;   // ISO date string
-  proceed_by: number | null;    // user ID
+  received_at: string | null; // ISO date string
+  proceed_by: number | null; // user ID
   created_at: string;
   updated_at: string;
   is_deleted: boolean;
@@ -47,8 +47,8 @@ export interface Purchase {
 export interface PurchaseItemCreateData {
   productId: number;
   quantity: number;
-  unitCost?: number;      // kung hindi ibibigay, gagamitin ang cost_per_item ng product
-  tax?: number;           // tax amount (optional)
+  unitCost?: number; // kung hindi ibibigay, gagamitin ang cost_per_item ng product
+  tax?: number; // tax amount (optional)
   variantId?: number | null;
 }
 
@@ -63,24 +63,18 @@ export interface PurchaseCreateData {
 
 // Para sa pag-update ng purchase (basic fields only, hindi items)
 export interface PurchaseUpdateData {
-  purchase_number?: string;
-  supplierId?: number;
-  warehouseId?: number;
   notes?: string | null;
-  status?: Purchase['status'];
-  subtotal?: number;
-  tax_amount?: number;
-  total?: number;
+  items: PurchaseItemCreateData[];
 }
 
 // Para sa pag-update ng status
 export interface PurchaseStatusUpdateData {
-  status: Purchase['status'];
+  status: Purchase["status"];
 }
 
 // Para sa receive operation
 export interface ReceivePurchaseData {
-  proceed_by?: number;    // user ID na nag-process
+  proceed_by?: number; // user ID na nag-process
 }
 
 // ----------------------------------------------------------------------
@@ -102,7 +96,7 @@ export interface PurchaseResponse {
 export interface DeletePurchaseResponse {
   status: boolean;
   message: string;
-  data: Purchase;   // ang na-soft delete na purchase
+  data: Purchase; // ang na-soft delete na purchase
 }
 
 export interface UpdateStatusResponse {
@@ -110,8 +104,6 @@ export interface UpdateStatusResponse {
   message: string;
   data: Purchase;
 }
-
-
 
 // ----------------------------------------------------------------------
 // 🧠 PurchaseAPI Class
@@ -124,7 +116,10 @@ class PurchaseAPI {
    * @param params - Mga parameter para sa method
    * @returns {Promise<any>} - Response mula sa backend
    */
-  private async call<T = any>(method: string, params: Record<string, any> = {}): Promise<T> {
+  private async call<T = any>(
+    method: string,
+    params: Record<string, any> = {},
+  ): Promise<T> {
     if (!window.backendAPI?.purchase) {
       throw new Error("Electron API (purchase) not available");
     }
@@ -148,22 +143,25 @@ class PurchaseAPI {
    * @param params.limit - Bilang ng items kada page
    */
   async getAll(params?: {
-    status?: Purchase['status'];
+    status?: Purchase["status"];
     supplierId?: number;
     warehouseId?: number;
     startDate?: string;
     endDate?: string;
     sortBy?: string;
-    sortOrder?: 'ASC' | 'DESC';
+    sortOrder?: "ASC" | "DESC";
     page?: number;
     limit?: number;
   }): Promise<PurchasesResponse> {
     try {
-      const response = await this.call<PurchasesResponse>('getAllPurchases', params || {});
+      const response = await this.call<PurchasesResponse>(
+        "getAllPurchases",
+        params || {},
+      );
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to fetch purchases');
+      throw new Error(response.message || "Failed to fetch purchases");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to fetch purchases');
+      throw new Error(error.message || "Failed to fetch purchases");
     }
   }
 
@@ -173,12 +171,14 @@ class PurchaseAPI {
    */
   async getById(id: number): Promise<PurchaseResponse> {
     try {
-      if (!id || id <= 0) throw new Error('Invalid ID');
-      const response = await this.call<PurchaseResponse>('getPurchaseById', { id });
+      if (!id || id <= 0) throw new Error("Invalid ID");
+      const response = await this.call<PurchaseResponse>("getPurchaseById", {
+        id,
+      });
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to fetch purchase');
+      throw new Error(response.message || "Failed to fetch purchase");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to fetch purchase');
+      throw new Error(error.message || "Failed to fetch purchase");
     }
   }
 
@@ -187,12 +187,15 @@ class PurchaseAPI {
    * @param supplierId - Supplier ID
    * @param params - Karagdagang parameters (pagination, sorting)
    */
-  async getBySupplier(supplierId: number, params?: {
-    page?: number;
-    limit?: number;
-    sortBy?: string;
-    sortOrder?: 'ASC' | 'DESC';
-  }): Promise<PurchasesResponse> {
+  async getBySupplier(
+    supplierId: number,
+    params?: {
+      page?: number;
+      limit?: number;
+      sortBy?: string;
+      sortOrder?: "ASC" | "DESC";
+    },
+  ): Promise<PurchasesResponse> {
     return this.getAll({ supplierId, ...params });
   }
 
@@ -206,18 +209,24 @@ class PurchaseAPI {
    */
   async create(data: PurchaseCreateData): Promise<PurchaseResponse> {
     try {
-      if (!data.purchase_number || data.purchase_number.trim() === '') {
-        throw new Error('Purchase number is required');
+      if (!data.purchase_number || data.purchase_number.trim() === "") {
+        throw new Error("Purchase number is required");
       }
-      if (!data.supplierId || data.supplierId <= 0) throw new Error('Valid supplierId is required');
-      if (!data.warehouseId || data.warehouseId <= 0) throw new Error('Valid warehouseId is required');
-      if (!data.items || data.items.length === 0) throw new Error('At least one purchase item is required');
+      if (!data.supplierId || data.supplierId <= 0)
+        throw new Error("Valid supplierId is required");
+      if (!data.warehouseId || data.warehouseId <= 0)
+        throw new Error("Valid warehouseId is required");
+      if (!data.items || data.items.length === 0)
+        throw new Error("At least one purchase item is required");
 
-      const response = await this.call<PurchaseResponse>('createPurchase', data);
+      const response = await this.call<PurchaseResponse>(
+        "createPurchase",
+        data,
+      );
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to create purchase');
+      throw new Error(response.message || "Failed to create purchase");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to create purchase');
+      throw new Error(error.message || "Failed to create purchase");
     }
   }
 
@@ -226,14 +235,20 @@ class PurchaseAPI {
    * @param id - Purchase ID
    * @param data - Mga field na gustong baguhin
    */
-  async update(id: number, data: PurchaseUpdateData): Promise<PurchaseResponse> {
+  async update(
+    id: number,
+    data: PurchaseUpdateData,
+  ): Promise<PurchaseResponse> {
     try {
-      if (!id || id <= 0) throw new Error('Invalid ID');
-      const response = await this.call<PurchaseResponse>('updatePurchase', { id, ...data });
+      if (!id || id <= 0) throw new Error("Invalid ID");
+      const response = await this.call<PurchaseResponse>("updatePurchase", {
+        id,
+        ...data,
+      });
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to update purchase');
+      throw new Error(response.message || "Failed to update purchase");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to update purchase');
+      throw new Error(error.message || "Failed to update purchase");
     }
   }
 
@@ -243,12 +258,15 @@ class PurchaseAPI {
    */
   async delete(id: number): Promise<DeletePurchaseResponse> {
     try {
-      if (!id || id <= 0) throw new Error('Invalid ID');
-      const response = await this.call<DeletePurchaseResponse>('deletePurchase', { id });
+      if (!id || id <= 0) throw new Error("Invalid ID");
+      const response = await this.call<DeletePurchaseResponse>(
+        "deletePurchase",
+        { id },
+      );
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to delete purchase');
+      throw new Error(response.message || "Failed to delete purchase");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to delete purchase');
+      throw new Error(error.message || "Failed to delete purchase");
     }
   }
 
@@ -257,18 +275,33 @@ class PurchaseAPI {
    * @param id - Purchase ID
    * @param status - Bagong status
    */
-  async updateStatus(id: number, status: Purchase['status']): Promise<UpdateStatusResponse> {
+  async updateStatus(
+    id: number,
+    status: Purchase["status"],
+  ): Promise<UpdateStatusResponse> {
+    // console.log("status pick ", status)
     try {
-      if (!id || id <= 0) throw new Error('Invalid ID');
-      const validStatuses = ['initiated', 'pending', 'confirmed', 'received', 'cancelled'];
+      if (!id || id <= 0) throw new Error("Invalid ID");
+      const validStatuses = [
+        "initiated",
+        "pending",
+        "confirmed",
+        "received",
+        "cancelled",
+      ];
       if (!validStatuses.includes(status)) {
-        throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+        throw new Error(
+          `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
+        );
       }
-      const response = await this.call<UpdateStatusResponse>('updatePurchaseStatus', { id, status });
+      const response = await this.call<UpdateStatusResponse>(
+        "updatePurchaseStatus",
+        { id, status },
+      );
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to update purchase status');
+      throw new Error(response.message || "Failed to update purchase status");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to update purchase status');
+      throw new Error(error.message || "Failed to update purchase status");
     }
   }
 
@@ -280,7 +313,7 @@ class PurchaseAPI {
    * I-validate kung available ang backend API.
    */
   async isAvailable(): Promise<boolean> {
-    return !!(window.backendAPI?.purchase);
+    return !!window.backendAPI?.purchase;
   }
 }
 

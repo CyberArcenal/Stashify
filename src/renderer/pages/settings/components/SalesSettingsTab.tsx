@@ -35,110 +35,6 @@ const SalesSettingsTab: React.FC<SalesSettingsTabProps> = ({ settings, onSave })
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
-          {/* <div>
-            <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
-              Tax Rate (%)
-            </label>
-            <input
-              type="number"
-              value={form?.tax_rate || 0}
-              onChange={(e) => handleChange("tax_rate", parseFloat(e.target.value) || 0)}
-              className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-              min="0"
-              max="100"
-              step="0.1"
-            />
-          </div> */}
-
-          <div>
-            <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
-              VAT Rate (%)
-            </label>
-            <input
-              type="number"
-              value={form?.vat_rate || 0}
-              onChange={(e) => handleChange("vat_rate", parseFloat(e.target.value) || 0)}
-              className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-              min="0"
-              max="100"
-              step="0.1"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
-              Supplier Tax Rate (%)
-            </label>
-            <input
-              type="number"
-              value={form?.supplier_tax_rate || 0}
-              onChange={(e) => handleChange("supplier_tax_rate", parseFloat(e.target.value) || 0)}
-              className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-              min="0"
-              max="100"
-              step="0.1"
-            />
-          </div>
-
-          {/* <div>
-            <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
-              Import Duty Rate (%)
-            </label>
-            <input
-              type="number"
-              value={form?.import_duty_rate || 0}
-              onChange={(e) => handleChange("import_duty_rate", parseFloat(e.target.value) || 0)}
-              className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-              min="0"
-              max="100"
-              step="0.1"
-            />
-          </div> */}
-
-          {/* <div>
-            <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
-              Excise Tax Rate (%)
-            </label>
-            <input
-              type="number"
-              value={form?.excise_tax_rate || 0}
-              onChange={(e) => handleChange("excise_tax_rate", parseFloat(e.target.value) || 0)}
-              className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-              min="0"
-              max="100"
-              step="0.1"
-            />
-          </div> */}
-
-          {/* <div>
-            <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
-              Digital Services Tax Rate (%)
-            </label>
-            <input
-              type="number"
-              value={form?.digital_services_tax_rate || 0}
-              onChange={(e) => handleChange("digital_services_tax_rate", parseFloat(e.target.value) || 0)}
-              className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-              min="0"
-              max="100"
-              step="0.1"
-            />
-          </div> */}
-
-          {/* <div>
-            <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
-              Tax Flat Amount
-            </label>
-            <input
-              type="number"
-              value={form?.tax_flat_amount || 0}
-              onChange={(e) => handleChange("tax_flat_amount", parseFloat(e.target.value) || 0)}
-              className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-              min="0"
-              step="0.01"
-            />
-          </div> */}
-
           <div>
             <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
               Max Discount Percent
@@ -186,16 +82,6 @@ const SalesSettingsTab: React.FC<SalesSettingsTabProps> = ({ settings, onSave })
           <label className="flex items-center">
             <input
               type="checkbox"
-              checked={form?.tax_enabled || false}
-              onChange={(e) => handleChange("tax_enabled", e.target.checked)}
-              className="rounded border-[var(--border-color)] text-[var(--accent-blue)]"
-            />
-            <span className="ml-2 text-sm text-[var(--sidebar-text)]">Enable Tax</span>
-          </label>
-
-          <label className="flex items-center">
-            <input
-              type="checkbox"
               checked={form?.discount_enabled || false}
               onChange={(e) => handleChange("discount_enabled", e.target.checked)}
               className="rounded border-[var(--border-color)] text-[var(--accent-blue)]"
@@ -223,49 +109,6 @@ const SalesSettingsTab: React.FC<SalesSettingsTabProps> = ({ settings, onSave })
             <span className="ml-2 text-sm text-[var(--sidebar-text)]">Enable Loyalty Points</span>
           </label>
 
-          {/* <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={form?.loyalty_points_earn_on_confirm || false}
-              onChange={(e) => handleChange("loyalty_points_earn_on_confirm", e.target.checked)}
-              className="rounded border-[var(--border-color)] text-[var(--accent-blue)]"
-            />
-            <span className="ml-2 text-sm text-[var(--sidebar-text)]">Earn Points on Order Confirm</span>
-          </label> */}
-
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={form?.round_tax_at_subtotal || false}
-              onChange={(e) => handleChange("round_tax_at_subtotal", e.target.checked)}
-              className="rounded border-[var(--border-color)] text-[var(--accent-blue)]"
-            />
-            <span className="ml-2 text-sm text-[var(--sidebar-text)]">Round Tax at Subtotal</span>
-          </label>
-
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={form?.prices_include_tax || false}
-              onChange={(e) => handleChange("prices_include_tax", e.target.checked)}
-              className="rounded border-[var(--border-color)] text-[var(--accent-blue)]"
-            />
-            <span className="ml-2 text-sm text-[var(--sidebar-text)]">Prices Include Tax</span>
-          </label>
-
-          {/* <div>
-            <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
-              Tax Calculation
-            </label>
-            <select
-              value={form?.tax_calculation || "exclusive"}
-              onChange={(e) => handleChange("tax_calculation", e.target.value as "inclusive" | "exclusive")}
-              className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-            >
-              <option value="exclusive">Exclusive</option>
-              <option value="inclusive">Inclusive</option>
-            </select>
-          </div> */}
         </div>
       </div>
 

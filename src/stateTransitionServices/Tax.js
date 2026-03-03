@@ -52,7 +52,7 @@ class TaxStateTransitionService {
     user = "system",
     metadata = {},
   ) {
-    const { updateDb } = require("../utils/dbUtils/dbActions");
+    const { updateDb, saveDb } = require("../utils/dbUtils/dbActions");
     const entityType = entity.constructor.name;
     const repo = entityType === "Product" ? this.productRepo : this.variantRepo;
     const oldGross = entity.gross_price;
@@ -66,7 +66,7 @@ class TaxStateTransitionService {
 
     entity.gross_price = newGross;
     entity.updated_at = new Date();
-    await updateDb(repo, entity);
+    await updateDb(repo, entity, { skipSignal: true });
 
     // Create tax change record
     const changeData = {
@@ -81,7 +81,7 @@ class TaxStateTransitionService {
     };
 
     const change = this.taxChangeRepo.create(changeData);
-    await this.taxChangeRepo.save(change);
+    await saveDb(this.taxChangeRepo, change);
 
     await auditLogger.logUpdate(
       entityType,

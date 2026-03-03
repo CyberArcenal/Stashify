@@ -41,9 +41,9 @@ export interface Product {
   weight: number | null;
   dimensions: string | null;
   is_published: boolean;
-  published_at: string | null;    // ISO date string
-  created_at: string;              // ISO date string
-  updated_at: string;              // ISO date string
+  published_at: string | null; // ISO date string
+  created_at: string; // ISO date string
+  updated_at: string; // ISO date string
   is_deleted: boolean;
   is_active: boolean;
   // Relations
@@ -51,7 +51,8 @@ export interface Product {
   variants?: ProductVariant[];
   images?: ProductImage[];
   stockItems?: StockItem[];
-  taxes?: Tax[]; 
+  taxes?: Tax[];
+  purchaseTaxes?: Tax[];
 }
 
 // Para sa pag-create ng product
@@ -62,14 +63,14 @@ export interface ProductCreateData {
   description?: string | null;
   net_price?: number | null;
   cost_per_item?: number | null;
-  track_quantity?: boolean;        // default true
-  allow_backorder?: boolean;       // default false
+  track_quantity?: boolean; // default true
+  allow_backorder?: boolean; // default false
   compare_price?: number | null;
   barcode?: string | null;
   weight?: number | null;
   dimensions?: string | null;
-  is_published?: boolean;           // default false
-  is_active?: boolean;              // default true
+  is_published?: boolean; // default false
+  is_active?: boolean; // default true
   categoryId?: number | null;
   taxIds?: number[];
 }
@@ -96,8 +97,8 @@ export interface ProductUpdateData {
 }
 
 export interface ExportResult {
-  format: 'json' | 'csv';
-  data: any;                 // array for json, CSV string for csv
+  format: "json" | "csv";
+  data: any; // array for json, CSV string for csv
   filename: string;
 }
 
@@ -115,7 +116,7 @@ export interface LowStockItem {
   id: number;
   quantity: number;
   product: Product;
-  warehouse: any;            // Warehouse
+  warehouse: any; // Warehouse
   // other stock item fields
 }
 
@@ -138,7 +139,7 @@ export interface ProductResponse {
 export interface DeleteProductResponse {
   status: boolean;
   message: string;
-  data: Product;   // ang na-soft delete na product
+  data: Product; // ang na-soft delete na product
 }
 
 export interface LowStockResponse {
@@ -164,7 +165,10 @@ class ProductAPI {
    * @param params - Mga parameter para sa method
    * @returns {Promise<any>} - Response mula sa backend
    */
-  private async call<T = any>(method: string, params: Record<string, any> = {}): Promise<T> {
+  private async call<T = any>(
+    method: string,
+    params: Record<string, any> = {},
+  ): Promise<T> {
     if (!window.backendAPI?.product) {
       throw new Error("Electron API (product) not available");
     }
@@ -194,17 +198,20 @@ class ProductAPI {
     minPrice?: number;
     maxPrice?: number;
     sortBy?: string;
-    sortOrder?: 'ASC' | 'DESC';
+    sortOrder?: "ASC" | "DESC";
     page?: number;
     limit?: number;
   }): Promise<ProductsResponse> {
     try {
-      const response = await this.call<ProductsResponse>('getAllProducts', params || {});
-      console.log(response)
+      const response = await this.call<ProductsResponse>(
+        "getAllProducts",
+        params || {},
+      );
+      // console.log(response)
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to fetch products');
+      throw new Error(response.message || "Failed to fetch products");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to fetch products');
+      throw new Error(error.message || "Failed to fetch products");
     }
   }
 
@@ -214,12 +221,14 @@ class ProductAPI {
    */
   async getById(id: number): Promise<ProductResponse> {
     try {
-      if (!id || id <= 0) throw new Error('Invalid ID');
-      const response = await this.call<ProductResponse>('getProductById', { id });
+      if (!id || id <= 0) throw new Error("Invalid ID");
+      const response = await this.call<ProductResponse>("getProductById", {
+        id,
+      });
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to fetch product');
+      throw new Error(response.message || "Failed to fetch product");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to fetch product');
+      throw new Error(error.message || "Failed to fetch product");
     }
   }
 
@@ -230,11 +239,14 @@ class ProductAPI {
   async getLowStock(threshold?: number): Promise<LowStockResponse> {
     try {
       const params = threshold !== undefined ? { threshold } : {};
-      const response = await this.call<LowStockResponse>('getLowStockProducts', params);
+      const response = await this.call<LowStockResponse>(
+        "getLowStockProducts",
+        params,
+      );
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to fetch low stock products');
+      throw new Error(response.message || "Failed to fetch low stock products");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to fetch low stock products');
+      throw new Error(error.message || "Failed to fetch low stock products");
     }
   }
 
@@ -243,11 +255,14 @@ class ProductAPI {
    */
   async getStatistics(): Promise<ProductStatisticsResponse> {
     try {
-      const response = await this.call<ProductStatisticsResponse>('getProductStatistics', {});
+      const response = await this.call<ProductStatisticsResponse>(
+        "getProductStatistics",
+        {},
+      );
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to fetch product statistics');
+      throw new Error(response.message || "Failed to fetch product statistics");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to fetch product statistics');
+      throw new Error(error.message || "Failed to fetch product statistics");
     }
   }
 
@@ -261,17 +276,17 @@ class ProductAPI {
    */
   async create(data: ProductCreateData): Promise<ProductResponse> {
     try {
-      if (!data.name || data.name.trim() === '') {
-        throw new Error('Product name is required');
+      if (!data.name || data.name.trim() === "") {
+        throw new Error("Product name is required");
       }
-      if (!data.sku || data.sku.trim() === '') {
-        throw new Error('SKU is required');
+      if (!data.sku || data.sku.trim() === "") {
+        throw new Error("SKU is required");
       }
-      const response = await this.call<ProductResponse>('createProduct', data);
+      const response = await this.call<ProductResponse>("createProduct", data);
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to create product');
+      throw new Error(response.message || "Failed to create product");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to create product');
+      throw new Error(error.message || "Failed to create product");
     }
   }
 
@@ -282,13 +297,25 @@ class ProductAPI {
    */
   async update(id: number, data: ProductUpdateData): Promise<ProductResponse> {
     try {
-      if (!id || id <= 0) throw new Error('Invalid ID');
-      const response = await this.call<ProductResponse>('updateProduct', { id, ...data });
+      if (!id || id <= 0) throw new Error("Invalid ID");
+      const response = await this.call<ProductResponse>("updateProduct", {
+        id,
+        ...data,
+      });
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to update product');
+      throw new Error(response.message || "Failed to update product");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to update product');
+      throw new Error(error.message || "Failed to update product");
     }
+  }
+
+  // In productAPI.ts
+  async bulkAssignTaxes(data: {
+    productIds: number[];
+    taxIds: number[];
+    operation: "replace" | "add" | "remove";
+  }): Promise<{ status: boolean; message: string; data: any }> {
+    return this.call("bulkUpdateTaxes", data);
   }
 
   /**
@@ -297,12 +324,14 @@ class ProductAPI {
    */
   async delete(id: number): Promise<DeleteProductResponse> {
     try {
-      if (!id || id <= 0) throw new Error('Invalid ID');
-      const response = await this.call<DeleteProductResponse>('deleteProduct', { id });
+      if (!id || id <= 0) throw new Error("Invalid ID");
+      const response = await this.call<DeleteProductResponse>("deleteProduct", {
+        id,
+      });
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to delete product');
+      throw new Error(response.message || "Failed to delete product");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to delete product');
+      throw new Error(error.message || "Failed to delete product");
     }
   }
 
@@ -314,7 +343,7 @@ class ProductAPI {
    * I-validate kung available ang backend API.
    */
   async isAvailable(): Promise<boolean> {
-    return !!(window.backendAPI?.product);
+    return !!window.backendAPI?.product;
   }
 }
 

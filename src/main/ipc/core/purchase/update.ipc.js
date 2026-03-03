@@ -101,14 +101,8 @@ module.exports = async (params, queryRunner, user = "system") => {
 
     // Prepare update data
     const updateData = {
-      purchase_number: params.purchase_number?.trim(),
-      supplierId: params.supplierId,
-      warehouseId: params.warehouseId,
       notes: params.notes,
-      status: params.status,
-      subtotal: params.subtotal,
-      tax_amount: params.tax_amount,
-      total: params.total,
+      items: params.items,
     };
 
     // Remove undefined values

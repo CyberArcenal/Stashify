@@ -1,11 +1,11 @@
 // src/subscribers/ProductSubscriber.js
 // @ts-check
 const Product = require("../entities/Product");
-const Warehouse = require("../entities/Warehouse");
-const StockItem = require("../entities/StockItem");
 const { AppDataSource } = require("../main/db/datasource");
 const { logger } = require("../utils/logger");
-const { TaxStateTransitionService } = require("../stateTransitionServices/Tax");
+const {
+  ProductStateTransitionService,
+} = require("../stateTransitionServices/Product");
 
 console.log("[Subscriber] Loading ProductSubscriber");
 
@@ -33,7 +33,6 @@ class ProductSubscriber {
    * @param {{ id: any; }} entity
    */
   async afterInsert(entity) {
-    const { saveDb } = require("../utils/dbUtils/dbActions");
     try {
       // @ts-ignore
       logger.info("[ProductSubscriber] afterInsert", {
@@ -44,39 +43,15 @@ class ProductSubscriber {
         await AppDataSource.initialize();
       }
 
-      const warehouseRepo = AppDataSource.getRepository(Warehouse);
-      const stockItemRepo = AppDataSource.getRepository(StockItem);
+      const productRepo = AppDataSource.getRepository(Product);
+      const product = await productRepo.findOne({ where: { id: entity.id } });
+      if (!product) return;
 
-      const warehouses = await warehouseRepo.find({
-        where: { is_deleted: false, is_active: true },
-      });
-
-      for (const warehouse of warehouses) {
-        const existing = await stockItemRepo.findOne({
-          where: {
-            // @ts-ignore
-            product: { id: entity.id },
-            variant: null,
-            warehouse: { id: warehouse.id },
-          },
-        });
-
-        if (!existing) {
-          const stockItem = stockItemRepo.create({
-            // @ts-ignore
-            product: entity,
-            warehouse,
-            quantity: 0,
-            reorder_level: 0,
-            low_stock_threshold: null,
-          });
-          // @ts-ignore
-          await saveDb(stockItemRepo, stockItem);
-          logger.info(
-            `[ProductSubscriber] Created StockItem for product ${entity.id} in warehouse ${warehouse.id}`,
-          );
-        }
-      }
+      const transitionService = new ProductStateTransitionService(
+        AppDataSource,
+      );
+      // @ts-ignore
+      await transitionService.onAfterInsert(product, "system");
     } catch (err) {
       // @ts-ignore
       logger.error("[ProductSubscriber] afterInsert error", err);
@@ -98,47 +73,54 @@ class ProductSubscriber {
     }
   }
 
-  // @ts-ignore
- async afterUpdate(event) {
+  /**
+   * @param {{ databaseEntity: any; entity: any; }} event
+   */
+
+  async afterUpdate(event) {
     try {
       const { databaseEntity: oldEntity, entity: newEntity } = event;
 
-      // Need to load full relations
-      const productRepo = AppDataSource.getRepository(Product);
-      const oldProduct = await productRepo.findOne({
-        where: { id: oldEntity.id },
-        relations: ["taxes"]
+      // @ts-ignore
+      logger.info("[ProductSubscriber] afterUpdate started", {
+        id: newEntity.id,
       });
 
-      const newProduct = await productRepo.findOne({
-        where: { id: newEntity.id },
-        relations: ["taxes"]
+      // Kunin ang tax IDs – direkta mula sa event (huwag nang mag-query)
+      // @ts-ignore
+      const oldTaxIds = (oldEntity.taxes || []).map((t) => t.id).sort();
+      // @ts-ignore
+      const newTaxIds = (newEntity.taxes || []).map((t) => t.id).sort();
+
+      // @ts-ignore
+      logger.info("[ProductSubscriber] Tax comparison", {
+        old: oldTaxIds,
+        new: newTaxIds,
       });
-
-      if (!oldProduct || !newProduct) return;
-
-      // @ts-ignore
-      const oldTaxIds = (oldProduct.taxes || []).map(t => t.id).sort();
-      // @ts-ignore
-      const newTaxIds = (newProduct.taxes || []).map(t => t.id).sort();
 
       if (JSON.stringify(oldTaxIds) !== JSON.stringify(newTaxIds)) {
-        logger.info(`[ProductSubscriber] Taxes changed for product ${newEntity.id}`);
+        logger.info(
+          `[ProductSubscriber] Taxes changed for product ${newEntity.id}`,
+        );
 
-        const transitionService = new TaxStateTransitionService(AppDataSource);
+        const transitionService = new ProductStateTransitionService(
+          AppDataSource,
+        );
         await transitionService.onTaxesChanged(
-          newProduct,
-          // @ts-ignore
-          oldProduct.taxes || [],
-          // @ts-ignore
-          newProduct.taxes || [],
+          newEntity,
+          oldEntity.taxes || [],
+          newEntity.taxes || [],
           "system",
-          { reason: "Product taxes updated via product edit" }
+          { reason: "Product taxes updated via product edit" },
+        );
+      } else {
+        logger.info(
+          `[ProductSubscriber] No tax change detected for product ${newEntity.id}`,
         );
       }
     } catch (err) {
       // @ts-ignore
-      logger.error('[ProductSubscriber] afterUpdate error', err);
+      logger.error("[ProductSubscriber] afterUpdate error", err);
     }
   }
 

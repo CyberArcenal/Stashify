@@ -4,7 +4,7 @@ import Modal from '../../../components/UI/Modal';
 import Button from '../../../components/UI/Button';
 import {
   Package, Layers, DollarSign, BarChart3, Warehouse, Truck, ShoppingCart,
-  Edit, AlertTriangle, X
+  Edit, AlertTriangle, X, Percent
 } from 'lucide-react';
 import type { ProductVariant } from '../../../api/core/productVariant';
 import type { StockItem } from '../../../api/core/stockItem';
@@ -47,7 +47,7 @@ const VariantViewDialog: React.FC<VariantViewDialogProps> = ({
 
   // Compute total stock
   const totalStock = stockItems?.reduce((sum, item) => sum + item.quantity, 0);
-  const reorderLevel = stockItems? stockItems[0]?.reorder_level || 0 : 0;
+  const reorderLevel = stockItems?.[0]?.reorder_level || 0;
 
   const getStockStatus = () => {
     if (totalStock === 0) {
@@ -114,7 +114,7 @@ const VariantViewDialog: React.FC<VariantViewDialogProps> = ({
           <div className="mt-4">
             {activeTab === 'overview' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Left column: Basic info */}
+                {/* Left column: Basic info and pricing */}
                 <div className="space-y-4">
                   <div className="bg-[var(--card-secondary-bg)] p-3 rounded-md">
                     <h4 className="font-medium mb-2 flex items-center text-[var(--sidebar-text)]">
@@ -142,13 +142,33 @@ const VariantViewDialog: React.FC<VariantViewDialogProps> = ({
                       <DollarSign className="w-4 h-4 mr-1" /> Pricing
                     </h4>
                     <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div><span className="text-[var(--text-secondary)]">Gross Price:</span> {formatCurrency(variant.gross_price || 0)}</div>
                       <div><span className="text-[var(--text-secondary)]">Net Price:</span> {formatCurrency(variant.net_price || 0)}</div>
                       <div><span className="text-[var(--text-secondary)]">Cost per item:</span> {formatCurrency(variant.cost_per_item || 0)}</div>
                     </div>
                   </div>
+
+                  {/* Tax Information */}
+                  {variant.taxes && variant.taxes.length > 0 && (
+                    <div className="bg-[var(--card-secondary-bg)] p-3 rounded-md">
+                      <h4 className="font-medium mb-2 flex items-center text-[var(--sidebar-text)]">
+                        <Percent className="w-4 h-4 mr-1" /> Taxes (Selling)
+                      </h4>
+                      <div className="space-y-1 text-sm">
+                        {variant.taxes.map(tax => (
+                          <div key={tax.id} className="flex justify-between">
+                            <span className="text-[var(--text-secondary)]">{tax.name} ({tax.code})</span>
+                            <span className="text-[var(--sidebar-text)]">
+                              {tax.rate}% {tax.type === 'percentage' ? '' : `(${tax.type})`}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Right column: Stock summary */}
+                {/* Right column: Stock summary and parent product */}
                 <div className="space-y-4">
                   <div className="bg-[var(--card-secondary-bg)] p-3 rounded-md">
                     <h4 className="font-medium mb-2 flex items-center text-[var(--sidebar-text)]">

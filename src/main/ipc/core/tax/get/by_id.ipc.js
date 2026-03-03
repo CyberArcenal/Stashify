@@ -1,6 +1,8 @@
 // src/main/ipc/tax/get/by_id.ipc.js
+//@ts-check
 const taxService = require("../../../../../services/Tax");
 
+// @ts-ignore
 module.exports = async (params) => {
   try {
     const { id } = params;
@@ -24,6 +26,7 @@ module.exports = async (params) => {
     console.error("Error in getTaxById:", error);
     return {
       status: false,
+      // @ts-ignore
       message: error.message || "Failed to retrieve tax",
       data: null,
     };

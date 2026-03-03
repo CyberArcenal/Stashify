@@ -27,6 +27,8 @@ import VariantFormDialog from "../productVariant/components/VariantFormDialog";
 import { useProductImageForm } from "../productImage/hooks/useProductImageForm";
 import ProductTaxAssignmentDialog from "../inventory/components/ProductTaxAssignmentDialog";
 import { useProductTaxAssignment } from "../inventory/hooks/useProductTaxAssignment";
+import { useBulkProductTaxAssignment } from "../inventory/hooks/bulk/useProductTaxAssignment";
+import BulkProductTaxAssignmentDialog from "../inventory/components/bulk/ProductTaxAssignmentDialog";
 
 const ProductsPage: React.FC = () => {
   const {
@@ -57,6 +59,7 @@ const ProductsPage: React.FC = () => {
   const variantForm = useVariantForm(); // assuming existing
   const viewDialog = useProductView();
   const taxAssignmentHook = useProductTaxAssignment(reload);
+  const bulkTaxAssignmentHook = useBulkProductTaxAssignment(reload);
 
   const [showFilters, setShowFilters] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
@@ -419,6 +422,13 @@ const ProductsPage: React.FC = () => {
           </span>
           <div className="flex gap-xs">
             <button
+              className="compact-button bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-hover)] text-white rounded-md"
+              onClick={() => bulkTaxAssignmentHook.open(selectedProducts)}
+              title="Assign taxes to selected products"
+            >
+              Assign Tax
+            </button>
+            <button
               className="compact-button rounded-md"
               style={{ backgroundColor: "var(--accent-blue)", color: "white" }}
               onClick={handleExport}
@@ -637,6 +647,7 @@ const ProductsPage: React.FC = () => {
       />
 
       <ProductTaxAssignmentDialog hook={taxAssignmentHook} />
+      <BulkProductTaxAssignmentDialog hook={bulkTaxAssignmentHook} />
     </div>
   );
 };

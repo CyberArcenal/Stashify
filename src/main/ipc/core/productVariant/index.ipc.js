@@ -24,6 +24,9 @@ class ProductVariantHandler {
 
     // 🔄 STOCK SYNC OPERATIONS
     this.syncVariantStock = this.importHandler("./sync_stock.ipc");
+
+    //Bulk Process
+    this.bulk_assign_taxes = this.importHandler("./bulk/assign_taxes.ipc.js");
   }
 
   // @ts-ignore
@@ -88,6 +91,11 @@ class ProductVariantHandler {
         case "syncVariantStock":
           return await this.handleWithTransaction(
             this.syncVariantStock,
+            enrichedParams,
+          );
+        case "bulkUpdateTaxes":
+          return await this.handleWithTransaction(
+            this.bulk_assign_taxes,
             enrichedParams,
           );
 

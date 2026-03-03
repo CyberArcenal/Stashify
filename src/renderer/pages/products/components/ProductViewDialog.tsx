@@ -1,5 +1,5 @@
 // src/renderer/pages/products/components/ProductViewDialog.tsx
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Modal from '../../../components/UI/Modal';
 import Button from '../../../components/UI/Button';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -10,7 +10,7 @@ import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
 import {
   ChevronLeft, ChevronRight, Package, Layers, ShoppingCart, Truck,
-  Edit, Plus, AlertTriangle, DollarSign, BarChart3
+  Edit, Plus, AlertTriangle, DollarSign, BarChart3, Percent
 } from 'lucide-react';
 import type { Product } from '../../../api/core/product';
 import type { ProductImage } from '../../../api/core/productImage';
@@ -50,16 +50,18 @@ const ProductViewDialog: React.FC<ProductViewDialogProps> = ({
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
   const [isSettingPrimary, setIsSettingPrimary] = useState<number | null>(null);
-  const [images, setImages] = useState<ProductImage[]>(product?.images || []);
+  const [images, setImages] = useState<ProductImage[]>([]);
 
   const navigationPrevRef = useRef<HTMLButtonElement>(null);
   const navigationNextRef = useRef<HTMLButtonElement>(null);
   const paginationRef = useRef<HTMLDivElement>(null);
 
-  // Update images when product changes
-  React.useEffect(() => {
+  // Update images when product changes – filter out deleted ones
+  useEffect(() => {
     if (product?.images) {
-      setImages(product.images);
+      setImages(product.images.filter(img => !img.is_deleted));
+    } else {
+      setImages([]);
     }
   }, [product]);
 
@@ -120,8 +122,8 @@ const ProductViewDialog: React.FC<ProductViewDialogProps> = ({
   const stockStatus = getStockStatus();
   const StatusIcon = stockStatus.icon;
 
-  const displayImages = images.length > 0 ? images : (product?.images || []);
-  const primaryImage = displayImages.find(img => img.is_primary) || displayImages[0];
+  // Use images state directly (already filtered)
+  const primaryImage = images.find(img => img.is_primary) || images[0];
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Product Details" size="xl" minHeight='745px'>
@@ -188,7 +190,7 @@ const ProductViewDialog: React.FC<ProductViewDialogProps> = ({
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Image carousel */}
                 <div>
-                  {displayImages.length > 0 ? (
+                  {images.length > 0 ? (
                     <div className="relative">
                       <Swiper
                         modules={[Navigation, Pagination, Autoplay, EffectFade]}
@@ -201,10 +203,10 @@ const ProductViewDialog: React.FC<ProductViewDialogProps> = ({
                         pagination={{ el: paginationRef.current, clickable: true }}
                         autoplay={{ delay: 5000, disableOnInteraction: false }}
                         effect="fade"
-                        loop={displayImages.length > 1}
+                        loop={images.length > 1}
                         onSlideChange={(swiper) => setActiveImageIndex(swiper.realIndex)}
                       >
-                        {displayImages.map((img) => (
+                        {images.map((img) => (
                           <SwiperSlide key={img.id}>
                             <div className="aspect-square bg-[var(--input-bg)] rounded-md flex items-center justify-center relative group">
                               <img
@@ -234,7 +236,7 @@ const ProductViewDialog: React.FC<ProductViewDialogProps> = ({
                           </SwiperSlide>
                         ))}
                       </Swiper>
-                      {displayImages.length > 1 && (
+                      {images.length > 1 && (
                         <>
                           <button
                             ref={navigationPrevRef}
@@ -284,11 +286,31 @@ const ProductViewDialog: React.FC<ProductViewDialogProps> = ({
                       <DollarSign className="w-4 h-4 mr-1" /> Pricing
                     </h4>
                     <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div><span className="text-[var(--text-secondary)]">Gross Price:</span> {formatCurrency(product.gross_price || 0)}</div>
                       <div><span className="text-[var(--text-secondary)]">Net Price:</span> {formatCurrency(product.net_price || 0)}</div>
                       <div><span className="text-[var(--text-secondary)]">Cost per item:</span> {formatCurrency(product.cost_per_item || 0)}</div>
                       <div><span className="text-[var(--text-secondary)]">Compare Price:</span> {formatCurrency(product.compare_price || 0)}</div>
                     </div>
                   </div>
+
+                  {/* Tax Information */}
+                  {product.taxes && product.taxes.length > 0 && (
+                    <div className="bg-[var(--card-secondary-bg)] p-3 rounded-md">
+                      <h4 className="font-medium mb-2 flex items-center text-[var(--sidebar-text)]">
+                        <Percent className="w-4 h-4 mr-1" /> Taxes (Selling)
+                      </h4>
+                      <div className="space-y-1 text-sm">
+                        {product.taxes.map(tax => (
+                          <div key={tax.id} className="flex justify-between">
+                            <span className="text-[var(--text-secondary)]">{tax.name} ({tax.code})</span>
+                            <span className="text-[var(--sidebar-text)]">
+                              {tax.rate}% {tax.type === 'percentage' ? '' : `(${tax.type})`}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="bg-[var(--card-secondary-bg)] p-3 rounded-md">
                     <h4 className="font-medium mb-2 flex items-center text-[var(--sidebar-text)]">

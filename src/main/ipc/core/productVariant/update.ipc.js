@@ -104,7 +104,7 @@ module.exports = async (params, queryRunner, user = "system") => {
     }
 
     // Update variant using service
-    const updatedVariant = await productVariantService.update(id, updateData, user);
+    const updatedVariant = await productVariantService.update(id, updateData, user, queryRunner);
 
     return {
       status: true,

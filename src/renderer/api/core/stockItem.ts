@@ -22,16 +22,13 @@ import type { Warehouse } from "./warehouse";
 // 📦 Types & Interfaces (batay sa StockItem entity at mga kaugnay)
 // ----------------------------------------------------------------------
 
-
-
-
 export interface StockItem {
   id: number;
   quantity: number;
   reorder_level: number;
   low_stock_threshold: number | null;
-  created_at: string;        // ISO date string
-  updated_at: string;        // ISO date string
+  created_at: string; // ISO date string
+  updated_at: string; // ISO date string
   is_deleted: boolean;
   // Relations
   product?: Product;
@@ -45,8 +42,8 @@ export interface StockItemCreateData {
   productId: number;
   warehouseId: number;
   variantId?: number | null;
-  quantity?: number;           // default 0
-  reorder_level?: number;      // default 0
+  quantity?: number; // default 0
+  reorder_level?: number; // default 0
   low_stock_threshold?: number | null;
 }
 
@@ -71,7 +68,7 @@ export interface TransferStockData {
 // Para sa stock adjustment
 export interface AdjustStockData {
   stockItemId: number;
-  adjustment: number;    // positive to increase, negative to decrease
+  adjustment: number; // positive to increase, negative to decrease
   reason: string;
 }
 
@@ -107,7 +104,7 @@ export interface StockItemResponse {
 export interface DeleteStockItemResponse {
   status: boolean;
   message: string;
-  data: StockItem;   // ang na-soft delete na stock item
+  data: StockItem; // ang na-soft delete na stock item
 }
 
 export interface TransferStockResponse {
@@ -133,7 +130,10 @@ class StockItemAPI {
    * @param params - Mga parameter para sa method
    * @returns {Promise<any>} - Response mula sa backend
    */
-  private async call<T = any>(method: string, params: Record<string, any> = {}): Promise<T> {
+  private async call<T = any>(
+    method: string,
+    params: Record<string, any> = {},
+  ): Promise<T> {
     if (!window.backendAPI?.stockItem) {
       throw new Error("Electron API (stockItem) not available");
     }
@@ -163,17 +163,20 @@ class StockItemAPI {
     minQuantity?: number;
     maxQuantity?: number;
     sortBy?: string;
-    sortOrder?: 'ASC' | 'DESC';
+    sortOrder?: "ASC" | "DESC";
     page?: number;
     limit?: number;
   }): Promise<StockItemsResponse> {
     try {
-      const response = await this.call<StockItemsResponse>('getAllStockItems', params || {});
-      console.log(response)
+      const response = await this.call<StockItemsResponse>(
+        "getAllStockItems",
+        params || {},
+      );
+      // console.log(response)
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to fetch stock items');
+      throw new Error(response.message || "Failed to fetch stock items");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to fetch stock items');
+      throw new Error(error.message || "Failed to fetch stock items");
     }
   }
 
@@ -183,12 +186,14 @@ class StockItemAPI {
    */
   async getById(id: number): Promise<StockItemResponse> {
     try {
-      if (!id || id <= 0) throw new Error('Invalid ID');
-      const response = await this.call<StockItemResponse>('getStockItemById', { id });
+      if (!id || id <= 0) throw new Error("Invalid ID");
+      const response = await this.call<StockItemResponse>("getStockItemById", {
+        id,
+      });
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to fetch stock item');
+      throw new Error(response.message || "Failed to fetch stock item");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to fetch stock item');
+      throw new Error(error.message || "Failed to fetch stock item");
     }
   }
 
@@ -202,13 +207,18 @@ class StockItemAPI {
    */
   async create(data: StockItemCreateData): Promise<StockItemResponse> {
     try {
-      if (!data.productId || data.productId <= 0) throw new Error('Valid productId is required');
-      if (!data.warehouseId || data.warehouseId <= 0) throw new Error('Valid warehouseId is required');
-      const response = await this.call<StockItemResponse>('createStockItem', data);
+      if (!data.productId || data.productId <= 0)
+        throw new Error("Valid productId is required");
+      if (!data.warehouseId || data.warehouseId <= 0)
+        throw new Error("Valid warehouseId is required");
+      const response = await this.call<StockItemResponse>(
+        "createStockItem",
+        data,
+      );
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to create stock item');
+      throw new Error(response.message || "Failed to create stock item");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to create stock item');
+      throw new Error(error.message || "Failed to create stock item");
     }
   }
 
@@ -217,14 +227,20 @@ class StockItemAPI {
    * @param id - Stock item ID
    * @param data - Mga field na gustong baguhin
    */
-  async update(id: number, data: StockItemUpdateData): Promise<StockItemResponse> {
+  async update(
+    id: number,
+    data: StockItemUpdateData,
+  ): Promise<StockItemResponse> {
     try {
-      if (!id || id <= 0) throw new Error('Invalid ID');
-      const response = await this.call<StockItemResponse>('updateStockItem', { id, ...data });
+      if (!id || id <= 0) throw new Error("Invalid ID");
+      const response = await this.call<StockItemResponse>("updateStockItem", {
+        id,
+        ...data,
+      });
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to update stock item');
+      throw new Error(response.message || "Failed to update stock item");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to update stock item');
+      throw new Error(error.message || "Failed to update stock item");
     }
   }
 
@@ -234,12 +250,15 @@ class StockItemAPI {
    */
   async delete(id: number): Promise<DeleteStockItemResponse> {
     try {
-      if (!id || id <= 0) throw new Error('Invalid ID');
-      const response = await this.call<DeleteStockItemResponse>('deleteStockItem', { id });
+      if (!id || id <= 0) throw new Error("Invalid ID");
+      const response = await this.call<DeleteStockItemResponse>(
+        "deleteStockItem",
+        { id },
+      );
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to delete stock item');
+      throw new Error(response.message || "Failed to delete stock item");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to delete stock item');
+      throw new Error(error.message || "Failed to delete stock item");
     }
   }
 
@@ -253,14 +272,20 @@ class StockItemAPI {
    */
   async transfer(data: TransferStockData): Promise<TransferStockResponse> {
     try {
-      if (!data.sourceStockItemId || data.sourceStockItemId <= 0) throw new Error('Valid sourceStockItemId is required');
-      if (!data.destinationStockItemId || data.destinationStockItemId <= 0) throw new Error('Valid destinationStockItemId is required');
-      if (!data.quantity || data.quantity <= 0) throw new Error('Quantity must be a positive integer');
-      const response = await this.call<TransferStockResponse>('transferStock', data);
+      if (!data.sourceStockItemId || data.sourceStockItemId <= 0)
+        throw new Error("Valid sourceStockItemId is required");
+      if (!data.destinationStockItemId || data.destinationStockItemId <= 0)
+        throw new Error("Valid destinationStockItemId is required");
+      if (!data.quantity || data.quantity <= 0)
+        throw new Error("Quantity must be a positive integer");
+      const response = await this.call<TransferStockResponse>(
+        "transferStock",
+        data,
+      );
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to transfer stock');
+      throw new Error(response.message || "Failed to transfer stock");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to transfer stock');
+      throw new Error(error.message || "Failed to transfer stock");
     }
   }
 
@@ -270,16 +295,55 @@ class StockItemAPI {
    */
   async adjust(data: AdjustStockData): Promise<AdjustStockResponse> {
     try {
-      if (!data.stockItemId || data.stockItemId <= 0) throw new Error('Valid stockItemId is required');
-      if (data.adjustment === undefined || data.adjustment === null || data.adjustment === 0) {
-        throw new Error('Adjustment must be a non-zero number');
+      if (!data.stockItemId || data.stockItemId <= 0)
+        throw new Error("Valid stockItemId is required");
+      if (
+        data.adjustment === undefined ||
+        data.adjustment === null ||
+        data.adjustment === 0
+      ) {
+        throw new Error("Adjustment must be a non-zero number");
       }
-      if (!data.reason || data.reason.trim() === '') throw new Error('Reason is required');
-      const response = await this.call<AdjustStockResponse>('adjustStock', data);
+      if (!data.reason || data.reason.trim() === "")
+        throw new Error("Reason is required");
+      const response = await this.call<AdjustStockResponse>(
+        "adjustStock",
+        data,
+      );
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to adjust stock');
+      throw new Error(response.message || "Failed to adjust stock");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to adjust stock');
+      throw new Error(error.message || "Failed to adjust stock");
+    }
+  }
+
+  /**
+   * Kunin ang kabuuang quantity ng stock para sa isang product/variant/warehouse.
+   * @param params.productId - Product ID
+   * @param params.variantId - Variant ID (optional)
+   * @param params.warehouseId - Warehouse ID (optional)
+   * @returns Kabuuang quantity (sum of all matching stock items)
+   */
+  async getStockQuantity(params: {
+    productId: number;
+    variantId?: number | null;
+    warehouseId?: number | null;
+  }): Promise<number> {
+    try {
+      const response = await this.getAll({
+        productId: params.productId,
+        variantId: params.variantId ?? undefined,
+        warehouseId: params.warehouseId ?? undefined,
+        limit: 100, // kunin ang lahat
+      });
+      if (response.status) {
+        // Kung may specific warehouse, dapat isa lang ang stock item. Pero sum na lang para sure.
+        return response.data.reduce((sum, item) => sum + item.quantity, 0);
+      }
+      return 0;
+    } catch (error) {
+      console.error("Failed to fetch stock quantity:", error);
+      return 0;
     }
   }
 
@@ -291,7 +355,7 @@ class StockItemAPI {
    * I-validate kung available ang backend API.
    */
   async isAvailable(): Promise<boolean> {
-    return !!(window.backendAPI?.stockItem);
+    return !!window.backendAPI?.stockItem;
   }
 
   /**
@@ -299,11 +363,14 @@ class StockItemAPI {
    * @param productId - Product ID
    * @param params - Karagdagang parameters (warehouse filter, pagination)
    */
-  async getByProduct(productId: number, params?: {
-    warehouseId?: number;
-    page?: number;
-    limit?: number;
-  }): Promise<StockItemsResponse> {
+  async getByProduct(
+    productId: number,
+    params?: {
+      warehouseId?: number;
+      page?: number;
+      limit?: number;
+    },
+  ): Promise<StockItemsResponse> {
     return this.getAll({ productId, ...params });
   }
 
@@ -312,12 +379,15 @@ class StockItemAPI {
    * @param warehouseId - Warehouse ID
    * @param params - Karagdagang parameters (product filter, pagination)
    */
-  async getByWarehouse(warehouseId: number, params?: {
-    productId?: number;
-    variantId?: number;
-    page?: number;
-    limit?: number;
-  }): Promise<StockItemsResponse> {
+  async getByWarehouse(
+    warehouseId: number,
+    params?: {
+      productId?: number;
+      variantId?: number;
+      page?: number;
+      limit?: number;
+    },
+  ): Promise<StockItemsResponse> {
     return this.getAll({ warehouseId, ...params });
   }
 }

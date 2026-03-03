@@ -22,6 +22,8 @@ import type { Purchase } from "./purchase";
 
 
 export interface PurchaseItem {
+  line_gross_total: number;
+  line_tax_total: number;
   id: number;
   quantity: number;
   unit_cost: number;

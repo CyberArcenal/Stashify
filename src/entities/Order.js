@@ -10,16 +10,35 @@ const Order = new EntitySchema({
       type: String,
       default: "pending",
       nullable: false,
-      check: "status IN ('initiated','pending','confirmed','completed','cancelled','refunded')",
+      check:
+        "status IN ('initiated','pending','confirmed','completed','cancelled','refunded')",
     },
     subtotal: { type: Number, default: 0, nullable: false },
     tax_amount: { type: Number, default: 0, nullable: false },
     total: { type: Number, default: 0, nullable: false },
     notes: { type: String, nullable: true },
     inventory_processed: { type: Boolean, default: false, nullable: false },
-    created_at: { type: Date, default: () => "CURRENT_TIMESTAMP", nullable: false },
-    updated_at: { type: Date, default: () => "CURRENT_TIMESTAMP", nullable: false },
+    tax_breakdown: { type: "simple-json", nullable: true },
+    created_at: {
+      type: Date,
+      default: () => "CURRENT_TIMESTAMP",
+      nullable: false,
+    },
+    updated_at: {
+      type: Date,
+      default: () => "CURRENT_TIMESTAMP",
+      nullable: false,
+    },
     is_deleted: { type: Boolean, default: false, nullable: false },
+
+    // Loyalty & Discount Fields (aligned with Sale)
+    usedLoyalty: { type: Boolean, default: false, nullable: false },
+    loyaltyRedeemed: { type: Number, default: 0, nullable: false },
+    usedDiscount: { type: Boolean, default: false, nullable: false },
+    totalDiscount: { type: Number, default: 0, nullable: false },
+    usedVoucher: { type: Boolean, default: false, nullable: false },
+    voucherCode: { type: String, nullable: true },
+    pointsEarn: { type: Number, default: 0, nullable: false },
   },
   relations: {
     customer: {

@@ -1,11 +1,11 @@
 // src/subscribers/ProductVariantSubscriber.js
 // @ts-check
 const ProductVariant = require("../entities/ProductVariant");
-const Warehouse = require("../entities/Warehouse");
-const StockItem = require("../entities/StockItem");
 const { AppDataSource } = require("../main/db/datasource");
 const { logger } = require("../utils/logger");
-const { TaxStateTransitionService } = require("../stateTransitionServices/Tax");
+const {
+  VariantStateTransitionService,
+} = require("../stateTransitionServices/Variant");
 
 console.log("[Subscriber] Loading ProductVariantSubscriber");
 
@@ -30,7 +30,7 @@ class ProductVariantSubscriber {
   }
 
   /**
-   * @param {{ product: { id: any; }; id: null | undefined; }} entity
+   * @param {{ id: any; }} entity
    */
   async afterInsert(entity) {
     try {
@@ -43,60 +43,18 @@ class ProductVariantSubscriber {
         await AppDataSource.initialize();
       }
 
-      let productId = entity.product?.id;
-      if (!productId) {
-        const variantRepo = AppDataSource.getRepository(ProductVariant);
-        const fullVariant = await variantRepo.findOne({
-          // @ts-ignore
-          where: { id: entity.id },
-          relations: ["product"],
-        });
-        // @ts-ignore
-        if (fullVariant?.product) {
-          // @ts-ignore
-          productId = fullVariant.product.id;
-        } else {
-          logger.error(
-            "[ProductVariantSubscriber] Could not determine productId for variant",
-            entity.id,
-          );
-          return;
-        }
-      }
-
-      const warehouseRepo = AppDataSource.getRepository(Warehouse);
-      const stockItemRepo = AppDataSource.getRepository(StockItem);
-
-      const warehouses = await warehouseRepo.find({
-        where: { is_deleted: false, is_active: true },
+      const variantRepo = AppDataSource.getRepository(ProductVariant);
+      const variant = await variantRepo.findOne({
+        where: { id: entity.id },
+        relations: ["product"],
       });
+      if (!variant) return;
 
-      for (const warehouse of warehouses) {
-        const existing = await stockItemRepo.findOne({
-          where: {
-            // @ts-ignore
-            product: { id: productId },
-            variant: { id: entity.id },
-            warehouse: { id: warehouse.id },
-          },
-        });
-
-        if (!existing) {
-          const stockItem = stockItemRepo.create({
-            // @ts-ignore
-            product: { id: productId },
-            variant: entity,
-            warehouse,
-            quantity: 0,
-            reorder_level: 0,
-            low_stock_threshold: null,
-          });
-          await stockItemRepo.save(stockItem);
-          logger.info(
-            `[ProductVariantSubscriber] Created StockItem for variant ${entity.id} in warehouse ${warehouse.id}`,
-          );
-        }
-      }
+      const transitionService = new VariantStateTransitionService(
+        AppDataSource,
+      );
+      // @ts-ignore
+      await transitionService.onAfterInsert(variant, "system");
     } catch (err) {
       // @ts-ignore
       logger.error("[ProductVariantSubscriber] afterInsert error", err);
@@ -118,49 +76,55 @@ class ProductVariantSubscriber {
     }
   }
 
-  // @ts-ignore
+  /**
+   * @param {{ databaseEntity: any; entity: any; }} event
+   */
+
   async afterUpdate(event) {
     try {
       const { databaseEntity: oldEntity, entity: newEntity } = event;
 
-      // Need to load full relations
-      const productVariantRepo = AppDataSource.getRepository(ProductVariant);
-      const oldProduct = await productVariantRepo.findOne({
-        where: { id: oldEntity.id },
-        relations: ["taxes"],
+      // @ts-ignore
+      logger.info("[ProductVariantSubscriber] afterUpdate started", {
+        id: newEntity.id,
       });
 
-      const newProduct = await productVariantRepo.findOne({
-        where: { id: newEntity.id },
-        relations: ["taxes"],
+      // ✅ HUWAG NANG MAG-QUERY – gamitin ang oldEntity at newEntity mula sa event
+      const oldTaxIds = (oldEntity.taxes || []).map((/** @type {{ id: any; }} */ t) => t.id).sort();
+      const newTaxIds = (newEntity.taxes || []).map((/** @type {{ id: any; }} */ t) => t.id).sort();
+
+      // @ts-ignore
+      logger.info("[ProductVariantSubscriber] Tax comparison", {
+        old: oldTaxIds,
+        new: newTaxIds,
       });
-
-      if (!oldProduct || !newProduct) return;
-
-      // @ts-ignore
-      const oldTaxIds = (oldProduct.taxes || []).map((t) => t.id).sort();
-      // @ts-ignore
-      const newTaxIds = (newProduct.taxes || []).map((t) => t.id).sort();
 
       if (JSON.stringify(oldTaxIds) !== JSON.stringify(newTaxIds)) {
         logger.info(
-          `[ProductSubscriber] Taxes changed for product ${newEntity.id}`,
+          `[ProductVariantSubscriber] Taxes changed for variant ${newEntity.id}`,
         );
 
-        const transitionService = new TaxStateTransitionService(AppDataSource);
+        const transitionService = new VariantStateTransitionService(
+          AppDataSource,
+        );
         await transitionService.onTaxesChanged(
-          newProduct,
           // @ts-ignore
-          oldProduct.taxes || [],
+          newEntity,
           // @ts-ignore
-          newProduct.taxes || [],
+          oldEntity.taxes || [],
+          // @ts-ignore
+          newEntity.taxes || [],
           "system",
-          { reason: "Product taxes updated via product edit" },
+          { reason: "Variant taxes updated via variant edit" },
+        );
+      } else {
+        logger.info(
+          `[ProductVariantSubscriber] No tax change detected for variant ${newEntity.id}`,
         );
       }
     } catch (err) {
       // @ts-ignore
-      logger.error("[ProductSubscriber] afterUpdate error", err);
+      logger.error("[ProductVariantSubscriber] afterUpdate error", err);
     }
   }
 

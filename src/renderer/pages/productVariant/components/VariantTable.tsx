@@ -273,7 +273,7 @@ const VariantTable: React.FC<VariantTableProps> = ({
                   className="px-4 py-2 whitespace-nowrap text-sm font-medium"
                   style={{ color: "var(--sidebar-text)" }}
                 >
-                  {formatCurrency(variant.net_price || 0)}
+                  {formatCurrency(variant.gross_price || 0)}
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap">
                   <span

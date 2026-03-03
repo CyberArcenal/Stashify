@@ -10,6 +10,9 @@ import {
   FileText,
   Edit,
   ChevronRight,
+  Award,
+  Percent,
+  Ticket,
 } from "lucide-react";
 import type { Order } from "../../../api/core/order";
 import { formatCurrency, formatDate } from "../../../utils/formatters";
@@ -53,6 +56,19 @@ const OrderViewDialog: React.FC<OrderViewDialogProps> = ({
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
+  };
+
+  // Format applied taxes for display
+  const formatAppliedTaxes = (item: any) => {
+    if (!item.applied_taxes || item.applied_taxes.length === 0) {
+      return "No tax";
+    }
+    return item.applied_taxes.map((tax: any) => (
+      <div key={tax.taxId} className="text-xs text-[var(--text-secondary)]">
+        {tax.name}: {formatCurrency(tax.amount)} 
+        {tax.type === "percentage" ? ` (${tax.rate}%)` : ` (₱${tax.rate} fixed)`}
+      </div>
+    ));
   };
 
   // Get first 3 items for preview
@@ -238,6 +254,18 @@ const OrderViewDialog: React.FC<OrderViewDialogProps> = ({
                           {formatCurrency(order.tax_amount)}
                         </span>
                       </div>
+                      {order.usedDiscount && order.totalDiscount > 0 && (
+                        <div className="flex justify-between text-[var(--accent-orange)]">
+                          <span>Discount:</span>
+                          <span>-{formatCurrency(order.totalDiscount)}</span>
+                        </div>
+                      )}
+                      {order.usedLoyalty && order.loyaltyRedeemed > 0 && (
+                        <div className="flex justify-between text-[var(--accent-green)]">
+                          <span>Points Redeemed:</span>
+                          <span>-{formatCurrency(order.loyaltyRedeemed)}</span>
+                        </div>
+                      )}
                       <div className="border-t border-[var(--border-color)] my-1 pt-1 flex justify-between font-semibold">
                         <span className="text-[var(--sidebar-text)]">
                           Total:
@@ -246,6 +274,18 @@ const OrderViewDialog: React.FC<OrderViewDialogProps> = ({
                           {formatCurrency(order.total)}
                         </span>
                       </div>
+                      {order.pointsEarn > 0 && (
+                        <div className="flex items-center gap-1 text-xs text-[var(--text-secondary)] mt-2">
+                          <Award className="w-3 h-3" />
+                          Points earned: {order.pointsEarn}
+                        </div>
+                      )}
+                      {order.usedVoucher && order.voucherCode && (
+                        <div className="flex items-center gap-1 text-xs text-[var(--text-secondary)]">
+                          <Ticket className="w-3 h-3" />
+                          Voucher: {order.voucherCode}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -326,7 +366,7 @@ const OrderViewDialog: React.FC<OrderViewDialogProps> = ({
                             SKU
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">
-                            Quantity
+                            Qty
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">
                             Unit Price
@@ -335,10 +375,13 @@ const OrderViewDialog: React.FC<OrderViewDialogProps> = ({
                             Discount
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">
-                            Tax
+                            Applied Taxes
                           </th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">
-                            Total
+                            Net Total
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">
+                            Gross Total
                           </th>
                         </tr>
                       </thead>
@@ -361,7 +404,10 @@ const OrderViewDialog: React.FC<OrderViewDialogProps> = ({
                               {formatCurrency(item.discount_amount)}
                             </td>
                             <td className="px-4 py-2 text-sm text-[var(--sidebar-text)]">
-                              {item.tax_rate}%
+                              {formatAppliedTaxes(item)}
+                            </td>
+                            <td className="px-4 py-2 text-sm text-[var(--sidebar-text)]">
+                              {formatCurrency(item.line_net_total)}
                             </td>
                             <td className="px-4 py-2 text-sm font-medium text-[var(--accent-green)]">
                               {formatCurrency(item.line_gross_total)}

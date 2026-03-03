@@ -16,12 +16,8 @@ export interface PublicSystemSettings {
 
 export interface FrontendSystemInfo {
   site_name: string;
-  logo: string;
   currency: string;
   admin_email: string;
-  tax_enabled: boolean;
-  tax_rate: number;
-  shipping_threshold_enabled: boolean;
   system_version: string;
 }
 
@@ -109,13 +105,7 @@ export interface SalesSettings {
   allow_refunds?: boolean;
   refund_window_days?: number;
   loyalty_points_enabled?: boolean;
-  loyalty_points_rate?: number;      // points per currency unit
-  // Extended tax fields
-  vat_rate?: number;
-  supplier_tax_rate?: number;
-  tax_enabled?: boolean;
-  round_tax_at_subtotal?: boolean;
-  prices_include_tax?: boolean;
+  loyalty_points_rate?: number
 }
 
 // 4. CASHIER SETTINGS
@@ -213,21 +203,6 @@ export interface SystemInfoData {
   timezone: string;
   current_time: string;
   setting_types: string[];
-}
-
-// 📌 TAX SETTINGS – dedicated interface para sa component
-export interface TaxSettings {
-  vat_rate: number;
-  tax_rate: number;
-  tax_calculation: "inclusive" | "exclusive";
-  display_prices: "incl_tax" | "excl_tax";
-  enabled: boolean;
-  tax_flat_amount: number;
-  import_duty_rate: number;
-  excise_tax_rate: number;
-  digital_services_tax_rate: number;
-  round_tax_at_subtotal: boolean;
-  prices_include_tax: boolean;
 }
 
 // 📊 API Responses
@@ -663,7 +638,7 @@ class SystemConfigAPI {
       const config = await this.getGroupedConfig();
       return config.data?.grouped_settings?.general || {};
     } catch (error) {
-      console.error("Error getting general settings:", error);
+      // console.error("Error getting general settings:", error);
       return {};
     }
   }
@@ -673,7 +648,7 @@ class SystemConfigAPI {
       const config = await this.getGroupedConfig();
       return config.data?.grouped_settings?.inventory || {};
     } catch (error) {
-      console.error("Error getting inventory settings:", error);
+      // console.error("Error getting inventory settings:", error);
       return {};
     }
   }
@@ -683,7 +658,7 @@ class SystemConfigAPI {
       const config = await this.getGroupedConfig();
       return config.data?.grouped_settings?.sales || {};
     } catch (error) {
-      console.error("Error getting sales settings:", error);
+      // console.error("Error getting sales settings:", error);
       return {};
     }
   }
@@ -693,7 +668,7 @@ class SystemConfigAPI {
       const config = await this.getGroupedConfig();
       return config.data?.grouped_settings?.cashier || {};
     } catch (error) {
-      console.error("Error getting cashier settings:", error);
+      // console.error("Error getting cashier settings:", error);
       return {};
     }
   }
@@ -703,7 +678,7 @@ class SystemConfigAPI {
       const config = await this.getGroupedConfig();
       return config.data?.grouped_settings?.notifications || {};
     } catch (error) {
-      console.error("Error getting notifications settings:", error);
+      // console.error("Error getting notifications settings:", error);
       return {};
     }
   }
@@ -713,7 +688,7 @@ class SystemConfigAPI {
       const config = await this.getGroupedConfig();
       return config.data?.grouped_settings?.data_reports || {};
     } catch (error) {
-      console.error("Error getting data & reports settings:", error);
+      // console.error("Error getting data & reports settings:", error);
       return {};
     }
   }
@@ -723,68 +698,8 @@ class SystemConfigAPI {
       const config = await this.getGroupedConfig();
       return config.data?.grouped_settings?.audit_security || {};
     } catch (error) {
-      console.error("Error getting audit & security settings:", error);
+      // console.error("Error getting audit & security settings:", error);
       return {};
-    }
-  }
-
-  // 📌 TAX SETTINGS – dedicated method para sa component
-  async getTaxSettings(): Promise<TaxSettings> {
-    try {
-      // Subukang kunin ang individual tax settings mula sa database
-      // Kung wala, gagamit ng default values
-      const [
-        vat_rate,
-        tax_rate,
-        tax_calculation,
-        enabled,
-        tax_flat_amount,
-        import_duty_rate,
-        excise_tax_rate,
-        digital_services_tax_rate,
-        round_tax_at_subtotal,
-        prices_include_tax,
-      ] = await Promise.all([
-        this.getNumberSetting("sales", "vat_rate", 0.12),
-        this.getNumberSetting("sales", "tax_rate", 12),
-        this.getStringSetting("sales", "tax_calculation", "inclusive"),
-        this.getBooleanSetting("sales", "tax_enabled", true),
-        this.getNumberSetting("sales", "tax_flat_amount", 0),
-        this.getNumberSetting("sales", "import_duty_rate", 0),
-        this.getNumberSetting("sales", "excise_tax_rate", 0),
-        this.getNumberSetting("sales", "digital_services_tax_rate", 0),
-        this.getBooleanSetting("sales", "round_tax_at_subtotal", false),
-        this.getBooleanSetting("sales", "prices_include_tax", true),
-      ]);
-
-      return {
-        vat_rate,
-        tax_rate,
-        tax_calculation: tax_calculation as "inclusive" | "exclusive",
-        display_prices: "incl_tax", // fixed or可从设置中读取
-        enabled,
-        tax_flat_amount,
-        import_duty_rate,
-        excise_tax_rate,
-        digital_services_tax_rate,
-        round_tax_at_subtotal,
-        prices_include_tax,
-      };
-    } catch (error) {
-      console.warn("Error fetching tax settings, using defaults");
-      return {
-        vat_rate: 0.12,
-        tax_rate: 12,
-        tax_calculation: "inclusive",
-        display_prices: "incl_tax",
-        enabled: true,
-        tax_flat_amount: 0,
-        import_duty_rate: 0,
-        excise_tax_rate: 0,
-        digital_services_tax_rate: 0,
-        round_tax_at_subtotal: false,
-        prices_include_tax: true,
-      };
     }
   }
 
@@ -850,7 +765,7 @@ class SystemConfigAPI {
       }
       return result;
     } catch (error) {
-      console.error("Error getting all settings as object:", error);
+      // console.error("Error getting all settings as object:", error);
       return {};
     }
   }
@@ -865,7 +780,7 @@ class SystemConfigAPI {
       const settings = await this.getAllSettingsAsObject();
       return settings[fullKey] ?? defaultValue;
     } catch (error) {
-      console.error(`Error getting setting ${category}.${key}:`, error);
+      // console.error(`Error getting setting ${category}.${key}:`, error);
       return defaultValue;
     }
   }

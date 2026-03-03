@@ -50,7 +50,7 @@ module.exports = async (params, queryRunner, user = "system") => {
     }
 
     // Update purchase status using service
-    const updatedPurchase = await purchaseService.update(id, { status: params.status }, user);
+    const updatedPurchase = await purchaseService.updateStatus(id, params.status, user);
 
     return {
       status: true,

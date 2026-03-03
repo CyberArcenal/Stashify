@@ -49,12 +49,6 @@ const DEFAULT_SALES: SalesSettings = {
   refund_window_days: 7,
   loyalty_points_enabled: false,
   loyalty_points_rate: 1,
-  // Tax fields
-  vat_rate: 0,
-  supplier_tax_rate: 0,
-  tax_enabled: true,
-  round_tax_at_subtotal: false,
-  prices_include_tax: true,
 };
 
 const DEFAULT_CASHIER: CashierSettings = {

@@ -1,4 +1,4 @@
-import type { SalesSettings, TaxSettings } from "../../api/core/system_config";
+import type { SalesSettings} from "../../api/core/system_config";
 import { useSettings } from "../../contexts/SettingsContext";
 
 // ============================================================================
@@ -132,33 +132,11 @@ export const useLoyaltyPointsRate = (): number => {
 export const useSalesSettings = (): Partial<SalesSettings> => {
   const { getSetting } = useSettings();
   return {
-    vat_rate: getSetting<number>("sales", "vat_rate", 0.12),
-    tax_enabled: getSetting<boolean>("sales", "tax_enabled", true),
-    prices_include_tax: getSetting<boolean>("sales", "prices_include_tax", true),
-    round_tax_at_subtotal: getSetting<boolean>("sales", "round_tax_at_subtotal", false),
     discount_enabled: getSetting<boolean>("sales", "discount_enabled", true),
     max_discount_percent: getSetting<number>("sales", "max_discount_percent", 100),
     allow_refunds: getSetting<boolean>("sales", "allow_refunds", true),
     refund_window_days: getSetting<number>("sales", "refund_window_days", 7),
     loyalty_points_enabled: getSetting<boolean>("sales", "loyalty_points_enabled", false),
     loyalty_points_rate: getSetting<number>("sales", "loyalty_points_rate", 0),
-  };
-};
-
-// ----- Tax settings object (dedicated) -----
-export const useTaxSettings = (): TaxSettings => {
-  const { getSetting } = useSettings();
-  return {
-    vat_rate: getSetting<number>("sales", "vat_rate", 0.12),
-    tax_rate: getSetting<number>("sales", "tax_rate", 12),
-    tax_calculation: getSetting<"inclusive" | "exclusive">("sales", "tax_calculation", "inclusive"),
-    display_prices: "incl_tax", // or read from a separate setting if available
-    enabled: getSetting<boolean>("sales", "tax_enabled", true),
-    tax_flat_amount: getSetting<number>("sales", "tax_flat_amount", 0),
-    import_duty_rate: getSetting<number>("sales", "import_duty_rate", 0),
-    excise_tax_rate: getSetting<number>("sales", "excise_tax_rate", 0),
-    digital_services_tax_rate: getSetting<number>("sales", "digital_services_tax_rate", 0),
-    round_tax_at_subtotal: getSetting<boolean>("sales", "round_tax_at_subtotal", false),
-    prices_include_tax: getSetting<boolean>("sales", "prices_include_tax", true),
   };
 };

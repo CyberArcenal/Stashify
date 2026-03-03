@@ -8,7 +8,7 @@ const OrderItem = new EntitySchema({
     quantity: { type: Number, nullable: false },
     unit_price: { type: Number, nullable: false }, // net price per unit
     discount_amount: { type: Number, default: 0, nullable: false }, // line discount
-    tax_rate: { type: Number, default: 0, nullable: false }, // e.g., 0.20 for 20%
+    applied_taxes: { type: "simple-json", nullable: true }, // e.g., 0.20 for 20%
     line_net_total: { type: Number, nullable: false }, // (unit_price * quantity) - discount
     line_tax_total: { type: Number, nullable: false }, // line_net_total * tax_rate
     line_gross_total: { type: Number, nullable: false }, // line_net_total + line_tax_total

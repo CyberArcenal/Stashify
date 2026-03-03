@@ -18,12 +18,14 @@ class ProductHandler {
     this.getLowStockProducts = this.importHandler("./get/low_stock.ipc");
     this.getProductStatistics = this.importHandler("./get/statistics.ipc");
 
-
     // ✏️ WRITE OPERATIONS (basic)
     this.createProduct = this.importHandler("./create.ipc");
     this.updateProduct = this.importHandler("./update.ipc");
     this.deleteProduct = this.importHandler("./delete.ipc");
 
+    // bulk operations
+
+    this.bulk_assign_tax = this.importHandler("./bulk/assign_tax.ipc.js");
   }
 
   // @ts-ignore
@@ -83,6 +85,11 @@ class ProductHandler {
         case "deleteProduct":
           return await this.handleWithTransaction(
             this.deleteProduct,
+            enrichedParams,
+          );
+        case "bulkUpdateTaxes":
+          return await this.handleWithTransaction(
+            this.bulk_assign_tax,
             enrichedParams,
           );
 

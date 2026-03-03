@@ -51,6 +51,74 @@ class OrderStateTransitionService {
   }
 
   /**
+   * Called when an order status changes to 'pending' (after creation).
+   * Deducts loyalty points if redeemed.
+   * @param {Order} order
+   * @param {string} user
+   */
+  async onPending(order, user = "system") {
+    const { updateDb, saveDb } = require("../utils/dbUtils/dbActions");
+    // @ts-ignore
+    logger.info(`[Transition] Processing pending order #${order.id}`);
+
+    // @ts-ignore
+    const hydratedOrder = await this._hydrateOrder(order.id);
+    if (!hydratedOrder) return;
+
+    // Handle loyalty redemption if used
+    if (
+      // @ts-ignore
+      hydratedOrder.usedLoyalty &&
+      // @ts-ignore
+      hydratedOrder.loyaltyRedeemed > 0 &&
+      // @ts-ignore
+      hydratedOrder.customer
+    ) {
+      const customer = await this.customerRepo.findOne({
+        // @ts-ignore
+        where: { id: hydratedOrder.customer.id },
+      });
+      if (!customer) return;
+
+      const oldBalance = customer.loyaltyPointsBalance;
+      // @ts-ignore
+      customer.loyaltyPointsBalance -= hydratedOrder.loyaltyRedeemed;
+      // @ts-ignore
+      if (customer.loyaltyPointsBalance < 0) {
+        logger.warn(
+          `[Loyalty] Customer ${customer.id} points balance went negative after redemption. Clamping to 0.`,
+        );
+        customer.loyaltyPointsBalance = 0;
+      }
+      customer.updatedAt = new Date();
+      // @ts-ignore
+      await updateDb(this.customerRepo, customer);
+
+      // @ts-ignore
+      const loyaltyTx = this.loyaltyRepo.create({
+        // @ts-ignore
+        pointsChange: -hydratedOrder.loyaltyRedeemed,
+        transactionType: "redeem",
+        // @ts-ignore
+        notes: `Redeemed on Order #${hydratedOrder.id}`,
+        customer,
+        order: hydratedOrder,
+        timestamp: new Date(),
+      });
+      // @ts-ignore
+      await saveDb(this.loyaltyRepo, loyaltyTx);
+
+      await auditLogger.logUpdate(
+        "Customer",
+        // @ts-ignore
+        customer.id,
+        { loyaltyPointsBalance: oldBalance },
+        { loyaltyPointsBalance: customer.loyaltyPointsBalance },
+        user,
+      );
+    }
+  }
+  /**
    * Called when an order is confirmed.
    * @param {Order} order
    * @param {string} user
@@ -62,6 +130,9 @@ class OrderStateTransitionService {
     // @ts-ignore
     const hydratedOrder = await this._hydrateOrder(order.id);
     if (!hydratedOrder) return;
+
+    // @ts-ignore
+    logger.debug("Hydrated Order: ", hydratedOrder);
 
     // Stock adjustment (if enabled)
     const shouldUpdateStock = await autoUpdateStockOnOrderConfirm();
@@ -204,6 +275,7 @@ class OrderStateTransitionService {
    * @param {string} user
    */
   async _handleLoyalty(order, user) {
+    const { updateDb, saveDb } = require("../utils/dbUtils/dbActions");
     const loyaltyEnabled = await loyaltyPointsEnabled();
     // @ts-ignore
     if (!loyaltyEnabled || !order.customer) return;
@@ -248,6 +320,12 @@ class OrderStateTransitionService {
       // @ts-ignore
       await saveDb(this.loyaltyRepo, loyaltyTx);
 
+      // Update order with points earned
+      // @ts-ignore
+      order.pointsEarn = pointsEarned;
+      // @ts-ignore
+      await updateDb(this.orderRepo, order);
+
       await auditLogger.logUpdate(
         "Customer",
         // @ts-ignore
@@ -271,52 +349,52 @@ class OrderStateTransitionService {
       }
     }
 
-    // Handle loyalty redemption if used
+    // Handle loyalty redemption
     // @ts-ignore
-    if (order.loyalty_used && order.loyalty_points_redeemed > 0) {
-      const customer = await this.customerRepo.findOne({
-        // @ts-ignore
-        where: { id: order.customer.id },
-      });
-      if (!customer) return;
+    // if (order.usedLoyalty && order.loyaltyRedeemed > 0) {
+    //   const customer = await this.customerRepo.findOne({
+    //     // @ts-ignore
+    //     where: { id: order.customer.id },
+    //   });
+    //   if (!customer) return;
 
-      const oldBalance = customer.loyaltyPointsBalance;
-      // @ts-ignore
-      customer.loyaltyPointsBalance -= order.loyalty_points_redeemed;
-      // @ts-ignore
-      if (customer.loyaltyPointsBalance < 0) {
-        logger.warn(
-          `[Loyalty] Customer ${customer.id} points balance went negative after redemption. Clamping to 0.`,
-        );
-        customer.loyaltyPointsBalance = 0;
-      }
-      customer.updatedAt = new Date();
-      // @ts-ignore
-      await updateDb(this.customerRepo, customer);
+    //   const oldBalance = customer.loyaltyPointsBalance;
+    //   // @ts-ignore
+    //   customer.loyaltyPointsBalance -= order.loyaltyRedeemed;
+    //   // @ts-ignore
+    //   if (customer.loyaltyPointsBalance < 0) {
+    //     logger.warn(
+    //       `[Loyalty] Customer ${customer.id} points balance went negative after redemption. Clamping to 0.`,
+    //     );
+    //     customer.loyaltyPointsBalance = 0;
+    //   }
+    //   customer.updatedAt = new Date();
+    //   // @ts-ignore
+    //   await updateDb(this.customerRepo, customer);
 
-      // @ts-ignore
-      const loyaltyTx = this.loyaltyRepo.create({
-        // @ts-ignore
-        pointsChange: -order.loyalty_points_redeemed,
-        transactionType: "redeem",
-        // @ts-ignore
-        notes: `Redeemed on Order #${order.id}`,
-        customer,
-        order,
-        timestamp: new Date(),
-      });
-      // @ts-ignore
-      await saveDb(this.loyaltyRepo, loyaltyTx);
+    //   // @ts-ignore
+    //   const loyaltyTx = this.loyaltyRepo.create({
+    //     // @ts-ignore
+    //     pointsChange: -order.loyaltyRedeemed,
+    //     transactionType: "redeem",
+    //     // @ts-ignore
+    //     notes: `Redeemed on Order #${order.id}`,
+    //     customer,
+    //     order,
+    //     timestamp: new Date(),
+    //   });
+    //   // @ts-ignore
+    //   await saveDb(this.loyaltyRepo, loyaltyTx);
 
-      await auditLogger.logUpdate(
-        "Customer",
-        // @ts-ignore
-        customer.id,
-        { loyaltyPointsBalance: oldBalance },
-        { loyaltyPointsBalance: customer.loyaltyPointsBalance },
-        user,
-      );
-    }
+    //   await auditLogger.logUpdate(
+    //     "Customer",
+    //     // @ts-ignore
+    //     customer.id,
+    //     { loyaltyPointsBalance: oldBalance },
+    //     { loyaltyPointsBalance: customer.loyaltyPointsBalance },
+    //     user,
+    //   );
+    // }
   }
 
   /**

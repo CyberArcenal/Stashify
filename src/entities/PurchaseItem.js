@@ -8,8 +8,19 @@ const PurchaseItem = new EntitySchema({
     quantity: { type: Number, nullable: false, check: "quantity >= 0" },
     unit_cost: { type: Number, default: 0, nullable: false },
     total: { type: Number, default: 0, nullable: false }, // unit_cost * quantity
-    created_at: { type: Date, default: () => "CURRENT_TIMESTAMP", nullable: false },
-    updated_at: { type: Date, default: () => "CURRENT_TIMESTAMP", nullable: false },
+    applied_taxes: { type: "simple-json", nullable: true }, // array of { taxId, name, rate, type, amount }
+    line_tax_total: { type: Number, default: 0, nullable: false },
+    line_gross_total: { type: Number, default: 0, nullable: false },
+    created_at: {
+      type: Date,
+      default: () => "CURRENT_TIMESTAMP",
+      nullable: false,
+    },
+    updated_at: {
+      type: Date,
+      default: () => "CURRENT_TIMESTAMP",
+      nullable: false,
+    },
     is_deleted: { type: Boolean, default: false, nullable: false },
   },
   relations: {

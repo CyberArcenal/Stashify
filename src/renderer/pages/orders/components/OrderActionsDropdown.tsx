@@ -117,21 +117,28 @@ const SalesActionsDropdown: React.FC<SalesActionsDropdownProps> = ({
             </button>
 
             {/* Edit Order */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAction(() => onEdit(order));
-              }}
-              className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100"
-            >
-              <Edit className="w-4 h-4 text-yellow-500" />{" "}
-              <span>Edit Order</span>
-            </button>
+            {order.status === "pending" ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAction(() => onEdit(order));
+                }}
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100"
+              >
+                <Edit className="w-4 h-4 text-yellow-500" />{" "}
+                <span>Edit Order</span>
+              </button>
+            ) : (
+              ""
+            )}
 
             {/* Status Update Actions */}
             {order.status === "pending" && (
               <button
-                onClick={(e) => {e.stopPropagation(); handleStatusChange("confirmed")}}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStatusChange("confirmed");
+                }}
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100"
               >
                 <CheckCircle className="w-4 h-4 text-green-500" />{" "}
@@ -140,7 +147,10 @@ const SalesActionsDropdown: React.FC<SalesActionsDropdownProps> = ({
             )}
             {order.status === "confirmed" && (
               <button
-                onClick={(e) => {e.stopPropagation(); handleStatusChange("completed")}}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStatusChange("completed");
+                }}
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100"
               >
                 <Package className="w-4 h-4 text-green-600" />{" "}
@@ -149,7 +159,10 @@ const SalesActionsDropdown: React.FC<SalesActionsDropdownProps> = ({
             )}
             {(order.status === "pending" || order.status === "confirmed") && (
               <button
-                onClick={(e) => {e.stopPropagation(); handleStatusChange("cancelled")}}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStatusChange("cancelled");
+                }}
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100"
               >
                 <XCircle className="w-4 h-4 text-red-500" />{" "}
@@ -158,7 +171,10 @@ const SalesActionsDropdown: React.FC<SalesActionsDropdownProps> = ({
             )}
             {order.status === "cancelled" && (
               <button
-                onClick={(e) => {e.stopPropagation(); handleStatusChange("pending")}}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStatusChange("pending");
+                }}
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100"
               >
                 <RotateCcw className="w-4 h-4 text-blue-500" />{" "}
@@ -167,7 +183,10 @@ const SalesActionsDropdown: React.FC<SalesActionsDropdownProps> = ({
             )}
             {order.status === "completed" && (
               <button
-                onClick={(e) => {e.stopPropagation(); handleStatusChange("refunded")}}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStatusChange("refunded");
+                }}
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100"
               >
                 <RotateCcw className="w-4 h-4 text-purple-500" />{" "}

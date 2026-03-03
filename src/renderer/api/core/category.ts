@@ -122,7 +122,7 @@ class CategoryAPI {
   }): Promise<CategoriesResponse> {
     try {
       const response = await this.call<CategoriesResponse>('getAllCategories', params || {});
-      console.log(response)
+      // console.log(response)
       if (response.status) return response;
       throw new Error(response.message || 'Failed to fetch categories');
     } catch (error: any) {

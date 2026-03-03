@@ -1,6 +1,8 @@
 // src/main/ipc/tax/get/all.ipc.js
+//@ts-check
 const taxService = require("../../../../../services/Tax");
 
+// @ts-ignore
 module.exports = async (params) => {
   try {
     const filters = {
@@ -24,6 +26,7 @@ module.exports = async (params) => {
     console.error("Error in getAllTaxes:", error);
     return {
       status: false,
+      // @ts-ignore
       message: error.message || "Failed to retrieve taxes",
       data: null,
     };

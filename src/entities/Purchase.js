@@ -10,7 +10,7 @@ const Purchase = new EntitySchema({
       type: String,
       default: "pending",
       nullable: false,
-      check: "status IN ('initiated','pending','confirmed','received','cancelled')",
+      check: "status IN ('initiated','pending','confirmed','received','cancelled', 'refunded')",
     },
     subtotal: { type: Number, default: 0, nullable: false },
     tax_amount: { type: Number, default: 0, nullable: false },

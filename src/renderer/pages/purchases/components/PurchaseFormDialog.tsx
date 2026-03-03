@@ -1,9 +1,9 @@
 // src/renderer/pages/purchases/components/PurchaseFormDialog.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import Modal from '../../../components/UI/Modal';
 import Button from '../../../components/UI/Button';
-import SupplierSelect from '../../../components/Selects/Supplier'; // assuming exists
+import SupplierSelect from '../../../components/Selects/Supplier';
 import WarehouseSelect from '../../../components/Selects/Warehouse';
 import ProductSelect from '../../../components/Selects/Product';
 import ProductVariantSelect from '../../../components/Selects/ProductVariant';
@@ -60,6 +60,7 @@ const PurchaseFormDialog: React.FC<PurchaseFormDialogProps> = ({
     control,
     reset,
     setValue,
+    getValues,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
@@ -83,12 +84,72 @@ const PurchaseFormDialog: React.FC<PurchaseFormDialogProps> = ({
   const supplierId = watch('supplierId');
   const warehouseId = watch('warehouseId');
 
-  // Recalculate totals whenever items change
-  useEffect(() => {
-    const subtotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
+  // Recalculate totals based on current items
+  const recalcTotals = useCallback(() => {
+    const currentItems = getValues('items');
+    const subtotal = currentItems.reduce((sum, item) => sum + (item.total || 0), 0);
     setValue('subtotal', subtotal);
     setValue('total', subtotal);
-  }, [items, setValue]);
+  }, [getValues, setValue]);
+
+  // Update an item and immediately recalc totals
+  const updateItem = (index: number, updates: Partial<PurchaseItemForm>) => {
+    const current = items[index];
+    const updated = { ...current, ...updates };
+
+    // Ensure numeric values
+    const quantity = Number(updated.quantity) || 0;
+    const unit_cost = Number(updated.unit_cost) || 0;
+    updated.quantity = quantity;
+    updated.unit_cost = unit_cost;
+    updated.total = quantity * unit_cost;
+
+    setValue(`items.${index}`, updated);
+    recalcTotals(); // <- immediate recalculation
+  };
+
+  // Add new item
+  const addItem = () => {
+    append({
+      productId: null,
+      variantId: null,
+      quantity: 1,
+      unit_cost: 0,
+      total: 0,
+    });
+
+    // Use setTimeout to ensure append completes before expanding and recalc
+    setTimeout(() => {
+      recalcTotals();
+      const newLength = getValues('items').length;
+      setExpandedItems((prev) => [...prev, newLength - 1]);
+    }, 0);
+  };
+
+  // Remove item
+  const removeItem = (index: number) => {
+    remove(index);
+    setTimeout(() => {
+      recalcTotals();
+      setExpandedItems((prev) =>
+        prev.filter((i) => i !== index).map((i) => (i > index ? i - 1 : i))
+      );
+    }, 0);
+  };
+
+  const toggleExpand = (index: number) => {
+    setExpandedItems((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+    );
+  };
+
+  const expandAll = () => {
+    setExpandedItems(fields.map((_, i) => i));
+  };
+
+  const collapseAll = () => {
+    setExpandedItems([]);
+  };
 
   // Populate form when editing
   useEffect(() => {
@@ -114,6 +175,11 @@ const PurchaseFormDialog: React.FC<PurchaseFormDialogProps> = ({
         subtotal: initialData.subtotal || 0,
         total: initialData.total || 0,
       });
+
+      // Recalculate totals after reset to ensure consistency
+      setTimeout(() => {
+        recalcTotals();
+      }, 0);
     } else if (mode === 'add') {
       reset({
         purchase_number: `PO-${Date.now()}`,
@@ -124,46 +190,9 @@ const PurchaseFormDialog: React.FC<PurchaseFormDialogProps> = ({
         subtotal: 0,
         total: 0,
       });
+      setExpandedItems([]);
     }
-  }, [mode, initialData, reset]);
-
-  const addItem = () => {
-    append({
-      productId: null,
-      variantId: null,
-      quantity: 1,
-      unit_cost: 0,
-      total: 0,
-    });
-    setExpandedItems(prev => [...prev, fields.length]); // expand new item
-  };
-
-  const removeItem = (index: number) => {
-    remove(index);
-    setExpandedItems(prev => prev.filter(i => i !== index).map(i => i > index ? i - 1 : i));
-  };
-
-  const toggleExpand = (index: number) => {
-    setExpandedItems(prev =>
-      prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
-    );
-  };
-
-  const expandAll = () => {
-    setExpandedItems(fields.map((_, i) => i));
-  };
-
-  const collapseAll = () => {
-    setExpandedItems([]);
-  };
-
-  const updateItem = (index: number, updates: Partial<PurchaseItemForm>) => {
-    const current = items[index];
-    const updated = { ...current, ...updates };
-    // Recalculate total
-    updated.total = updated.quantity * updated.unit_cost;
-    setValue(`items.${index}`, updated);
-  };
+  }, [mode, initialData, reset, recalcTotals]);
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -176,7 +205,7 @@ const PurchaseFormDialog: React.FC<PurchaseFormDialogProps> = ({
         supplierId: data.supplierId,
         warehouseId: data.warehouseId,
         notes: data.notes || undefined,
-        items: data.items.map(item => ({
+        items: data.items.map((item) => ({
           productId: item.productId!,
           variantId: item.variantId || undefined,
           quantity: item.quantity,
@@ -200,7 +229,7 @@ const PurchaseFormDialog: React.FC<PurchaseFormDialogProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen}   safetyClose={true} onClose={onClose} title={mode === 'add' ? 'Create Purchase Order' : 'Edit Purchase Order'} size="xl">
+    <Modal isOpen={isOpen} safetyClose={true} onClose={onClose} title={mode === 'add' ? 'Create Purchase Order' : 'Edit Purchase Order'} size="xl">
       <form onSubmit={handleSubmit(onSubmit)} className="h-full flex flex-col">
         {/* Scrollable main content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -209,7 +238,7 @@ const PurchaseFormDialog: React.FC<PurchaseFormDialogProps> = ({
             <div className="space-y-4">
               <div className="bg-[var(--card-secondary-bg)] p-3 rounded-md space-y-3">
                 <h3 className="text-sm font-medium" style={{ color: 'var(--sidebar-text)' }}>Purchase Information</h3>
-                
+
                 {/* Purchase Number */}
                 <div>
                   <label className="block text-xs font-medium mb-1" style={{ color: 'var(--sidebar-text)' }}>

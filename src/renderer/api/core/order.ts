@@ -25,17 +25,32 @@ import type { OrderItem } from "./orderItem";
 export interface Order {
   id: number;
   order_number: string;
-  status: 'initiated' | 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'refunded';
+  status:
+    | "initiated"
+    | "pending"
+    | "confirmed"
+    | "completed"
+    | "cancelled"
+    | "refunded";
   subtotal: number;
   tax_amount: number;
   total: number;
   notes: string | null;
   inventory_processed: boolean;
-  created_at: string;        // ISO date string
-  updated_at: string;        // ISO date string
+  created_at: string; // ISO date string
+  updated_at: string; // ISO date string
   is_deleted: boolean;
+
+  usedLoyalty: boolean;
+  loyaltyRedeemed: number;
+  usedDiscount: boolean;
+  totalDiscount: number;
+  usedVoucher: boolean;
+  voucherCode: string | undefined;
+  pointsEarn: number;
+
   // Optional relational fields
-  customer?: Customer | null; // simplified; you can import Customer type if available
+  customer?: Customer | undefined; // simplified; you can import Customer type if available
   items?: OrderItem[];
 }
 
@@ -43,9 +58,9 @@ export interface Order {
 export interface OrderItemCreateData {
   productId: number;
   quantity: number;
-  unitPrice?: number;         // kung hindi ibibigay, gagamitin ang net_price ng product
-  discount?: number;          // line discount amount
-  taxRate?: number;           // percentage (optional, default system tax rate)
+  unitPrice?: number; // kung hindi ibibigay, gagamitin ang net_price ng product
+  discount?: number; // line discount amount
+  taxRate?: number; // percentage (optional, default system tax rate)
   variantId?: number | null;
   warehouseId?: number | null;
 }
@@ -55,17 +70,19 @@ export interface OrderCreateData {
   customerId?: number | null;
   notes?: string | null;
   items: OrderItemCreateData[];
+
+  usedLoyalty?: boolean | undefined;
+  loyaltyRedeemed?: number | undefined;
+  usedDiscount?: boolean | undefined;
+  totalDiscount?: number | undefined;
+  usedVoucher?: boolean | undefined;
+  voucherCode?: string | undefined;
 }
 
 // Para sa pag-update ng order (basic fields only, hindi items)
 export interface OrderUpdateData {
-  order_number?: string;
-  customerId?: number | null;
   notes?: string | null;
-  status?: Order['status'];
-  subtotal?: number;
-  tax_amount?: number;
-  total?: number;
+  items?: OrderItemCreateData[];
 }
 
 // ----------------------------------------------------------------------
@@ -100,7 +117,7 @@ export interface OrderTotalsResponse {
 export interface DeleteOrderResponse {
   status: boolean;
   message: string;
-  data: Order;   // ang na-soft delete na order
+  data: Order; // ang na-soft delete na order
 }
 
 // ----------------------------------------------------------------------
@@ -114,7 +131,10 @@ class OrderAPI {
    * @param params - Mga parameter para sa method
    * @returns {Promise<any>} - Response mula sa backend
    */
-  private async call<T = any>(method: string, params: Record<string, any> = {}): Promise<T> {
+  private async call<T = any>(
+    method: string,
+    params: Record<string, any> = {},
+  ): Promise<T> {
     if (!window.backendAPI?.order) {
       throw new Error("Electron API (order) not available");
     }
@@ -137,21 +157,24 @@ class OrderAPI {
    * @param params.limit - Bilang ng items kada page
    */
   async getAll(params?: {
-    status?: Order['status'];
+    status?: Order["status"];
     customerId?: number;
     startDate?: string;
     endDate?: string;
     sortBy?: string;
-    sortOrder?: 'ASC' | 'DESC';
+    sortOrder?: "ASC" | "DESC";
     page?: number;
     limit?: number;
   }): Promise<OrdersResponse> {
     try {
-      const response = await this.call<OrdersResponse>('getAllOrders', params || {});
+      const response = await this.call<OrdersResponse>(
+        "getAllOrders",
+        params || {},
+      );
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to fetch orders');
+      throw new Error(response.message || "Failed to fetch orders");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to fetch orders');
+      throw new Error(error.message || "Failed to fetch orders");
     }
   }
 
@@ -161,12 +184,12 @@ class OrderAPI {
    */
   async getById(id: number): Promise<OrderResponse> {
     try {
-      if (!id || id <= 0) throw new Error('Invalid ID');
-      const response = await this.call<OrderResponse>('getOrderById', { id });
+      if (!id || id <= 0) throw new Error("Invalid ID");
+      const response = await this.call<OrderResponse>("getOrderById", { id });
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to fetch order');
+      throw new Error(response.message || "Failed to fetch order");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to fetch order');
+      throw new Error(error.message || "Failed to fetch order");
     }
   }
 
@@ -183,15 +206,21 @@ class OrderAPI {
     page?: number;
     limit?: number;
     sortBy?: string;
-    sortOrder?: 'ASC' | 'DESC';
+    sortOrder?: "ASC" | "DESC";
   }): Promise<OrdersResponse> {
     try {
-      if (!params.customerId || params.customerId <= 0) throw new Error('Invalid customerId');
-      const response = await this.call<OrdersResponse>('getOrderByCustomer', params);
+      if (!params.customerId || params.customerId <= 0)
+        throw new Error("Invalid customerId");
+      const response = await this.call<OrdersResponse>(
+        "getOrderByCustomer",
+        params,
+      );
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to fetch orders for customer');
+      throw new Error(
+        response.message || "Failed to fetch orders for customer",
+      );
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to fetch orders for customer');
+      throw new Error(error.message || "Failed to fetch orders for customer");
     }
   }
 
@@ -204,14 +233,17 @@ class OrderAPI {
   async getTotals(params?: {
     startDate?: string;
     endDate?: string;
-    status?: Order['status'];
+    status?: Order["status"];
   }): Promise<OrderTotalsResponse> {
     try {
-      const response = await this.call<OrderTotalsResponse>('getOrderTotals', params || {});
+      const response = await this.call<OrderTotalsResponse>(
+        "getOrderTotals",
+        params || {},
+      );
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to fetch order totals');
+      throw new Error(response.message || "Failed to fetch order totals");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to fetch order totals');
+      throw new Error(error.message || "Failed to fetch order totals");
     }
   }
 
@@ -225,17 +257,17 @@ class OrderAPI {
    */
   async create(data: OrderCreateData): Promise<OrderResponse> {
     try {
-      if (!data.order_number || data.order_number.trim() === '') {
-        throw new Error('Order number is required');
+      if (!data.order_number || data.order_number.trim() === "") {
+        throw new Error("Order number is required");
       }
       if (!data.items || data.items.length === 0) {
-        throw new Error('At least one order item is required');
+        throw new Error("At least one order item is required");
       }
-      const response = await this.call<OrderResponse>('createOrder', data);
+      const response = await this.call<OrderResponse>("createOrder", data);
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to create order');
+      throw new Error(response.message || "Failed to create order");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to create order');
+      throw new Error(error.message || "Failed to create order");
     }
   }
 
@@ -246,12 +278,15 @@ class OrderAPI {
    */
   async update(id: number, data: OrderUpdateData): Promise<OrderResponse> {
     try {
-      if (!id || id <= 0) throw new Error('Invalid ID');
-      const response = await this.call<OrderResponse>('updateOrder', { id, ...data });
+      if (!id || id <= 0) throw new Error("Invalid ID");
+      const response = await this.call<OrderResponse>("updateOrder", {
+        id,
+        ...data,
+      });
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to update order');
+      throw new Error(response.message || "Failed to update order");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to update order');
+      throw new Error(error.message || "Failed to update order");
     }
   }
 
@@ -261,12 +296,14 @@ class OrderAPI {
    */
   async delete(id: number): Promise<DeleteOrderResponse> {
     try {
-      if (!id || id <= 0) throw new Error('Invalid ID');
-      const response = await this.call<DeleteOrderResponse>('deleteOrder', { id });
+      if (!id || id <= 0) throw new Error("Invalid ID");
+      const response = await this.call<DeleteOrderResponse>("deleteOrder", {
+        id,
+      });
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to delete order');
+      throw new Error(response.message || "Failed to delete order");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to delete order');
+      throw new Error(error.message || "Failed to delete order");
     }
   }
 
@@ -275,18 +312,33 @@ class OrderAPI {
    * @param id - Order ID
    * @param status - Bagong status
    */
-  async updateStatus(id: number, status: Order['status']): Promise<OrderResponse> {
+  async updateStatus(
+    id: number,
+    status: Order["status"],
+  ): Promise<OrderResponse> {
     try {
-      if (!id || id <= 0) throw new Error('Invalid ID');
-      const validStatuses = ['initiated', 'pending', 'confirmed', 'completed', 'cancelled', 'refunded'];
+      if (!id || id <= 0) throw new Error("Invalid ID");
+      const validStatuses = [
+        "initiated",
+        "pending",
+        "confirmed",
+        "completed",
+        "cancelled",
+        "refunded",
+      ];
       if (!validStatuses.includes(status)) {
-        throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+        throw new Error(
+          `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
+        );
       }
-      const response = await this.call<OrderResponse>('updateOrderStatus', { id, status });
+      const response = await this.call<OrderResponse>("updateOrderStatus", {
+        id,
+        status,
+      });
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to update order status');
+      throw new Error(response.message || "Failed to update order status");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to update order status');
+      throw new Error(error.message || "Failed to update order status");
     }
   }
 
@@ -296,12 +348,12 @@ class OrderAPI {
    */
   async cancel(id: number): Promise<OrderResponse> {
     try {
-      if (!id || id <= 0) throw new Error('Invalid ID');
-      const response = await this.call<OrderResponse>('cancelOrder', { id });
+      if (!id || id <= 0) throw new Error("Invalid ID");
+      const response = await this.call<OrderResponse>("cancelOrder", { id });
       if (response.status) return response;
-      throw new Error(response.message || 'Failed to cancel order');
+      throw new Error(response.message || "Failed to cancel order");
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to cancel order');
+      throw new Error(error.message || "Failed to cancel order");
     }
   }
 
@@ -313,7 +365,7 @@ class OrderAPI {
    * I-validate kung available ang backend API.
    */
   async isAvailable(): Promise<boolean> {
-    return !!(window.backendAPI?.order);
+    return !!window.backendAPI?.order;
   }
 
   /**

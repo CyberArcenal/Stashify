@@ -47,19 +47,6 @@ const AuditSecuritySettingsTab: React.FC<AuditSecuritySettingsTabProps> = ({ set
               min="0"
             />
           </div>
-{/* 
-          <div>
-            <label className="block text-sm font-medium text-[var(--sidebar-text)] mb-1">
-              Log Events (comma separated)
-            </label>
-            <input
-              type="text"
-              value={form?.log_events?.join(", ") || ""}
-              onChange={(e) => handleChange("log_events", e.target.value.split(",").map(s => s.trim()))}
-              className="w-full p-3 border border-[var(--border-color)] rounded-lg bg-[var(--input-bg)] text-[var(--sidebar-text)]"
-              placeholder="CREATE, UPDATE, DELETE"
-            />
-          </div> */}
         </div>
 
         <div className="space-y-4">
@@ -72,27 +59,6 @@ const AuditSecuritySettingsTab: React.FC<AuditSecuritySettingsTabProps> = ({ set
             />
             <span className="ml-2 text-sm text-[var(--sidebar-text)]">Enable Audit Log</span>
           </label>
-
-          {/* <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={form?.force_https || false}
-              onChange={(e) => handleChange("force_https", e.target.checked)}
-              className="rounded border-[var(--border-color)] text-[var(--accent-blue)]"
-            />
-            <span className="ml-2 text-sm text-[var(--sidebar-text)]">Force HTTPS</span>
-          </label> */}
-
-          {/* <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={form?.session_encryption_enabled || false}
-              onChange={(e) => handleChange("session_encryption_enabled", e.target.checked)}
-              className="rounded border-[var(--border-color)] text-[var(--accent-blue)]"
-            />
-            <span className="ml-2 text-sm text-[var(--sidebar-text)]">Enable Session Encryption</span>
-          </label> */}
-
           <label className="flex items-center">
             <input
               type="checkbox"

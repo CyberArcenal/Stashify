@@ -1,6 +1,9 @@
 // src/main/ipc/tax/create.ipc.js
-const taxService = require("../../../../../services/Tax");
+//@ts-check
 
+const taxService = require("../../../../services/Tax");
+
+// @ts-ignore
 module.exports = async (params, queryRunner, user = "system") => {
   try {
     // Validate required fields
@@ -76,6 +79,7 @@ module.exports = async (params, queryRunner, user = "system") => {
     console.error("Error in createTax:", error);
     return {
       status: false,
+      // @ts-ignore
       message: error.message || "Failed to create tax",
       data: null,
     };

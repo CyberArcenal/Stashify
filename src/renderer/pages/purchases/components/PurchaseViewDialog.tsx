@@ -7,6 +7,7 @@ import {
   ChevronRight, X
 } from 'lucide-react';
 import type { Purchase } from '../../../api/core/purchase';
+import type { PurchaseItem } from '../../../api/core/purchaseItem'; // ensure this type includes new fields
 import { formatCurrency, formatDate } from '../../../utils/formatters';
 
 interface PurchaseViewDialogProps {
@@ -16,6 +17,9 @@ interface PurchaseViewDialogProps {
   onClose: () => void;
   onEdit?: (id: number) => void;
 }
+
+// Extend the PurchaseItem type locally if needed – but ideally the API already returns new fields
+// Assume the backend returns line_tax_total and line_gross_total
 
 const PurchaseViewDialog: React.FC<PurchaseViewDialogProps> = ({
   isOpen,
@@ -35,6 +39,7 @@ const PurchaseViewDialog: React.FC<PurchaseViewDialogProps> = ({
       confirmed: { bg: 'bg-blue-100', text: 'text-blue-700' },
       received: { bg: 'bg-green-100', text: 'text-green-700' },
       cancelled: { bg: 'bg-red-100', text: 'text-red-700' },
+      refunded: { bg: 'bg-purple-100', text: 'text-purple-700' }, // added refunded
     };
     const config = statusMap[status] || { bg: 'bg-gray-100', text: 'text-gray-700' };
     return (
@@ -123,6 +128,9 @@ const PurchaseViewDialog: React.FC<PurchaseViewDialogProps> = ({
                       {purchase.received_at && (
                         <div><span className="text-[var(--text-secondary)]">Received at:</span> {formatDate(purchase.received_at)}</div>
                       )}
+                      {purchase.proceed_by && (
+                        <div><span className="text-[var(--text-secondary)]">Processed by:</span> User #{purchase.proceed_by}</div>
+                      )}
                     </div>
                   </div>
 
@@ -166,7 +174,7 @@ const PurchaseViewDialog: React.FC<PurchaseViewDialogProps> = ({
                     </h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-[var(--text-secondary)]">Subtotal:</span>
+                        <span className="text-[var(--text-secondary)]">Subtotal (net):</span>
                         <span className="font-medium text-[var(--sidebar-text)]">{formatCurrency(purchase.subtotal)}</span>
                       </div>
                       <div className="flex justify-between">
@@ -174,7 +182,7 @@ const PurchaseViewDialog: React.FC<PurchaseViewDialogProps> = ({
                         <span className="font-medium text-[var(--sidebar-text)]">{formatCurrency(purchase.tax_amount)}</span>
                       </div>
                       <div className="border-t border-[var(--border-color)] my-1 pt-1 flex justify-between font-semibold">
-                        <span className="text-[var(--sidebar-text)]">Total:</span>
+                        <span className="text-[var(--sidebar-text)]">Total (gross):</span>
                         <span className="text-[var(--accent-green)]">{formatCurrency(purchase.total)}</span>
                       </div>
                     </div>
@@ -237,9 +245,11 @@ const PurchaseViewDialog: React.FC<PurchaseViewDialogProps> = ({
                         <tr>
                           <th className="px-4 py-2 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">Product</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">SKU</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">Quantity</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">Qty</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">Unit Cost</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">Total</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">Net Total</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">Tax</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-[var(--text-secondary)] uppercase">Gross Total</th>
                         </tr>
                       </thead>
                       <tbody className="bg-[var(--card-bg)] divide-y divide-[var(--border-color)]">
@@ -249,7 +259,9 @@ const PurchaseViewDialog: React.FC<PurchaseViewDialogProps> = ({
                             <td className="px-4 py-2 text-sm text-[var(--sidebar-text)]">{item.product?.sku || '-'}</td>
                             <td className="px-4 py-2 text-sm text-[var(--sidebar-text)]">{item.quantity}</td>
                             <td className="px-4 py-2 text-sm text-[var(--sidebar-text)]">{formatCurrency(item.unit_cost)}</td>
-                            <td className="px-4 py-2 text-sm font-medium text-[var(--accent-green)]">{formatCurrency(item.total)}</td>
+                            <td className="px-4 py-2 text-sm font-medium text-[var(--sidebar-text)]">{formatCurrency(item.total)}</td>
+                            <td className="px-4 py-2 text-sm text-[var(--sidebar-text)]">{formatCurrency(item.line_tax_total || 0)}</td>
+                            <td className="px-4 py-2 text-sm font-medium text-[var(--accent-green)]">{formatCurrency(item.line_gross_total || item.total)}</td>
                           </tr>
                         ))}
                       </tbody>

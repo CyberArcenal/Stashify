@@ -1,5 +1,5 @@
 // src/main/ipc/tax/update.ipc.js
-const taxService = require("../../../../../services/Tax");
+const taxService = require("../../../../services/Tax");
 
 module.exports = async (params, queryRunner, user = "system") => {
   try {
