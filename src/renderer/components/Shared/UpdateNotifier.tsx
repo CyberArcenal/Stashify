@@ -10,15 +10,27 @@ const UpdateNotifier: React.FC = () => {
     useUpdater();
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [installing, setInstalling] = useState(false);
 
   const handleDownload = async () => {
     setLoading(true);
     try {
-      downloadUpdate();
+      await downloadUpdate();
     } catch (err) {
       showApiError(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleInstall = async () => {
+    setInstalling(true);
+    try {
+      await installUpdate();
+    } catch (err) {
+      showApiError(err);
+    } finally {
+      setInstalling(false);
     }
   };
 
@@ -117,30 +129,43 @@ const UpdateNotifier: React.FC = () => {
                 </div>
               </div>
             )}
-
             <div className="flex gap-3 justify-end">
               {state === "available" && (
                 <Button
-                  onClick={() => {
-                    handleDownload();
-                    // Keep modal open to show progress
-                  }}
+                  onClick={handleDownload}
                   disabled={loading}
-                  className={`btn-primary btn-sm px-4 py-2 ${loading ? "opacity-75" : ""}`}
+                  className={`btn-primary btn-sm px-4 py-2 flex items-center gap-2 
+                 hover:bg-[var(--primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  {loading ? `Downloading...` : `Download Update`}
+                  {loading ? (
+                    <>
+                      <RefreshCw className="icon-sm animate-spin" />
+                      Downloading...
+                    </>
+                  ) : (
+                    "Download Update"
+                  )}
                 </Button>
               )}
+
               {state === "downloaded" && (
                 <Button
-                  onClick={() => {
-                    installUpdate();
-                  }}
-                  className="btn-success btn-sm px-4 py-2"
+                  onClick={handleInstall}
+                  disabled={installing}
+                  className="btn-success btn-sm px-4 py-2 flex items-center gap-2 
+                 hover:bg-[var(--success-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Install & Restart
+                  {installing ? (
+                    <>
+                      <RefreshCw className="icon-sm animate-spin" />
+                      Installing...
+                    </>
+                  ) : (
+                    "Install & Restart"
+                  )}
                 </Button>
               )}
+
               <Button
                 onClick={() => setShowModal(false)}
                 className="btn-secondary btn-sm px-4 py-2"
